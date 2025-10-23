@@ -57,6 +57,7 @@
 		handleDragEnd(e);
 	}}
 	on:click={handleClick}
+	on:keydown={(e) => e.key === 'Enter' && handleClick()}
 	in:fly={{ y: 50, duration: 600, delay: Math.random() * 200 }}
 	out:fade={{ duration: 200 }}
 	role="button"
@@ -113,7 +114,7 @@
 
 	<!-- Glow-Effekt bei offenen Räumen -->
 	{#if room.isOpen}
-		<div class="glow-effect" transition:fade={{ duration: 500 }} />
+		<div class="glow-effect" transition:fade={{ duration: 500 }}></div>
 	{/if}
 </div>
 
