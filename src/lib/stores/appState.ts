@@ -71,8 +71,12 @@ export const visibleRooms = derived(
 // ===== REALTIME SUBSCRIPTIONS =====
 let roomStatusChannel: RealtimeChannel | null = null;
 let roomsChannel: RealtimeChannel | null = null;
+let configsChannel: RealtimeChannel | null = null;
+let settingsChannel: RealtimeChannel | null = null;
 
 export function subscribeToRealtimeUpdates() {
+	console.log('🔌 Subscribing to realtime updates...');
+
 	// Room Status Updates
 	roomStatusChannel = supabase
 		.channel('room-status-changes')
@@ -80,25 +84,29 @@ export function subscribeToRealtimeUpdates() {
 			'postgres_changes',
 			{ event: '*', schema: 'public', table: 'room_status' },
 			(payload) => {
+				console.log('📊 Room status change:', payload);
 				if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
 					roomStatuses.update((map) => {
 						map.set(payload.new.room_id, payload.new as RoomStatus);
-						return map;
+						return new Map(map);
 					});
 				} else if (payload.eventType === 'DELETE') {
 					roomStatuses.update((map) => {
 						map.delete(payload.old.room_id);
-						return map;
+						return new Map(map);
 					});
 				}
 			}
 		)
-		.subscribe();
+		.subscribe((status) => {
+			console.log('Room status channel:', status);
+		});
 
 	// Rooms Updates (Position, Größe, etc.)
 	roomsChannel = supabase
 		.channel('rooms-changes')
 		.on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, (payload) => {
+			console.log('🏠 Room change:', payload);
 			if (payload.eventType === 'INSERT') {
 				rooms.update((list) => [...list, payload.new as Room]);
 			} else if (payload.eventType === 'UPDATE') {
@@ -109,12 +117,54 @@ export function subscribeToRealtimeUpdates() {
 				rooms.update((list) => list.filter((r) => r.id !== payload.old.id));
 			}
 		})
-		.subscribe();
+		.subscribe((status) => {
+			console.log('Rooms channel:', status);
+		});
+
+	// Daily Configs Updates
+	configsChannel = supabase
+		.channel('configs-changes')
+		.on('postgres_changes', { event: '*', schema: 'public', table: 'daily_configs' }, (payload) => {
+			console.log('📅 Config change:', payload);
+			if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+				const config = payload.new as DailyConfig;
+				const key = `${config.room_id}-${config.weekday}`;
+				dailyConfigs.update((map) => {
+					map.set(key, config);
+					return new Map(map);
+				});
+			} else if (payload.eventType === 'DELETE') {
+				const config = payload.old as DailyConfig;
+				const key = `${config.room_id}-${config.weekday}`;
+				dailyConfigs.update((map) => {
+					map.delete(key);
+					return new Map(map);
+				});
+			}
+		})
+		.subscribe((status) => {
+			console.log('Configs channel:', status);
+		});
+
+	// App Settings Updates
+	settingsChannel = supabase
+		.channel('settings-changes')
+		.on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, (payload) => {
+			console.log('⚙️ Settings change:', payload);
+			if (payload.eventType === 'UPDATE') {
+				appSettings.set(payload.new as AppSettings);
+			}
+		})
+		.subscribe((status) => {
+			console.log('Settings channel:', status);
+		});
 }
 
 export function unsubscribeFromRealtimeUpdates() {
 	roomStatusChannel?.unsubscribe();
 	roomsChannel?.unsubscribe();
+	configsChannel?.unsubscribe();
+	settingsChannel?.unsubscribe();
 }
 
 // ===== DATA LOADING =====
@@ -160,13 +210,35 @@ export async function toggleRoomStatus(roomId: string) {
 	const currentStatus = get(roomStatuses).get(roomId);
 	const newStatus = !(currentStatus?.is_open ?? false);
 
-	await supabase
+	const { error } = await supabase
 		.from('room_status')
-		.upsert({ room_id: roomId, is_open: newStatus, manual_override: true });
+		.upsert(
+			{ room_id: roomId, is_open: newStatus, manual_override: true },
+			{ onConflict: 'room_id' }
+		);
+
+	if (error) {
+		console.error('Error toggling room status:', error);
+		return;
+	}
+
+	// Optimistisches Update (sofort UI aktualisieren)
+	roomStatuses.update((map) => {
+		const existing = map.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+		map.set(roomId, { ...existing, is_open: newStatus, manual_override: true });
+		return new Map(map);
+	});
 }
 
 export async function updateRoomPosition(roomId: string, x: number, y: number) {
-	await supabase.from('rooms').update({ position_x: x, position_y: y }).eq('id', roomId);
+	const { error } = await supabase
+		.from('rooms')
+		.update({ position_x: Math.round(x), position_y: Math.round(y) })
+		.eq('id', roomId);
+
+	if (error) {
+		console.error('Error updating position:', error);
+	}
 }
 
 export async function updateRoomSize(roomId: string, width: number, height: number) {
@@ -181,7 +253,18 @@ export async function bulkOpenAllRooms() {
 		manual_override: true
 	}));
 
-	await supabase.from('room_status').upsert(updates);
+	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
+
+	if (!error) {
+		// Optimistisches Update
+		roomStatuses.update((map) => {
+			allRooms.forEach((room) => {
+				const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+				map.set(room.id, { ...existing, is_open: true, manual_override: true });
+			});
+			return new Map(map);
+		});
+	}
 }
 
 export async function bulkCloseAllRooms() {
@@ -192,7 +275,18 @@ export async function bulkCloseAllRooms() {
 		manual_override: true
 	}));
 
-	await supabase.from('room_status').upsert(updates);
+	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
+
+	if (!error) {
+		// Optimistisches Update
+		roomStatuses.update((map) => {
+			allRooms.forEach((room) => {
+				const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+				map.set(room.id, { ...existing, is_open: false, manual_override: true });
+			});
+			return new Map(map);
+		});
+	}
 }
 
 export async function deleteRoom(roomId: string) {

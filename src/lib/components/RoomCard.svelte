@@ -15,12 +15,16 @@
 
 	function handleDragEnd(event: CustomEvent) {
 		const { offsetX, offsetY } = event.detail;
-		updateRoomPosition(room.id, room.position_x + offsetX, room.position_y + offsetY);
+		const newX = room.position_x + offsetX;
+		const newY = room.position_y + offsetY;
+		
+		// Sofortiges lokales Update (keine Wartezeit)
+		updateRoomPosition(room.id, newX, newY);
 	}
 
-	function handleClick() {
-		if ($isEditMode && !showContextMenu) {
-			toggleRoomStatus(room.id);
+	async function handleClick() {
+		if ($isEditMode && !showContextMenu && !isDragging) {
+			await toggleRoomStatus(room.id);
 		}
 	}
 
@@ -75,7 +79,10 @@
 	use:draggable={{
 		disabled: !$isEditMode,
 		bounds: 'parent',
-		handle: '.drag-handle'
+		handle: '.drag-handle',
+		position: { x: room.position_x, y: room.position_y },
+		defaultPosition: { x: room.position_x, y: room.position_y },
+		gpuAcceleration: true
 	}}
 	on:neodrag:start={() => (isDragging = true)}
 	on:neodrag:end={(e) => {
