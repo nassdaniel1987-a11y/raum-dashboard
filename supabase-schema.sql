@@ -102,3 +102,18 @@ SELECT
   '15:00'
 FROM rooms
 ON CONFLICT (room_id, weekday) DO NOTHING;
+
+-- Storage Bucket für Raum-Bilder erstellen
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('room-images', 'room-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policy: Jeder kann Bilder sehen
+CREATE POLICY "Room images are publicly accessible"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'room-images');
+
+-- Storage Policy: Jeder kann Bilder hochladen (für Demo - in Produktion einschränken!)
+CREATE POLICY "Anyone can upload room images"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'room-images');
