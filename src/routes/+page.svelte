@@ -40,7 +40,8 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	<AdminToolbar {onOpenScheduler} {onOpenSettings} /> {/* Props übergeben */}
+	{/* FEHLERBEHEBUNG: Kommentar entfernt */}
+	<AdminToolbar {onOpenScheduler} {onOpenSettings} />
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
