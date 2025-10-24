@@ -40,6 +40,9 @@
 		background: ${room.isOpen ? room.background_color : '#6b7280'};
 		filter: ${room.isOpen ? 'brightness(1) saturate(1)' : 'grayscale(40%) brightness(0.8)'};
 	`;
+
+	// Zeit ohne Sekunden (10:00:00 → 10:00)
+	$: displayTime = room.config?.open_time ? room.config.open_time.substring(0, 5) : '';
 </script>
 
 <svelte:window on:click={closeContextMenu} />
@@ -76,10 +79,10 @@
 		{/if}
 	</div>
 
-	<!-- Zeit-Badge prominent oben (wenn vorhanden) -->
-	{#if room.config?.open_time}
+	<!-- Zeit-Badge prominent oben (wenn vorhanden) - OHNE SEKUNDEN! -->
+	{#if displayTime}
 		<div class="time-badge-top">
-			🕐 Öffnet um {room.config.open_time}
+			🕐 Öffnet um {displayTime}
 		</div>
 	{/if}
 
@@ -144,7 +147,6 @@
 
 	.room-card.open {
 		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
-		/* Pulsieren entfernt! */
 	}
 
 	.card-bg-image {
@@ -184,7 +186,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-start; /* Oben statt center! */
+		justify-content: flex-start;
 		align-items: center;
 		color: white;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
@@ -192,34 +194,24 @@
 	}
 
 	.room-title {
-		margin: 0 0 8px 0; /* Abstand nach unten */
+		margin: 0 0 8px 0;
 		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
 		width: 100%;
-		padding-top: 4px; /* Etwas Abstand vom Rand */
+		padding-top: 4px;
 	}
 
 	.room-activity {
 		margin: 0;
-		font-size: 28px; /* Größer! */
+		font-size: 28px;
 		font-weight: 600;
 		opacity: 1;
-		flex-grow: 1; /* Nimmt verfügbaren Platz */
+		flex-grow: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	.time-badge {
-		margin-top: auto; /* Ganz unten */
-		padding: 3px 8px;
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 10px;
-		font-size: 11px;
-		font-weight: 600;
-		backdrop-filter: blur(10px);
 	}
 
 	.status-badge {
@@ -242,11 +234,11 @@
 
 	.time-badge-top {
 		position: absolute;
-		top: 35px; /* Unter dem Status-Badge */
+		top: 35px;
 		left: 50%;
 		transform: translateX(-50%);
 		padding: 8px 16px;
-		background: rgba(251, 146, 60, 0.95); /* Orange wie im Bild */
+		background: rgba(251, 146, 60, 0.95);
 		border: 2px solid rgba(249, 115, 22, 1);
 		border-radius: 12px;
 		font-size: 14px;
@@ -289,7 +281,6 @@
 		background: radial-gradient(circle, rgba(76, 175, 80, 0.2) 0%, transparent 70%);
 		z-index: -1;
 		pointer-events: none;
-		/* Pulsieren entfernt! */
 	}
 
 	.context-menu {

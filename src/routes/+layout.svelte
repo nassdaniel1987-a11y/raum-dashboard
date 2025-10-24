@@ -12,6 +12,29 @@
 		await loadAllData();
 		subscribeToRealtimeUpdates();
 
+		// Vollbild-Modus aktivieren
+		const enterFullscreen = async () => {
+			try {
+				if (document.documentElement.requestFullscreen) {
+					await document.documentElement.requestFullscreen();
+				} else if ((document.documentElement as any).webkitRequestFullscreen) {
+					// Safari
+					await (document.documentElement as any).webkitRequestFullscreen();
+				} else if ((document.documentElement as any).mozRequestFullScreen) {
+					// Firefox
+					await (document.documentElement as any).mozRequestFullScreen();
+				}
+			} catch (err) {
+				console.log('Fullscreen nicht verfügbar:', err);
+			}
+		};
+
+		// Warte 1 Sekunde, dann Vollbild aktivieren
+		setTimeout(enterFullscreen, 1000);
+
+		// Optional: Bei Klick auch Vollbild versuchen (falls automatisch nicht klappt)
+		document.addEventListener('click', enterFullscreen, { once: true });
+
 		return () => {
 			unsubscribeFromRealtimeUpdates();
 		};

@@ -8,6 +8,7 @@
 	export let onClose: () => void;
 
 	let name = room.name;
+	let floor = room.floor || 'eg';
 	let backgroundColor = room.background_color;
 	let activity = room.config?.activity || '';
 	let openTime = room.config?.open_time || '';
@@ -24,6 +25,7 @@
 				.from('rooms')
 				.update({
 					name,
+					floor,
 					background_color: backgroundColor
 				})
 				.eq('id', room.id);
@@ -88,6 +90,18 @@
 			<div class="form-group">
 				<label>Raum-Name</label>
 				<input type="text" bind:value={name} placeholder="z.B. Turnhalle" />
+			</div>
+
+			<div class="form-group">
+				<label>Stockwerk</label>
+				<select bind:value={floor}>
+					<option value="extern">🏃 Außenbereich</option>
+					<option value="dach">🏠 Dachgeschoss</option>
+					<option value="og2">2️⃣ 2. OG</option>
+					<option value="og1">1️⃣ 1. OG</option>
+					<option value="eg">🚪 Erdgeschoss</option>
+					<option value="ug">⬇️ Untergeschoss</option>
+				</select>
 			</div>
 
 			<div class="form-row">
@@ -229,7 +243,8 @@
 
 	input[type='text'],
 	input[type='time'],
-	input[type='file'] {
+	input[type='file'],
+	select {
 		width: 100%;
 		padding: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
@@ -238,10 +253,17 @@
 		color: white;
 		font-size: 16px;
 		transition: all 0.3s;
+		cursor: pointer;
+	}
+
+	select option {
+		background: #1e3a8a;
+		color: white;
 	}
 
 	input[type='text']:focus,
-	input[type='time']:focus {
+	input[type='time']:focus,
+	select:focus {
 		outline: none;
 		border-color: rgba(59, 130, 246, 0.8);
 		background: rgba(255, 255, 255, 0.15);

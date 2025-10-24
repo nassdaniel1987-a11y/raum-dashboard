@@ -11,6 +11,7 @@
 	export let onOpenSettings: () => void;
 
 	let newRoomName = '';
+	let newRoomFloor = 'eg'; // Standard: Erdgeschoss
 
 	async function handleBulkOpen() {
 		await bulkOpenAllRooms();
@@ -22,8 +23,9 @@
 
 	async function handleCreateRoom() {
 		if (newRoomName.trim()) {
-			await createNewRoom(newRoomName.trim());
+			await createNewRoom(newRoomName.trim(), newRoomFloor);
 			newRoomName = '';
+			newRoomFloor = 'eg'; // Zurücksetzen
 		}
 	}
 
@@ -68,6 +70,14 @@
 					bind:value={newRoomName}
 					on:keydown={(e) => e.key === 'Enter' && handleCreateRoom()}
 				/>
+				<select bind:value={newRoomFloor} class="floor-select">
+					<option value="extern">🏃 Außen</option>
+					<option value="dach">🏠 Dach</option>
+					<option value="og2">2️⃣ 2.OG</option>
+					<option value="og1">1️⃣ 1.OG</option>
+					<option value="eg">🚪 EG</option>
+					<option value="ug">⬇️ UG</option>
+				</select>
 				<button class="btn btn-primary" on:click={handleCreateRoom} disabled={!newRoomName.trim()}>
 					<span class="icon">➕</span>
 					Erstellen
@@ -92,7 +102,7 @@
 
 	<div class="toolbar-info">
 		{#if $isEditMode}
-			<span class="info-text">💡 Rechtsklick auf Raum → Bearbeiten/Löschen</span>
+			<span class="info-text">💡 Rechtsklick → Bearbeiten | Ziehen → Sortieren</span>
 		{:else}
 			<span class="info-text">👀 Anzeige-Modus aktiv</span>
 		{/if}
@@ -107,20 +117,20 @@
 		right: 0;
 		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
 		box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-		padding: 8px 20px; /* Vorher: 20px 40px */
+		padding: 8px 20px;
 		display: flex;
 		align-items: center;
-		gap: 12px; /* Vorher: 20px */
+		gap: 12px;
 		z-index: 100;
 		backdrop-filter: blur(10px);
 		flex-wrap: wrap;
-		min-height: 50px; /* Feste Höhe */
+		min-height: 50px;
 	}
 
 	.toolbar-section {
 		display: flex;
 		align-items: center;
-		gap: 10px; /* Vorher: 15px */
+		gap: 10px;
 	}
 
 	.ml-auto {
@@ -130,12 +140,12 @@
 	.mode-toggle {
 		display: flex;
 		align-items: center;
-		gap: 6px; /* Vorher: 12px */
-		padding: 6px 16px; /* Vorher: 15px 30px */
-		font-size: 14px; /* Vorher: 18px */
+		gap: 6px;
+		padding: 6px 16px;
+		font-size: 14px;
 		font-weight: 600;
 		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px; /* Vorher: 16px */
+		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);
 		color: white;
 		cursor: pointer;
@@ -156,18 +166,18 @@
 
 	.bulk-actions {
 		display: flex;
-		gap: 8px; /* Vorher: 12px */
+		gap: 8px;
 	}
 
 	.btn {
 		display: flex;
 		align-items: center;
-		gap: 6px; /* Vorher: 8px */
-		padding: 6px 12px; /* Vorher: 12px 20px */
-		font-size: 13px; /* Vorher: 16px */
+		gap: 6px;
+		padding: 6px 12px;
+		font-size: 13px;
 		font-weight: 600;
 		border: none;
-		border-radius: 8px; /* Vorher: 12px */
+		border-radius: 8px;
 		cursor: pointer;
 		transition: all 0.3s;
 		color: white;
@@ -205,23 +215,23 @@
 	}
 
 	.icon {
-		font-size: 14px; /* Vorher: 18px */
+		font-size: 14px;
 	}
 
 	.create-room {
 		display: flex;
-		gap: 8px; /* Vorher: 10px */
+		gap: 8px;
 		align-items: center;
 	}
 
 	.create-room input {
-		padding: 6px 12px; /* Vorher: 12px 20px */
-		font-size: 13px; /* Vorher: 16px */
+		padding: 6px 12px;
+		font-size: 13px;
 		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px; /* Vorher: 12px */
+		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);
 		color: white;
-		min-width: 150px; /* Vorher: 200px */
+		min-width: 120px;
 		backdrop-filter: blur(10px);
 	}
 
@@ -235,17 +245,41 @@
 		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 	}
 
+	.floor-select {
+		padding: 6px 10px;
+		font-size: 13px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		backdrop-filter: blur(10px);
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.floor-select:focus {
+		outline: none;
+		border-color: rgba(59, 130, 246, 0.8);
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+	}
+
+	.floor-select option {
+		background: #1e3a8a;
+		color: white;
+		font-weight: 600;
+	}
+
 	.toolbar-info {
 		flex-basis: 100%;
-		padding: 6px 12px; /* Vorher: 10px 20px */
+		padding: 6px 12px;
 		background: rgba(0, 0, 0, 0.2);
-		border-radius: 8px; /* Vorher: 12px */
+		border-radius: 8px;
 		backdrop-filter: blur(10px);
 		text-align: center;
 	}
 
 	.info-text {
-		font-size: 12px; /* Vorher: 14px */
+		font-size: 12px;
 		font-weight: 500;
 		color: rgba(255, 255, 255, 0.9);
 	}
@@ -262,8 +296,13 @@
 		}
 
 		.create-room input {
-			min-width: 120px;
+			min-width: 100px;
 			font-size: 12px;
+		}
+
+		.floor-select {
+			font-size: 12px;
+			padding: 5px 8px;
 		}
 	}
 </style>

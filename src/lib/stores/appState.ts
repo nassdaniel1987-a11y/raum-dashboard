@@ -293,10 +293,21 @@ export async function deleteRoom(roomId: string) {
 	await supabase.from('rooms').delete().eq('id', roomId);
 }
 
-export async function createNewRoom(name: string) {
+export async function createNewRoom(name: string, floor: string = 'eg') {
+	// Berechne die nächste position_x für das Stockwerk
+	const existingRooms = get(rooms).filter(r => r.floor === floor);
+	const maxPosition = existingRooms.length > 0 
+		? Math.max(...existingRooms.map(r => r.position_x))
+		: 0;
+
 	const { data } = await supabase
 		.from('rooms')
-		.insert({ name, position_x: 100, position_y: 100 })
+		.insert({ 
+			name, 
+			floor,
+			position_x: maxPosition + 100, 
+			position_y: 100 
+		})
 		.select()
 		.single();
 
