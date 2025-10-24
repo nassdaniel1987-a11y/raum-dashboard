@@ -67,25 +67,27 @@
 		</button>
 	{/if}
 
-	<div class="card-content">
-		<h3 class="room-title">{room.name}</h3>
-		
-		{#if room.config?.activity}
-			<p class="room-activity">{room.config.activity}</p>
-		{/if}
-
-		{#if room.config?.open_time && room.config?.close_time}
-			<div class="time-badge">
-				🕐 {room.config.open_time}-{room.config.close_time}
-			</div>
-		{/if}
-	</div>
-
+	<!-- Status-Badge links oben -->
 	<div class="status-badge" class:open={room.isOpen}>
 		{#if room.isOpen}
 			<span in:scale={{ duration: 300 }}>✓</span>
 		{:else}
 			<span in:scale={{ duration: 300 }}>🔒</span>
+		{/if}
+	</div>
+
+	<!-- Zeit-Badge prominent oben (wenn vorhanden) -->
+	{#if room.config?.open_time}
+		<div class="time-badge-top">
+			🕐 Öffnet um {room.config.open_time}
+		</div>
+	{/if}
+
+	<div class="card-content">
+		<h3 class="room-title">{room.name}</h3>
+		
+		{#if room.config?.activity}
+			<p class="room-activity">{room.config.activity}</p>
 		{/if}
 	</div>
 
@@ -236,6 +238,25 @@
 
 	.status-badge.open {
 		background: rgba(34, 197, 94, 0.9);
+	}
+
+	.time-badge-top {
+		position: absolute;
+		top: 35px; /* Unter dem Status-Badge */
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 8px 16px;
+		background: rgba(251, 146, 60, 0.95); /* Orange wie im Bild */
+		border: 2px solid rgba(249, 115, 22, 1);
+		border-radius: 12px;
+		font-size: 14px;
+		font-weight: 700;
+		color: white;
+		z-index: 6;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(10px);
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+		white-space: nowrap;
 	}
 
 	.lock-overlay {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
+	import { loadAllData, subscribeToRealtimeUpdates, unsubscribeFromRealtimeUpdates } from '$lib/stores/appState';
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
 	import AdminToolbar from '$lib/components/AdminToolbar.svelte';
@@ -10,6 +12,20 @@
 	let editingRoom: RoomWithConfig | null = null;
 	let showScheduler = false;
 	let showSettings = false;
+
+	// Beim Start: Daten laden + Realtime aktivieren
+	onMount(async () => {
+		console.log('🚀 Dashboard mounted - Loading data...');
+		await loadAllData();
+		console.log('✅ Data loaded - Subscribing to realtime...');
+		subscribeToRealtimeUpdates();
+	});
+
+	// Beim Beenden: Realtime deaktivieren
+	onDestroy(() => {
+		console.log('👋 Dashboard unmounting - Unsubscribing from realtime...');
+		unsubscribeFromRealtimeUpdates();
+	});
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
