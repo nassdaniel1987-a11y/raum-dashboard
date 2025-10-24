@@ -6,8 +6,8 @@
 
 	export let room: RoomWithConfig;
 	export let onEdit: (room: RoomWithConfig) => void;
-	export let onSelect: (roomId: string) => void; 
-	export let isSelected: boolean = false; 
+	export let onSelect: (roomId: string) => void;
+	export let isSelected: boolean = false;
 
 	let showContextMenu = false;
 	let contextMenuX = 0;
@@ -33,6 +33,7 @@
 
 	async function handleDelete() {
 		if (confirm(`Raum "${room.name}" wirklich löschen?`)) {
+			// Beim Löschen aus Auswahl entfernen
 			swapSelection.update(ids => ids.filter(id => id !== room.id));
 			await supabase.from('rooms').delete().eq('id', room.id);
 		}
@@ -53,7 +54,7 @@
 	class="room-card"
 	class:locked={!$isEditMode}
 	class:open={room.isOpen}
-	class:selected={isSelected} 
+	class:selected={isSelected}
 	style={roomStyle}
 	on:contextmenu={handleContextMenu}
 	on:keydown={(e) => e.key === 'Enter' && handleClick()}
@@ -68,7 +69,7 @@
 
 	<div class="button-container">
 		{#if $isEditMode}
-			<button 
+			<button
 				class="select-button"
 				class:selected={isSelected}
 				title="Für Tausch auswählen"
@@ -76,7 +77,7 @@
 			>
 				{isSelected ? '✓' : '⮀'}
 			</button>
-			
+
 			<button class="edit-button" title="Bearbeiten" on:click|stopPropagation={() => onEdit(room)}>
 				✏️
 			</button>
@@ -91,17 +92,18 @@
 		{/if}
 	</div>
 
-	{#if displayTime}
+	{#if displayTime && !room.isOpen}
 		<div class="time-badge-top">
 			🕐 Öffnet um {displayTime}
 		</div>
 	{/if}
 
-	<div 
+	<div
 		class="card-content"
-		on:click={handleClick} >
+		on:click={handleClick}
+	>
 		<h3 class="room-title">{room.name}</h3>
-		
+
 		{#if room.config?.activity}
 			<p class="room-activity">{room.config.activity}</p>
 		{/if}
@@ -140,20 +142,17 @@
 		border-radius: 12px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		transition: all 0.3s ease;
-		/* cursor: pointer; ENTFERNT VON HIER */
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
 		min-height: 120px;
 		display: flex;
 		flex-direction: column;
-		/* NEU: Rand für Auswahl */
 		border: 3px solid transparent;
 	}
 
-	/* NEU: Styling für ausgewählte Karte */
 	.room-card.selected {
-		border-color: #f59e0b; /* Orange-Gelb */
+		border-color: #f59e0b;
 		box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
 	}
 
@@ -170,10 +169,8 @@
 		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 	}
 
-	/* NEU: Styling für ausgewählte Karte (wenn offen) */
 	.room-card.open.selected {
 		border-color: #f59e0b;
-		/* Kombiniert beide Schatten */
 		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5), 0 0 25px rgba(245, 158, 11, 0.7);
 	}
 
@@ -189,7 +186,6 @@
 		z-index: 0;
 	}
 
-	/* NEU: Container für die Buttons */
 	.button-container {
 		position: absolute;
 		top: 6px;
@@ -208,7 +204,7 @@
 		font-size: 14px;
 		cursor: pointer;
 		transition: all 0.2s;
-		color: white; /* Farbe explizit setzen */
+		color: white;
 	}
 
 	.edit-button:hover,
@@ -217,15 +213,14 @@
 		transform: scale(1.1);
 	}
 
-	/* NEU: Styling für Select Button */
 	.select-button {
-		background: rgba(59, 130, 246, 0.7); /* Blau */
+		background: rgba(59, 130, 246, 0.7);
 	}
 	.select-button:hover {
 		background: rgba(59, 130, 246, 1);
 	}
 	.select-button.selected {
-		background: rgba(245, 158, 11, 0.9); /* Orange-Gelb */
+		background: rgba(245, 158, 11, 0.9);
 	}
 	.select-button.selected:hover {
 		background: rgba(245, 158, 11, 1);
@@ -244,7 +239,7 @@
 		color: white;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 		text-align: center;
-		cursor: pointer; /* HINZUGEFÜGT HIER */
+		cursor: pointer;
 	}
 
 	.room-title {
