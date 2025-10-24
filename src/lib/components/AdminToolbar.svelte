@@ -56,10 +56,14 @@
 	}
 
 	async function handleSwap() {
-		const $swapIds = get(swapSelection);
-		if ($swapIds.length !== 2) return;
+		// --- HIER IST DER FIX ---
+		// const $swapIds = get(swapSelection); // Alt
+		const swapIds = get(swapSelection);   // Neu
+		// --- ENDE DES FIXES ---
+		
+		if (swapIds.length !== 2) return; // Benutzt 'swapIds'
 
-		const [id1, id2] = $swapIds;
+		const [id1, id2] = swapIds;       // Benutzt 'swapIds'
 		const allRooms = get(visibleRooms);
 		
 		const room1 = allRooms.find(r => r.id === id1);
@@ -90,7 +94,7 @@
 
 	{#if $isEditMode}
 		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			{#if $swapSelection.length === 2}
+			{#if $swapSelection.length === 2} 
 				<button class="btn btn-swap" on:click={handleSwap}>
 					<span class="icon">🔄</span>
 					Tauschen
@@ -165,6 +169,7 @@
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.admin-toolbar {
 		position: fixed;
 		bottom: 0;
