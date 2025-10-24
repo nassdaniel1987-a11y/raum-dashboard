@@ -183,7 +183,13 @@
 
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
-				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} /> {/* on:change -> onchange */}
+				<input
+  id="room-image-{room.id}"
+  type="file"
+  accept="image/*"
+  on:change={handleFileChange}
+/>
+
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
