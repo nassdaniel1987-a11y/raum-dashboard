@@ -40,7 +40,6 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	{/* FEHLERBEHEBUNG: Kommentar jetzt wirklich entfernt */}
 	<AdminToolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
 
 	{#if editingRoom}
