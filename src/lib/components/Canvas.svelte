@@ -91,7 +91,7 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
-	onwheel={handleUserScroll}  {/* FEHLERBEHEBUNG: Kommentar jetzt wirklich entfernt */}
+	onwheel={handleUserScroll} 
 	transition:fade
 >
 	<div class="canvas">
