@@ -2,9 +2,52 @@
 	import { visibleRooms } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
 	import { fade } from 'svelte/transition';
+	import { onMount, onDestroy } from 'svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	export let handleEditRoom: (room: RoomWithConfig) => void;
+
+	let scrollContainer: HTMLElement;
+	let autoScrollEnabled = true;
+	let scrollInterval: number;
+
+	// Auto-Scroll Funktion
+	onMount(() => {
+		if (scrollContainer && autoScrollEnabled) {
+			let scrollDirection = 1; // 1 = runter, -1 = hoch
+			
+			scrollInterval = setInterval(() => {
+				if (!scrollContainer) return;
+
+				const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+				const currentScroll = scrollContainer.scrollTop;
+
+				// Wenn am Ende, Richtung wechseln
+				if (currentScroll >= maxScroll - 10) {
+					scrollDirection = -1;
+				} else if (currentScroll <= 10) {
+					scrollDirection = 1;
+				}
+
+				// Langsam scrollen (1px pro 50ms = 20px/Sekunde)
+				scrollContainer.scrollBy({
+					top: scrollDirection * 1,
+					behavior: 'auto'
+				});
+			}, 50);
+		}
+	});
+
+	onDestroy(() => {
+		if (scrollInterval) {
+			clearInterval(scrollInterval);
+		}
+	});
+
+	// Bei Benutzer-Scroll Auto-Scroll pausieren
+	function handleUserScroll() {
+		// Optional: Auto-Scroll pausieren wenn Benutzer scrollt
+	}
 
 	// Gruppiere Räume nach Stockwerk
 	$: roomsByFloor = {
@@ -26,7 +69,12 @@
 	};
 </script>
 
-<div class="canvas-container" transition:fade>
+<div 
+	class="canvas-container" 
+	bind:this={scrollContainer}
+	on:wheel={handleUserScroll}
+	transition:fade
+>
 	<div class="canvas">
 		{#if $visibleRooms.length === 0}
 			<div class="empty-state">
@@ -56,10 +104,10 @@
 <style>
 	.canvas-container {
 		position: fixed;
-		top: 80px;
+		top: 50px; /* Header-Höhe */
 		left: 0;
 		right: 0;
-		bottom: 100px;
+		bottom: 50px; /* Footer-Höhe */
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);

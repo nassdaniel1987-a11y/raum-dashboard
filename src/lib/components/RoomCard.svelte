@@ -141,13 +141,8 @@
 	}
 
 	.room-card.open {
-		box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
-		animation: pulse 2s infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
-		50% { box-shadow: 0 0 30px rgba(76, 175, 80, 0.8); }
+		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+		/* Pulsieren entfernt! */
 	}
 
 	.card-bg-image {
@@ -187,7 +182,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: flex-start; /* Oben statt center! */
 		align-items: center;
 		color: white;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
@@ -195,22 +190,28 @@
 	}
 
 	.room-title {
-		margin: 0;
+		margin: 0 0 8px 0; /* Abstand nach unten */
 		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
+		width: 100%;
+		padding-top: 4px; /* Etwas Abstand vom Rand */
 	}
 
 	.room-activity {
-		margin: 6px 0 0 0;
-		font-size: 12px;
-		font-weight: 500;
-		opacity: 0.9;
+		margin: 0;
+		font-size: 28px; /* Größer! */
+		font-weight: 600;
+		opacity: 1;
+		flex-grow: 1; /* Nimmt verfügbaren Platz */
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.time-badge {
-		margin-top: 6px;
+		margin-top: auto; /* Ganz unten */
 		padding: 3px 8px;
 		background: rgba(255, 255, 255, 0.2);
 		border-radius: 10px;
@@ -264,9 +265,10 @@
 		right: -3px;
 		bottom: -3px;
 		border-radius: 15px;
-		background: radial-gradient(circle, rgba(76, 175, 80, 0.3) 0%, transparent 70%);
+		background: radial-gradient(circle, rgba(76, 175, 80, 0.2) 0%, transparent 70%);
 		z-index: -1;
 		pointer-events: none;
+		/* Pulsieren entfernt! */
 	}
 
 	.context-menu {
