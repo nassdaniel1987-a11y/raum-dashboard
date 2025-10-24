@@ -9,17 +9,36 @@
 	export let onEdit: (room: RoomWithConfig) => void;
 
 	let isDragging = false;
+	let dragStartTime = 0;
 	let showContextMenu = false;
 	let contextMenuX = 0;
 	let contextMenuY = 0;
 
-	function handleDragEnd(event: CustomEvent) {
-		const { offsetX, offsetY } = event.detail;
-		updateRoomPosition(room.id, room.position_x + offsetX, room.position_y + offsetY);
+	function handleDragStart() {
+		isDragging = true;
+		dragStartTime = Date.now();
 	}
 
-	async function handleClick() {
-		if ($isEditMode && !showContextMenu && !isDragging) {
+	function handleDragEnd(event: CustomEvent) {
+		const dragDuration = Date.now() - dragStartTime;
+		isDragging = false;
+
+		// Nur Position speichern wenn wirklich gedragged wurde (> 100ms)
+		if (dragDuration > 100) {
+			const { offsetX, offsetY } = event.detail;
+			updateRoomPosition(room.id, room.position_x + offsetX, room.position_y + offsetY);
+		}
+	}
+
+	async function handleClick(e: MouseEvent) {
+		// Kein Toggle wenn gerade gedragged wurde
+		if (isDragging || Date.now() - dragStartTime < 200) {
+			e.preventDefault();
+			e.stopPropagation();
+			return;
+		}
+
+		if ($isEditMode && !showContextMenu) {
 			await toggleRoomStatus(room.id);
 		}
 	}
@@ -50,7 +69,7 @@
 		height: ${room.height}px;
 		background: ${room.isOpen ? room.background_color : '#757575'};
 		filter: ${room.isOpen ? 'brightness(1) saturate(1)' : 'grayscale(60%) brightness(0.7)'};
-		transform: scale(${room.isOpen ? 1 : 0.96});
+		${!isDragging ? `transform: scale(${room.isOpen ? 1 : 0.96});` : ''}
 	`;
 
 	$: titleStyle = `
@@ -77,11 +96,8 @@
 		bounds: 'parent',
 		handle: '.drag-handle'
 	}}
-	on:neodrag:start={() => (isDragging = true)}
-	on:neodrag:end={(e) => {
-		isDragging = false;
-		handleDragEnd(e);
-	}}
+	on:neodrag:start={handleDragStart}
+	on:neodrag:end={handleDragEnd}
 	on:click={handleClick}
 	on:contextmenu={handleContextMenu}
 	on:keydown={(e) => e.key === 'Enter' && handleClick()}
