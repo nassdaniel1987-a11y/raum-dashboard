@@ -208,7 +208,6 @@
 			</button>
 		</div>
 	</div>
-</div>
 
 <style>
 	/* CSS bleibt unverändert */
