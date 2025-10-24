@@ -28,36 +28,17 @@ export const appSettings = writable<AppSettings | null>(null);
 
 // ===== DERIVED STORES =====
 export const visibleRooms = derived(
-	[rooms, roomStatuses, dailyConfigs, currentWeekday, currentTime, appSettings],
-	([$rooms, $statuses, $configs, $weekday, $time, $settings]) => {
+	// $time und $settings entfernt, da Logik verlagert wurde
+	[rooms, roomStatuses, dailyConfigs, currentWeekday],
+	([$rooms, $statuses, $configs, $weekday]) => {
 		return $rooms.map((room) => {
 			const status = $statuses.get(room.id);
 			const configKey = `${room.id}-${$weekday}`;
 			const config = $configs.get(configKey);
 
-			// Berechne ob Raum offen sein sollte
-			let isOpen = status?.is_open ?? false;
-
-			// Prüfe Nachtruhe
-			if ($settings?.night_mode_enabled) {
-				const now = $time.getHours() * 60 + $time.getMinutes();
-				const nightStart = parseTime($settings.night_start);
-				const nightEnd = parseTime($settings.night_end);
-
-				if (nightStart && nightEnd) {
-					if (nightStart > nightEnd) {
-						// Nacht über Mitternacht (z.B. 22:00 - 06:00)
-						if (now >= nightStart || now < nightEnd) {
-							isOpen = false;
-						}
-					} else {
-						// Normale Zeitspanne
-						if (now >= nightStart && now < nightEnd) {
-							isOpen = false;
-						}
-					}
-				}
-			}
+			// KORREKTUR: 'isOpen' kommt jetzt DIREKT aus dem Status-Store.
+			// Die Berechnung passiert im neuen Automatik-Service.
+			const isOpen = status?.is_open ?? false;
 
 			const result: RoomWithConfig = {
 				...room,
@@ -202,16 +183,14 @@ export async function loadAllData() {
 }
 
 // ===== UTILITY FUNCTIONS =====
-function parseTime(timeString: string): number | null {
+function parseTime(timeString: string | null | undefined): number | null {
 	if (!timeString) return null;
 	const [hours, minutes] = timeString.split(':').map(Number);
+	if (isNaN(hours) || isNaN(minutes)) return null;
 	return hours * 60 + minutes;
 }
 
 // ===== ROOM ACTIONS =====
-
-// ========== HIER IST DIE ÄNDERUNG (START) ==========
-// Diese Funktion ist jetzt korrekt "optimistisch"
 export async function toggleRoomStatus(roomId: string) {
 	const currentStatus = get(roomStatuses).get(roomId);
 	const newStatus = !(currentStatus?.is_open ?? false);
@@ -246,9 +225,7 @@ export async function toggleRoomStatus(roomId: string) {
 			return new Map(map);
 		});
 	}
-	// Bei Erfolg: Nichts tun. Das Realtime-Update bestätigt den Zustand.
 }
-// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 
 export async function updateRoomPosition(roomId: string, x: number, y: number) {
 	const roundedX = Math.round(x);
@@ -418,3 +395,136 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		});
 	}
 }
+
+
+// ========== NEUER AUTOMATIK-SERVICE (START) ==========
+// Prüft alle 10 Sekunden, ob Raum-Status aktualisiert werden müssen
+
+if (typeof window !== 'undefined') {
+	// Prüf-Intervall (z.B. alle 10 Sekunden)
+	const AUTOMATION_INTERVAL_MS = 10000; 
+
+	const runAutomation = () => {
+		// Holt die aktuellen Werte aus den Stores
+		const $rooms = get(rooms);
+		const $statuses = get(roomStatuses);
+		const $configs = get(dailyConfigs);
+		const $settings = get(appSettings);
+		const $weekday = get(currentWeekday);
+		const $time = get(currentTime);
+		
+		if (!$settings) return; // Einstellungen noch nicht geladen
+
+		// 1. Ist Nachtruhe aktiv?
+		let isNightModeActive = false;
+		const now = $time.getHours() * 60 + $time.getMinutes();
+		const nightStart = parseTime($settings.night_start);
+		const nightEnd = parseTime($settings.night_end);
+
+		if ($settings.night_mode_enabled && nightStart !== null && nightEnd !== null) {
+			if (nightStart > nightEnd) { // z.B. 22:00 - 06:00
+				if (now >= nightStart || now < nightEnd) isNightModeActive = true;
+			} else { // z.B. 09:00 - 17:00
+				if (now >= nightStart && now < nightEnd) isNightModeActive = true;
+			}
+		}
+
+		// ========== HIER IST DIE KORREKTUR (START) ==========
+		// Wir geben 'updates' hier einen expliziten Typ
+		const updates: { room_id: string; is_open: boolean; manual_override: boolean }[] = []; 
+		// ========== HIER IST DIE KORREKTUR (ENDE) ==========
+
+		for (const room of $rooms) {
+			const status = $statuses.get(room.id);
+			const currentStatus = status?.is_open ?? false;
+			const isManual = status?.manual_override ?? false;
+			
+			const configKey = `${room.id}-${$weekday}`;
+			const config = $configs.get(configKey);
+
+			let shouldBeOpen = false; // Standard: geschlossen
+			let isScheduled = false; // Ob eine Automatik (Zeitplan/Nachtruhe) greift
+
+			if (isNightModeActive) {
+				shouldBeOpen = false;
+				isScheduled = true; // Nachtruhe ist ein "Zeitplan"
+			} else if (config && config.open_time && config.close_time) {
+				// Zeitplan-Prüfung
+				const openTime = parseTime(config.open_time);
+				const closeTime = parseTime(config.close_time);
+
+				if (openTime !== null && closeTime !== null) {
+					isScheduled = true; // Ein Zeitplan existiert
+					if (openTime < closeTime) { // Normaler Tag (z.B. 08:00 - 16:00)
+						if (now >= openTime && now < closeTime) {
+							shouldBeOpen = true;
+						}
+					} else { // Über Mitternacht (z.B. 22:00 - 04:00)
+						if (now >= openTime || now < closeTime) {
+							shouldBeOpen = true;
+						}
+					}
+				}
+			}
+
+			// Jetzt die Logik:
+			if (isManual) {
+				// Manuell gesetzt. Prüfen, ob die Automatik den manuellen Status "einholt".
+				if (isScheduled && shouldBeOpen === currentStatus) {
+					// Beispiel: Nutzer hat manuell um 10:00 geöffnet.
+					// Zeitplan (11:00-12:00) wird um 11:00 aktiv.
+					// shouldBeOpen ist true, currentStatus ist true.
+					// -> Automatik übernimmt wieder.
+					updates.push({
+						room_id: room.id,
+						is_open: currentStatus, // Status bleibt gleich
+						manual_override: false // Override aufheben
+					});
+				}
+				// Sonst: Manuell gesetzt, Automatik greift nicht. Nichts tun.
+			} else {
+				// Nicht manuell gesetzt. Prüfen, ob Automatik greifen muss.
+				if (isScheduled && currentStatus !== shouldBeOpen) {
+					// Beispiel: Es ist 11:00, Zeitplan sagt 'open'.
+					// currentStatus ist 'false'.
+					// -> Raum öffnen.
+					updates.push({
+						room_id: room.id,
+						is_open: shouldBeOpen,
+						manual_override: false
+					});
+				}
+			}
+		}
+
+		// Führe Updates in Supabase aus (wenn es welche gibt)
+		if (updates.length > 0) {
+			console.log(`[AutoService] Aktualisiere ${updates.length} Räume...`);
+			supabase
+				.from('room_status')
+				.upsert(updates, { onConflict: 'room_id' })
+				.then(({ error }) => {
+					if (error) {
+						console.error("[AutoService] Fehler bei DB-Update:", error);
+					} else {
+						// Optimistisches Update im Store (wird eh vom Realtime-Event überschrieben,
+						// aber macht die UI schneller)
+						roomStatuses.update(map => {
+							for (const update of updates) {
+								const existing = map.get(update.room_id) || { room_id: update.room_id, is_open: !update.is_open, manual_override: true, last_updated: new Date().toISOString() };
+								map.set(update.room_id, { ...existing, is_open: update.is_open, manual_override: false, last_updated: new Date().toISOString() });
+							}
+							return new Map(map);
+						});
+					}
+				});
+		}
+	};
+	
+	// Starte den Service
+	setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
+	
+	// Führe ihn einmal beim Start aus (nachdem Daten geladen wurden)
+	setTimeout(runAutomation, 2000); // 2 Sek. Puffer
+}
+// ========== NEUER AUTOMATIK-SERVICE (ENDE) ==========
