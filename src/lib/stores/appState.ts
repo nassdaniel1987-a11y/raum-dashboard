@@ -230,7 +230,6 @@ export async function toggleRoomStatus(roomId: string) {
 	});
 }
 
-// ========== HIER IST DIE ÄNDERUNG (START) ==========
 export async function updateRoomPosition(roomId: string, x: number, y: number) {
 	const roundedX = Math.round(x);
 	const roundedY = Math.round(y);
@@ -250,11 +249,47 @@ export async function updateRoomPosition(roomId: string, x: number, y: number) {
 
 	if (error) {
 		console.error('Error updating position:', error);
-		// HINWEIS: Bei einem Fehler könnte man ein Rollback des optimist. Updates implementieren,
-		// aber für eine Positionsänderung ist das oft nicht kritisch.
 	}
 }
-// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
+
+// ========== HIER IST DIE NEUE FUNKTION (START) ==========
+export function swapRoomPositions(draggedRoom: RoomWithConfig, targetRoom: RoomWithConfig) {
+	const draggedPos = draggedRoom.position_x;
+	const targetPos = targetRoom.position_x;
+
+	// 1. Optimistisches Update (atomar)
+	// Mache ein einziges Update im 'rooms' store, das beide Räume tauscht
+	rooms.update((list) =>
+		list.map((r) => {
+			if (r.id === draggedRoom.id) {
+				return { ...r, position_x: targetPos };
+			}
+			if (r.id === targetRoom.id) {
+				return { ...r, position_x: draggedPos };
+			}
+			return r;
+		})
+	);
+
+	// 2. Datenbank-Updates (fire-and-forget, kein 'await' nötig)
+	// Wir müssen nicht auf die DB warten, die UI ist schon aktualisiert.
+	supabase
+		.from('rooms')
+		.update({ position_x: targetPos })
+		.eq('id', draggedRoom.id)
+		.then(({ error }) => {
+			if (error) console.error('Error swapping pos 1:', error.message);
+		});
+
+	supabase
+		.from('rooms')
+		.update({ position_x: draggedPos })
+		.eq('id', targetRoom.id)
+		.then(({ error }) => {
+			if (error) console.error('Error swapping pos 2:', error.message);
+		});
+}
+// ========== HIER IST DIE NEUE FUNKTION (ENDE) ==========
 
 export async function updateRoomSize(roomId: string, width: number, height: number) {
 	await supabase.from('rooms').update({ width, height }).eq('id', roomId);

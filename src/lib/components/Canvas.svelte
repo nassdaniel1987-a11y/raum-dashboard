@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { visibleRooms, isEditMode, updateRoomPosition } from '$lib/stores/appState';
+	// HIER: 'swapRoomPositions' importieren, 'updateRoomPosition' ist nicht mehr nötig
+	import { visibleRooms, isEditMode, swapRoomPositions } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
@@ -61,8 +62,6 @@
 		eg: '🚪 Erdgeschoss',
 		ug: '⬇️ Untergeschoss'
 	};
-
-	// ========== HIER IST DIE ÄNDERUNG (START) ==========
 	// Definiert die gewünschte Reihenfolge der Stockwerke
 	const floorOrder: (keyof typeof floorLabels)[] = [
 		'dach',
@@ -72,8 +71,6 @@
 		'ug',
 		'extern'
 	];
-	// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
-
 	// Drag & Drop für Reihenfolge (nur im Edit-Modus!)
 	function handleDragStart(room: RoomWithConfig, event: DragEvent) {
 		if (!$isEditMode) return;
@@ -91,6 +88,7 @@
 		}
 	}
 
+	// ========== HIER IST DIE ÄNDERUNG (START) ==========
 	async function handleDrop(targetRoom: RoomWithConfig, event: DragEvent) {
 		event.preventDefault();
 		if (!draggedRoom || draggedRoom.id === targetRoom.id || !$isEditMode) return;
@@ -100,16 +98,13 @@
 			return;
 		}
 
-		// Tausche position_x Werte
-		const draggedPos = draggedRoom.position_x;
-		const targetPos = targetRoom.position_x;
+		// Rufe die neue atomare Swap-Funktion auf.
+		// Kein 'await' nötig, da die Funktion synchron die UI updatet.
+		swapRoomPositions(draggedRoom, targetRoom);
 
-		// WICHTIG: updateRoomPosition stößt jetzt ein optimistisches Update an.
-		// Wir rufen sie nacheinander auf.
-		await updateRoomPosition(draggedRoom.id, targetPos, draggedRoom.position_y);
-		await updateRoomPosition(targetRoom.id, draggedPos, targetRoom.position_y);
 		draggedRoom = null;
 	}
+	// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 </script>
 
 <div 
@@ -155,7 +150,7 @@
 						</div>
 					{/if}
 				{/each}
-				</div>
+			</div>
 		{/if}
 	</div>
 </div>
