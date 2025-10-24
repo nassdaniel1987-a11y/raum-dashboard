@@ -3,9 +3,13 @@
 		isEditMode,
 		bulkOpenAllRooms,
 		bulkCloseAllRooms,
-		createNewRoom
+		createNewRoom,
+		swapSelection, // NEU
+		swapRoomPositions, // NEU
+		visibleRooms // NEU
 	} from '$lib/stores/appState';
 	import { slide } from 'svelte/transition';
+	import { get } from 'svelte/store'; // NEU
 
 	export let onOpenScheduler: () => void;
 	export let onOpenSettings: () => void;
@@ -14,7 +18,6 @@
 	let newRoomFloor = 'eg';
 	// Standard: Erdgeschoss
 
-	// NEUE FUNKTION: Vollbild umschalten
 	function toggleFullscreen() {
 		if (typeof document === 'undefined') return;
 
@@ -47,6 +50,29 @@
 
 	function toggleEditMode() {
 		isEditMode.update((mode) => !mode);
+		// Auswahl zurücksetzen, wenn Modus gewechselt wird
+		swapSelection.set([]);
+	}
+
+	// NEUE FUNKTION: Tauschen
+	async function handleSwap() {
+		const $swapIds = get(swapSelection);
+		if ($swapIds.length !== 2) return;
+
+		const [id1, id2] = $swapIds;
+		const allRooms = get(visibleRooms); // 'get' holt den aktuellen Wert
+		
+		const room1 = allRooms.find(r => r.id === id1);
+		const room2 = allRooms.find(r => r.id === id2);
+
+		if (room1 && room2 && room1.floor === room2.floor) {
+			// Ruft die optimistische Swap-Funktion auf
+			swapRoomPositions(room1, room2);
+		} else if (room1 && room2 && room1.floor !== room2.floor) {
+			alert('Fehler: Räume müssen im selben Stockwerk sein, um sie zu tauschen.');
+		}
+		
+		swapSelection.set([]); // Auswahl zurücksetzen
 	}
 </script>
 
@@ -64,6 +90,15 @@
 	</div>
 
 	{#if $isEditMode}
+		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
+			{#if $swapSelection.length === 2}
+				<button class="btn btn-swap" on:click={handleSwap}>
+					<span class="icon">🔄</span>
+					Tauschen
+				</button>
+			{/if}
+		</div>
+
 		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
 			<div class="bulk-actions">
 				<button class="btn btn-success" on:click={handleBulkOpen}>
@@ -123,7 +158,7 @@
 
 	<div class="toolbar-info">
 		{#if $isEditMode}
-			<span class="info-text">💡 Rechtsklick → Bearbeiten | Ziehen → Sortieren</span>
+			<span class="info-text">💡 Rechtsklick → Bearbeiten | Kacheln auswählen → Tauschen</span>
 		{:else}
 			<span class="info-text">👀 Anzeige-Modus aktiv</span>
 		{/if}
@@ -234,6 +269,16 @@
 	.btn-settings {
 		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 	}
+
+	/* NEUES STYLING FÜR SWAP-BUTTON */
+	.btn-swap {
+		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+		box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+		border: 2px solid rgba(245, 158, 11, 0.8);
+		padding: 6px 16px; /* Etwas größer */
+		font-size: 14px;
+	}
+
 
 	.icon {
 		font-size: 14px;

@@ -1,6 +1,5 @@
 <script lang="ts">
-	// HIER: 'swapRoomPositions' importieren, 'updateRoomPosition' ist nicht mehr nötig
-	import { visibleRooms, isEditMode, swapRoomPositions } from '$lib/stores/appState';
+	import { visibleRooms, isEditMode, swapSelection } from '$lib/stores/appState'; // Geändert
 	import RoomCard from './RoomCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
@@ -11,7 +10,7 @@
 	let scrollContainer: HTMLElement;
 	let autoScrollEnabled = true;
 	let scrollInterval: number;
-	let draggedRoom: RoomWithConfig | null = null;
+	// let draggedRoom: RoomWithConfig | null = null; // ENTFERNT
 
 	// Auto-Scroll
 	onMount(() => {
@@ -71,40 +70,22 @@
 		'ug',
 		'extern'
 	];
-	// Drag & Drop für Reihenfolge (nur im Edit-Modus!)
-	function handleDragStart(room: RoomWithConfig, event: DragEvent) {
-		if (!$isEditMode) return;
-		draggedRoom = room;
-		if (event.dataTransfer) {
-			event.dataTransfer.effectAllowed = 'move';
-		}
+	
+	// --- DRAG & DROP LOGIK ENTFERNT ---
+	// function handleDragStart...
+	// function handleDragOver...
+	// function handleDrop...
+
+	// +++ NEUE SWAP-AUSWAHL LOGIK +++
+	function handleSelectForSwap(roomId: string) {
+		swapSelection.update(ids => {
+			if (ids.includes(roomId)) {
+				return ids.filter(id => id !== roomId); // Bereits ausgewählt -> Abwählen
+			}
+			// Neuen hinzufügen und auf 2 begrenzen (die letzten 2)
+			return [...ids, roomId].slice(-2);
+		});
 	}
-
-	function handleDragOver(event: DragEvent) {
-		if (!$isEditMode) return;
-		event.preventDefault();
-		if (event.dataTransfer) {
-			event.dataTransfer.dropEffect = 'move';
-		}
-	}
-
-	// ========== HIER IST DIE ÄNDERUNG (START) ==========
-	async function handleDrop(targetRoom: RoomWithConfig, event: DragEvent) {
-		event.preventDefault();
-		if (!draggedRoom || draggedRoom.id === targetRoom.id || !$isEditMode) return;
-		// Nur innerhalb des gleichen Stockwerks verschieben
-		if (draggedRoom.floor !== targetRoom.floor) {
-			draggedRoom = null;
-			return;
-		}
-
-		// Rufe die neue atomare Swap-Funktion auf.
-		// Kein 'await' nötig, da die Funktion synchron die UI updatet.
-		swapRoomPositions(draggedRoom, targetRoom);
-
-		draggedRoom = null;
-	}
-	// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 </script>
 
 <div 
@@ -129,21 +110,22 @@
 							<h2 class="floor-title">
 								{floorLabels[floorKey]}
 								{#if $isEditMode}
-									<span class="floor-hint">(Ziehen zum Sortieren)</span>
+									<span class="floor-hint">(Kacheln zum Tauschen auswählen)</span>
 								{/if}
 							</h2>
 							<div class="rooms-grid">
 								{#each rooms as room (room.id)}
 									<div
-										draggable={$isEditMode}
-										on:dragstart={(e) => handleDragStart(room, e)}
-										on:dragover={handleDragOver}
-										on:drop={(e) => handleDrop(room, e)}
 										animate:flip={{ duration: 300 }}
 										class="room-wrapper"
-										class:draggable={$isEditMode}
+										class:selected={$swapSelection.includes(room.id)}
 									>
-										<RoomCard {room} onEdit={handleEditRoom} />
+										<RoomCard 
+											{room} 
+											onEdit={handleEditRoom}
+											onSelect={handleSelectForSwap}
+											isSelected={$swapSelection.includes(room.id)}
+										/>
 									</div>
 								{/each}
 							</div>
@@ -213,8 +195,20 @@
 
 	.room-wrapper {
 		transition: transform 0.2s, opacity 0.2s;
+		/* NEU: Styling für Wrapper (damit Flip-Animation besser aussieht) */
+		border-radius: 15px; /* Passt zu RoomCard */
+		transition: all 0.3s;
 	}
 
+	/* NEU: Styling für ausgewählten Wrapper */
+	.room-wrapper.selected {
+		/* Hebt die Karte leicht an, um die Auswahl zu betonen */
+		transform: scale(1.03);
+	}
+
+
+	/* DRAGGABLE CSS ENTFERNT */
+	/*
 	.room-wrapper.draggable {
 		cursor: grab;
 	}
@@ -224,6 +218,7 @@
 		opacity: 0.6;
 		transform: scale(1.05);
 	}
+	*/
 
 	@media (min-width: 1024px) {
 		.rooms-grid {

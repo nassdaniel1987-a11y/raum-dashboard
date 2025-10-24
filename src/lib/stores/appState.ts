@@ -6,6 +6,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 // ===== ADMIN MODE =====
 export const isEditMode = writable(false);
 
+// ===== NEUER STORE FÜR SWAP =====
+export const swapSelection = writable<string[]>([]); // Speichert die IDs der 2 ausgewählten Räume
+
 // ===== CURRENT DATE/TIME =====
 export const currentWeekday = writable(new Date().getDay() || 7); // 0 (Sonntag) -> 7
 export const currentTime = writable(new Date());
@@ -252,7 +255,6 @@ export async function updateRoomPosition(roomId: string, x: number, y: number) {
 	}
 }
 
-// ========== HIER IST DIE NEUE FUNKTION (START) ==========
 export function swapRoomPositions(draggedRoom: RoomWithConfig, targetRoom: RoomWithConfig) {
 	const draggedPos = draggedRoom.position_x;
 	const targetPos = targetRoom.position_x;
@@ -289,7 +291,6 @@ export function swapRoomPositions(draggedRoom: RoomWithConfig, targetRoom: RoomW
 			if (error) console.error('Error swapping pos 2:', error.message);
 		});
 }
-// ========== HIER IST DIE NEUE FUNKTION (ENDE) ==========
 
 export async function updateRoomSize(roomId: string, width: number, height: number) {
 	await supabase.from('rooms').update({ width, height }).eq('id', roomId);

@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { isEditMode, toggleRoomStatus } from '$lib/stores/appState';
+	import { isEditMode, toggleRoomStatus, swapSelection } from '$lib/stores/appState';
 	import { supabase } from '$lib/supabase/client';
 	import type { RoomWithConfig } from '$lib/types';
 
 	export let room: RoomWithConfig;
 	export let onEdit: (room: RoomWithConfig) => void;
+	export let onSelect: (roomId: string) => void; // NEU
+	export let isSelected: boolean = false; // NEU
 
 	let showContextMenu = false;
 	let contextMenuX = 0;
 	let contextMenuY = 0;
-
 	async function handleClick() {
 		if ($isEditMode && !showContextMenu) {
 			await toggleRoomStatus(room.id);
@@ -31,6 +32,8 @@
 
 	async function handleDelete() {
 		if (confirm(`Raum "${room.name}" wirklich löschen?`)) {
+			// Beim Löschen aus Auswahl entfernen
+			swapSelection.update(ids => ids.filter(id => id !== room.id));
 			await supabase.from('rooms').delete().eq('id', room.id);
 		}
 		closeContextMenu();
@@ -40,7 +43,6 @@
 		background: ${room.isOpen ? room.background_color : '#6b7280'};
 		filter: ${room.isOpen ? 'brightness(1) saturate(1)' : 'grayscale(40%) brightness(0.8)'};
 	`;
-
 	// Zeit ohne Sekunden (10:00:00 → 10:00)
 	$: displayTime = room.config?.open_time ? room.config.open_time.substring(0, 5) : '';
 </script>
@@ -51,6 +53,7 @@
 	class="room-card"
 	class:locked={!$isEditMode}
 	class:open={room.isOpen}
+	class:selected={isSelected} 
 	style={roomStyle}
 	on:click={handleClick}
 	on:contextmenu={handleContextMenu}
@@ -64,13 +67,23 @@
 		<img src={room.image_url} alt={room.name} class="card-bg-image" />
 	{/if}
 
-	{#if $isEditMode}
-		<button class="edit-button" on:click|stopPropagation={() => onEdit(room)}>
-			✏️
-		</button>
-	{/if}
+	<div class="button-container">
+		{#if $isEditMode}
+			<button 
+				class="select-button"
+				class:selected={isSelected}
+				title="Für Tausch auswählen"
+				on:click|stopPropagation={() => onSelect(room.id)}
+			>
+				{isSelected ? '✓' : '⮀'}
+			</button>
+			
+			<button class="edit-button" title="Bearbeiten" on:click|stopPropagation={() => onEdit(room)}>
+				✏️
+			</button>
+		{/if}
+	</div>
 
-	<!-- Status-Badge links oben -->
 	<div class="status-badge" class:open={room.isOpen}>
 		{#if room.isOpen}
 			<span in:scale={{ duration: 300 }}>✓</span>
@@ -79,7 +92,6 @@
 		{/if}
 	</div>
 
-	<!-- Zeit-Badge prominent oben (wenn vorhanden) - OHNE SEKUNDEN! -->
 	{#if displayTime}
 		<div class="time-badge-top">
 			🕐 Öffnet um {displayTime}
@@ -134,6 +146,14 @@
 		min-height: 120px;
 		display: flex;
 		flex-direction: column;
+		/* NEU: Rand für Auswahl */
+		border: 3px solid transparent;
+	}
+
+	/* NEU: Styling für ausgewählte Karte */
+	.room-card.selected {
+		border-color: #f59e0b; /* Orange-Gelb */
+		box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
 	}
 
 	.room-card:hover {
@@ -149,6 +169,14 @@
 		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 	}
 
+	/* NEU: Styling für ausgewählte Karte (wenn offen) */
+	.room-card.open.selected {
+		border-color: #f59e0b;
+		/* Kombiniert beide Schatten */
+		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5), 0 0 25px rgba(245, 158, 11, 0.7);
+	}
+
+
 	.card-bg-image {
 		position: absolute;
 		top: 0;
@@ -160,24 +188,48 @@
 		z-index: 0;
 	}
 
-	.edit-button {
+	/* NEU: Container für die Buttons */
+	.button-container {
 		position: absolute;
 		top: 6px;
 		right: 6px;
+		z-index: 10;
+		display: flex;
+		gap: 6px;
+	}
+
+	.edit-button,
+	.select-button {
 		padding: 4px 8px;
 		background: rgba(0, 0, 0, 0.7);
 		border: none;
 		border-radius: 6px;
 		font-size: 14px;
 		cursor: pointer;
-		z-index: 10;
 		transition: all 0.2s;
+		color: white; /* Farbe explizit setzen */
 	}
 
-	.edit-button:hover {
+	.edit-button:hover,
+	.select-button:hover {
 		background: rgba(0, 0, 0, 0.9);
 		transform: scale(1.1);
 	}
+
+	/* NEU: Styling für Select Button */
+	.select-button {
+		background: rgba(59, 130, 246, 0.7); /* Blau */
+	}
+	.select-button:hover {
+		background: rgba(59, 130, 246, 1);
+	}
+	.select-button.selected {
+		background: rgba(245, 158, 11, 0.9); /* Orange-Gelb */
+	}
+	.select-button.selected:hover {
+		background: rgba(245, 158, 11, 1);
+	}
+
 
 	.card-content {
 		position: relative;
