@@ -10,12 +10,10 @@
 	}>();
 
 	const weekdaysFull = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-	
-	// FEHLERBEHEBUNG: Das '$' wurde aus den Variablennamen entfernt
 	const weekday = get(currentWeekday);
 	const allRooms = get(rooms);
 
-	// Lokaler Status für die Zeiten, um nicht bei jeder Eingabe die DB zu fluten
+	// Lokaler Status für die Zeiten
 	let localOpenTimes = new Map<string, string>();
 	allRooms.forEach(room => {
 		const configKey = `${room.id}-${weekday}`;
@@ -27,7 +25,6 @@
 	let messageType: 'success' | 'error' | '' = '';
 	let saving = false;
 
-	// Hilfsfunktion zum Parsen der Zeit
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
@@ -37,8 +34,11 @@
 
 	async function handleSaveAll() {
 		saving = true;
-		const $now = get(currentTime);
-		const nowMinutes = $now.getHours() * 60 + $now.getMinutes();
+		// --- HIER IST DER FIX ---
+		// const $now = get(currentTime); // Alt
+		const now = get(currentTime);   // Neu
+		// --- ENDE DES FIXES ---
+		const nowMinutes = now.getHours() * 60 + now.getMinutes(); // Benutzt 'now'
 
 		const configUpdates: any[] = [];
 		const statusUpdates: any[] = [];
@@ -47,18 +47,18 @@
 			// 1. Config-Update vorbereiten
 			configUpdates.push({
 				room_id: roomId,
-				weekday: weekday, // Korrigierte Variable
+				weekday: weekday,
 				open_time: openTime || null,
-				close_time: null // Sicherstellen, dass close_time ignoriert wird
+				close_time: null
 			});
 
-			// 2. Status-Update vorbereiten (Raum sofort schließen, wenn zukünftige Zeit gesetzt)
+			// 2. Status-Update vorbereiten
 			const openTimeParsed = parseTimeLocal(openTime);
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
 				statusUpdates.push({
 					room_id: roomId,
 					is_open: false,
-					manual_override: false // Wichtig: Automatik!
+					manual_override: false
 				});
 			}
 		}
@@ -68,18 +68,18 @@
 			if (configUpdates.length > 0) {
 				await supabase.from('daily_configs').upsert(configUpdates, { onConflict: 'room_id,weekday' });
 			}
-			// Status sofort aktualisieren (damit "Öffnet um..." erscheint)
+			// Status sofort aktualisieren
 			if (statusUpdates.length > 0) {
 				await supabase.from('room_status').upsert(statusUpdates, { onConflict: 'room_id' });
 			}
-			
+
 			showMessage('Tagesplan gespeichert!', 'success');
 		} catch (error) {
 			console.error('Fehler beim Speichern:', error);
 			showMessage('Fehler beim Speichern!', 'error');
 		}
 		saving = false;
-		onClose(); // Modal nach Speichern schließen
+		// onClose(); // Schließen erst nach Meldung / Optional hier lassen
 	}
 
 	function showMessage(text: string, type: 'success' | 'error') {
@@ -88,12 +88,15 @@
 		setTimeout(() => {
 			message = '';
 			messageType = '';
+			if (type === 'success') { // Nur bei Erfolg schließen
+				onClose();
+			}
 		}, 3000);
 	}
 
 	// Räume nach Stockwerk sortieren
 	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
-	$: sortedRooms = allRooms.sort((a, b) => {
+	$: sortedRooms = allRooms.sort((a, b) => { // $derived wäre hier besser, aber $: funktioniert auch
 		const floorA = floorOrder.indexOf(a.floor);
 		const floorB = floorOrder.indexOf(b.floor);
 		if (floorA !== floorB) {
@@ -103,9 +106,9 @@
 	});
 </script>
 
-<div 
-	class="modal-backdrop" 
-	on:click={onClose} 
+<div
+	class="modal-backdrop"
+	on:click={onClose}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
@@ -161,6 +164,7 @@
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;
@@ -194,7 +198,7 @@
 		padding: 24px;
 		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 	}
-	
+
 	.header-content h2 {
 		margin: 0 0 8px 0;
 		font-size: 28px;
@@ -238,7 +242,7 @@
 		overflow-y: auto;
 		flex: 1;
 	}
-	
+
 	.room-list-header {
 		display: flex;
 		justify-content: space-between;
@@ -251,7 +255,7 @@
 		top: 0;
 		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
 	}
-	
+
 	.room-list {
 		display: flex;
 		flex-direction: column;
