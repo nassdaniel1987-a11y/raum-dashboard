@@ -6,13 +6,14 @@
 
 	export let room: RoomWithConfig;
 	export let onEdit: (room: RoomWithConfig) => void;
-	export let onSelect: (roomId: string) => void; // NEU
-	export let isSelected: boolean = false; // NEU
+	export let onSelect: (roomId: string) => void; 
+	export let isSelected: boolean = false; 
 
 	let showContextMenu = false;
 	let contextMenuX = 0;
 	let contextMenuY = 0;
 	async function handleClick() {
+		// Diese Funktion wird jetzt vom card-content aufgerufen
 		if ($isEditMode && !showContextMenu) {
 			await toggleRoomStatus(room.id);
 		}
@@ -32,7 +33,6 @@
 
 	async function handleDelete() {
 		if (confirm(`Raum "${room.name}" wirklich löschen?`)) {
-			// Beim Löschen aus Auswahl entfernen
 			swapSelection.update(ids => ids.filter(id => id !== room.id));
 			await supabase.from('rooms').delete().eq('id', room.id);
 		}
@@ -55,7 +55,6 @@
 	class:open={room.isOpen}
 	class:selected={isSelected} 
 	style={roomStyle}
-	on:click={handleClick}
 	on:contextmenu={handleContextMenu}
 	on:keydown={(e) => e.key === 'Enter' && handleClick()}
 	in:scale={{ duration: 300, start: 0.8 }}
@@ -98,7 +97,9 @@
 		</div>
 	{/if}
 
-	<div class="card-content">
+	<div 
+		class="card-content"
+		on:click={handleClick} >
 		<h3 class="room-title">{room.name}</h3>
 		
 		{#if room.config?.activity}
@@ -139,7 +140,7 @@
 		border-radius: 12px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		transition: all 0.3s ease;
-		cursor: pointer;
+		/* cursor: pointer; ENTFERNT VON HIER */
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
@@ -243,6 +244,7 @@
 		color: white;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 		text-align: center;
+		cursor: pointer; /* HINZUGEFÜGT HIER */
 	}
 
 	.room-title {
