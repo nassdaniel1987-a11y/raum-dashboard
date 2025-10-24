@@ -11,20 +11,22 @@
 
 	const weekdaysFull = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 	const weekday = get(currentWeekday);
-	const allRooms = get(rooms);
+	const allRooms = get(rooms); // Holen nur einmal beim Initialisieren
 
-	// Lokaler Status für die Zeiten
-	let localOpenTimes = new Map<string, string>();
+	// SVELTE 5 STATE SYNTAX
+	let localOpenTimes = $state(new Map<string, string>());
+	// Initialisiere die Map nach der Deklaration
 	allRooms.forEach(room => {
 		const configKey = `${room.id}-${weekday}`;
 		const config = get(dailyConfigs).get(configKey);
 		localOpenTimes.set(room.id, config?.open_time || '');
 	});
 
-	let message = '';
-	let messageType: 'success' | 'error' | '' = '';
-	let saving = false;
+	let message = $state('');
+	let messageType = $state<'success' | 'error' | ''>('');
+	let saving = $state(false);
 
+	// Hilfsfunktion zum Parsen der Zeit
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
@@ -34,11 +36,8 @@
 
 	async function handleSaveAll() {
 		saving = true;
-		// --- HIER IST DER FIX ---
-		// const $now = get(currentTime); // Alt
-		const now = get(currentTime);   // Neu
-		// --- ENDE DES FIXES ---
-		const nowMinutes = now.getHours() * 60 + now.getMinutes(); // Benutzt 'now'
+		const now = get(currentTime);
+		const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
 		const configUpdates: any[] = [];
 		const statusUpdates: any[] = [];
@@ -78,8 +77,11 @@
 			console.error('Fehler beim Speichern:', error);
 			showMessage('Fehler beim Speichern!', 'error');
 		}
-		saving = false;
-		// onClose(); // Schließen erst nach Meldung / Optional hier lassen
+		// Saving wird im finally Block gesetzt
+		finally {
+			saving = false;
+		}
+		// onClose(); // Wird jetzt im showMessage Timeout aufgerufen bei Erfolg
 	}
 
 	function showMessage(text: string, type: 'success' | 'error') {
@@ -88,39 +90,39 @@
 		setTimeout(() => {
 			message = '';
 			messageType = '';
-			if (type === 'success') { // Nur bei Erfolg schließen
+			if (type === 'success') {
 				onClose();
 			}
 		}, 3000);
 	}
 
-	// Räume nach Stockwerk sortieren
+	// Räume nach Stockwerk sortieren mit $derived
 	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
-	$: sortedRooms = allRooms.sort((a, b) => { // $derived wäre hier besser, aber $: funktioniert auch
+	let sortedRooms = $derived(allRooms.slice().sort((a, b) => { // .slice() für Kopie, da sort() inplace arbeitet
 		const floorA = floorOrder.indexOf(a.floor);
 		const floorB = floorOrder.indexOf(b.floor);
 		if (floorA !== floorB) {
 			return floorA - floorB;
 		}
 		return a.position_x - b.position_x; // Zweitsortierung nach Position
-	});
+	}));
 </script>
 
 <div
 	class="modal-backdrop"
-	on:click={onClose}
+	onclick={onClose}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
-	on:keydown={(e) => e.key === 'Escape' && onClose()}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal-scheduler" on:click|stopPropagation transition:scale={{ duration: 300 }} role="document">
+	<div class="modal-scheduler" onclick|stopPropagation transition:scale={{ duration: 300 }} role="document">
 		<div class="modal-header">
 			<div class="header-content">
 				<h2>📅 Tagesplan für {weekdaysFull[weekday]}</h2>
 				<p class="subtitle">Setze die automatische Öffnungszeit für heute.</p>
 			</div>
-			<button class="close-btn" on:click={onClose}>✕</button>
+			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
 
 		{#if message}
@@ -155,8 +157,8 @@
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-secondary" on:click={onClose}>Abbrechen</button>
-			<button class="btn btn-primary" on:click={handleSaveAll} disabled={saving}>
+			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
+			<button class="btn btn-primary" onclick={handleSaveAll} disabled={saving}>
 				{saving ? 'Speichert...' : 'Tagesplan speichern'}
 			</button>
 		</div>
@@ -254,6 +256,7 @@
 		position: sticky;
 		top: 0;
 		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+		z-index: 1; /* Sicherstellen, dass der Header über dem Inhalt liegt */
 	}
 
 	.room-list {
@@ -277,6 +280,8 @@
 		align-items: center;
 		gap: 12px;
 		flex: 1;
+		min-width: 0; /* Verhindert Überlaufen */
+		margin-right: 16px; /* Abstand zum Input */
 	}
 
 	.room-color {
@@ -289,6 +294,9 @@
 
 	.room-name {
 		font-weight: 600;
+		white-space: nowrap; /* Verhindert Umbruch */
+		overflow: hidden; /* Versteckt überlaufenden Text */
+		text-overflow: ellipsis; /* Fügt "..." hinzu */
 	}
 
 	.floor-badge {
@@ -296,6 +304,11 @@
 		padding: 2px 6px;
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 4px;
+		flex-shrink: 0;
+	}
+
+	.time-input-wrapper {
+		flex-shrink: 0; /* Verhindert, dass das Input schrumpft */
 	}
 
 	.time-input {

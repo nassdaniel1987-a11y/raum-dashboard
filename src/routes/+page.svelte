@@ -3,15 +3,14 @@
 	import Canvas from '$lib/components/Canvas.svelte';
 	import AdminToolbar from '$lib/components/AdminToolbar.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
-	// NEUER Import
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
-	let editingRoom: RoomWithConfig | null = null;
-	// Logik für den Tagesplaner wiederhergestellt
-	let showScheduler = false;
-	let showSettings = false;
+	// SVELTE 5 STATE SYNTAX
+	let editingRoom = $state<RoomWithConfig | null>(null);
+	let showScheduler = $state(false);
+	let showSettings = $state(false);
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -21,12 +20,10 @@
 		editingRoom = null;
 	}
 
-	// Wiederhergestellt
 	function openScheduler() {
 		showScheduler = true;
 	}
 
-	// Wiederhergestellt
 	function closeScheduler() {
 		showScheduler = false;
 	}
@@ -43,7 +40,7 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	<AdminToolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
+	<AdminToolbar {onOpenScheduler} {onOpenSettings} /> {/* Props übergeben */}
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
@@ -62,6 +59,6 @@
 	.dashboard {
 		width: 100vw;
 		height: 100vh;
-		overflow: hidden;
+		overflow: hidden; /* Verhindert Scrollen der Hauptseite */
 	}
 </style>

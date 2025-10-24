@@ -2,16 +2,17 @@
 	import { supabase } from '$lib/supabase/client';
 	import { appSettings } from '$lib/stores/appState';
 	import { scale, fade } from 'svelte/transition';
-	
-	// SVELTE 5 PROPS SYNTAX
+
+	// Svelte 5 Props Syntax
 	let { onClose } = $props<{
 		onClose: () => void;
 	}>();
 
-	let nightModeEnabled = $appSettings?.night_mode_enabled ?? true;
-	let nightStart = $appSettings?.night_start || '17:00';
-	let nightEnd = $appSettings?.night_end || '07:00';
-	let currentTheme = $appSettings?.current_theme || 'space';
+	// SVELTE 5 STATE SYNTAX
+	let nightModeEnabled = $state($appSettings?.night_mode_enabled ?? true);
+	let nightStart = $state($appSettings?.night_start || '17:00');
+	let nightEnd = $state($appSettings?.night_end || '07:00');
+	let currentTheme = $state($appSettings?.current_theme || 'space');
 
 	const themes = [
 		{ id: 'space', name: '🚀 Weltraum', emoji: '🌌' },
@@ -42,18 +43,18 @@
 	}
 </script>
 
-<div 
-	class="modal-backdrop" 
-	on:click={onClose} 
+<div
+	class="modal-backdrop"
+	onclick={onClose}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
-	on:keydown={(e) => e.key === 'Escape' && onClose()}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal" on:click|stopPropagation transition:scale role="document">
+	<div class="modal" onclick|stopPropagation transition:scale role="document">
 		<div class="modal-header">
 			<h2>⚙️ Einstellungen</h2>
-			<button class="close-btn" on:click={onClose}>✕</button>
+			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
 
 		<div class="modal-content">
@@ -93,7 +94,7 @@
 						<button
 							class="theme-card"
 							class:active={currentTheme === theme.id}
-							on:click={() => (currentTheme = theme.id)}
+							onclick={() => (currentTheme = theme.id)}
 						>
 							<div class="theme-emoji">{theme.emoji}</div>
 							<div class="theme-name">{theme.name}</div>
@@ -105,7 +106,7 @@
 			<div class="info-section">
 				<h4>💡 Hinweise</h4>
 				<ul>
-					<li>Nachtruhe schließt alle Räume außerhalb der Schulzeiten</li>
+					<li>Nachtruhe schließt alle Räume automatisch außerhalb der Schulzeiten (manuelle Öffnungen bleiben)</li>
 					<li>Themes ändern das visuelle Erscheinungsbild</li>
 					<li>Einstellungen gelten für alle Geräte</li>
 				</ul>
@@ -113,8 +114,8 @@
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-secondary" on:click={onClose}>Abbrechen</button>
-			<button class="btn btn-primary" on:click={handleSave}>Speichern</button>
+			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
+			<button class="btn btn-primary" onclick={handleSave}>Speichern</button>
 		</div>
 	</div>
 </div>
@@ -206,7 +207,11 @@
 	}
 
 	.toggle input {
-		display: none;
+		/* display: none; */ /* Besser zugänglich, wenn sichtbar aber gestyled */
+		opacity: 0;
+		position: absolute;
+		width: 0;
+		height: 0;
 	}
 
 	.toggle-slider {
@@ -241,6 +246,12 @@
 	.toggle-label {
 		font-weight: 600;
 	}
+
+	/* Fokusanzeige für Barrierefreiheit */
+	.toggle input:focus-visible ~ .toggle-slider {
+ 		box-shadow: 0 0 0 2px #3b82f6;
+ 	}
+
 
 	.time-group {
 		display: grid;
@@ -287,6 +298,7 @@
 		cursor: pointer;
 		transition: all 0.3s;
 		text-align: center;
+		color: white; /* Sicherstellen, dass Text weiß ist */
 	}
 
 	.theme-card.active {
@@ -299,6 +311,12 @@
 		transform: translateY(-3px);
 		border-color: rgba(255, 255, 255, 0.4);
 	}
+
+	/* Fokusanzeige */
+ 	.theme-card:focus-visible {
+ 		outline: 2px solid #3b82f6;
+ 		outline-offset: 2px;
+ 	}
 
 	.theme-emoji {
 		font-size: 36px;
@@ -336,37 +354,4 @@
 	.modal-footer {
 		padding: 24px;
 		border-top: 2px solid rgba(255, 255, 255, 0.1);
-		display: flex;
-		gap: 12px;
-		justify-content: flex-end;
-	}
-
-	.btn {
-		padding: 12px 24px;
-		border: none;
-		border-radius: 12px;
-		font-size: 16px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s;
-	}
-
-	.btn-secondary {
-		background: rgba(255, 255, 255, 0.1);
-		color: white;
-	}
-
-	.btn-secondary:hover {
-		background: rgba(255, 255, 255, 0.2);
-	}
-
-	.btn-primary {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-		color: white;
-	}
-
-	.btn-primary:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
-	}
-</style>
+		display:
