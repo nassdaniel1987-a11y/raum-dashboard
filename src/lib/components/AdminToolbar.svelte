@@ -4,13 +4,14 @@
 		bulkOpenAllRooms,
 		bulkCloseAllRooms,
 		createNewRoom,
-		swapSelection, // NEU
-		swapRoomPositions, // NEU
-		visibleRooms // NEU
+		swapSelection,
+		swapRoomPositions,
+		visibleRooms
 	} from '$lib/stores/appState';
 	import { slide } from 'svelte/transition';
-	import { get } from 'svelte/store'; // NEU
+	import { get } from 'svelte/store';
 
+	// Prop für den Scheduler wieder hinzugefügt
 	export let onOpenScheduler: () => void;
 	export let onOpenSettings: () => void;
 
@@ -20,7 +21,6 @@
 
 	function toggleFullscreen() {
 		if (typeof document === 'undefined') return;
-
 		if (!document.fullscreenElement) {
 			document.documentElement.requestFullscreen().catch((err) => {
 				console.error(`Error attempting to enable full-screen mode: ${err.message}`);
@@ -50,122 +50,53 @@
 
 	function toggleEditMode() {
 		isEditMode.update((mode) => !mode);
-		// Auswahl zurücksetzen, wenn Modus gewechselt wird
 		swapSelection.set([]);
 	}
 
-	// NEUE FUNKTION: Tauschen
 	async function handleSwap() {
 		const $swapIds = get(swapSelection);
 		if ($swapIds.length !== 2) return;
 
 		const [id1, id2] = $swapIds;
-		const allRooms = get(visibleRooms); // 'get' holt den aktuellen Wert
+		const allRooms = get(visibleRooms);
 		
 		const room1 = allRooms.find(r => r.id === id1);
 		const room2 = allRooms.find(r => r.id === id2);
 
 		if (room1 && room2 && room1.floor === room2.floor) {
-			// Ruft die optimistische Swap-Funktion auf
 			swapRoomPositions(room1, room2);
 		} else if (room1 && room2 && room1.floor !== room2.floor) {
 			alert('Fehler: Räume müssen im selben Stockwerk sein, um sie zu tauschen.');
 		}
 		
-		swapSelection.set([]); // Auswahl zurücksetzen
+		swapSelection.set([]);
 	}
 </script>
 
 <div class="admin-toolbar" transition:slide={{ duration: 300 }}>
-	<div class="toolbar-section">
-		<button class="mode-toggle" class:active={$isEditMode} on:click={toggleEditMode}>
-			{#if $isEditMode}
-				<span class="icon">🔓</span>
-				<span>Bearbeitungs-Modus</span>
-			{:else}
-				<span class="icon">🔒</span>
-				<span>Anzeige-Modus</span>
-			{/if}
-		</button>
-	</div>
-
 	{#if $isEditMode}
 		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			{#if $swapSelection.length === 2}
-				<button class="btn btn-swap" on:click={handleSwap}>
-					<span class="icon">🔄</span>
-					Tauschen
-				</button>
-			{/if}
-		</div>
-
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			<div class="bulk-actions">
-				<button class="btn btn-success" on:click={handleBulkOpen}>
-					<span class="icon">✓</span>
-					Alle öffnen
-				</button>
-
-				<button class="btn btn-danger" on:click={handleBulkClose}>
-					<span class="icon">🔒</span>
-					Alle schließen
-				</button>
-			</div>
-		</div>
-
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
 			<div class="create-room">
-				<input
-					type="text"
-					placeholder="Neuer Raum..."
-					bind:value={newRoomName}
-					on:keydown={(e) => e.key === 'Enter' && handleCreateRoom()}
-				/>
-				<select bind:value={newRoomFloor} class="floor-select">
-					<option value="extern">🏃 Außen</option>
-					<option value="dach">🏠 Dach</option>
-					<option value="og2">2️⃣ 2.OG</option>
-					<option value="og1">1️⃣ 1.OG</option>
-					<option value="eg">🚪 EG</option>
-					<option value="ug">⬇️ UG</option>
-				</select>
-				<button class="btn btn-primary" on:click={handleCreateRoom} disabled={!newRoomName.trim()}>
-					<span class="icon">➕</span>
-					Erstellen
-				</button>
-			</div>
+				</div>
 		</div>
 
 		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
 			<button class="btn btn-info" on:click={onOpenScheduler}>
 				<span class="icon">📅</span>
-				Zeitpläne
+				Tagesplan
 			</button>
 		</div>
 	{/if}
 
 	<div class="toolbar-section ml-auto">
-		<button class="btn btn-settings" on:click={toggleFullscreen}>
-			<span class="icon">🖥️</span>
-			Vollbild
-		</button>
-
-		<button class="btn btn-settings" on:click={onOpenSettings}>
-			<span class="icon">⚙️</span>
-			Einstellungen
-		</button>
-	</div>
+		</div>
 
 	<div class="toolbar-info">
-		{#if $isEditMode}
-			<span class="info-text">💡 Rechtsklick → Bearbeiten | Kacheln auswählen → Tauschen</span>
-		{:else}
-			<span class="info-text">👀 Anzeige-Modus aktiv</span>
-		{/if}
-	</div>
+		</div>
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.admin-toolbar {
 		position: fixed;
 		bottom: 0;
@@ -275,7 +206,8 @@
 		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 		box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
 		border: 2px solid rgba(245, 158, 11, 0.8);
-		padding: 6px 16px; /* Etwas größer */
+		padding: 6px 16px;
+		/* Etwas größer */
 		font-size: 14px;
 	}
 

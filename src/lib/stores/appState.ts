@@ -412,7 +412,7 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 }
 
 
-// ========== NEUER AUTOMATIK-SERVICE (START - Version 4) ==========
+// ========== NEUER AUTOMATIK-SERVICE (START - Version 5 - Vereinfacht) ==========
 // Prüft alle 10 Sekunden, ob Raum-Status aktualisiert werden müssen
 
 if (typeof window !== 'undefined') {
@@ -433,20 +433,19 @@ if (typeof window !== 'undefined') {
 		// 1. Ist Nachtruhe aktiv?
 		let isNightModeActive = false;
 		const now = $time.getHours() * 60 + $time.getMinutes();
-		const nightStart = parseTime($settings.night_start);
+		const nightStart = parseTime($settings.night_start); // parseTime ist oben in appState definiert
 		const nightEnd = parseTime($settings.night_end);
 
 		if ($settings.night_mode_enabled && nightStart !== null && nightEnd !== null) {
-			if (nightStart !== nightEnd) { // Verhindert Endlosschleife falls Start == Ende
+			if (nightStart !== nightEnd) {
 				if (nightStart > nightEnd) { // z.B. 22:00 - 06:00
 					if (now >= nightStart || now < nightEnd) isNightModeActive = true;
-				} else { // z.B. 09:00 - 17:00 (Nachtruhe tagsüber?) oder 06:00 - 22:00 (Normalfall umgekehrt)
+				} else { // z.B. 09:00 - 17:00
 					if (now >= nightStart && now < nightEnd) isNightModeActive = true;
 				}
 			}
 		}
 
-		// Typ für die Update-Objekte definieren
 		type StatusUpdate = { room_id: string; is_open: boolean; manual_override: boolean };
 		const updates: StatusUpdate[] = [];
 
@@ -458,68 +457,48 @@ if (typeof window !== 'undefined') {
 			const configKey = `${room.id}-${$weekday}`;
 			const config = $configs.get(configKey);
 
-			// 2. Ziel-Status basierend auf Zeitplan / Nachtruhe berechnen
-			let targetIsOpen = false; // Standard: geschlossen
-			let hasScheduleRule = false; // Gibt es überhaupt eine Regel für jetzt?
-
-			if (isNightModeActive) {
-				targetIsOpen = false;
-				hasScheduleRule = true; // Nachtruhe ist eine Regel
-			} else if (config && config.open_time && config.close_time) {
-				const openTime = parseTime(config.open_time);
-				const closeTime = parseTime(config.close_time);
-
-				// Gültigen Zeitplan prüfen
-				if (openTime !== null && closeTime !== null && openTime !== closeTime) {
-					hasScheduleRule = true; // Ein Zeitplan existiert
-					if (openTime < closeTime) { // Normaler Tag (z.B. 08:00 - 16:00)
-						if (now >= openTime && now < closeTime) {
-							targetIsOpen = true;
-						} else {
-							targetIsOpen = false; // Explizit außerhalb setzen
-						}
-					} else { // Über Mitternacht (z.B. 22:00 - 04:00)
-						if (now >= openTime || now < closeTime) {
-							targetIsOpen = true;
-						} else {
-							targetIsOpen = false; // Explizit außerhalb setzen
-						}
-					}
-				}
-			}
-
-			// 3. Entscheiden, ob ein Update nötig ist - ÜBERARBEITETE LOGIK
 			let needsUpdate = false;
 			let newIsOpen = currentIsOpen;
 			let newManualOverride = isManual;
 
-			if (hasScheduleRule) {
-				// Eine Regel ist aktiv (Zeitplan oder Nachtruhe)
-				if (currentIsOpen !== targetIsOpen) {
-					// Der Status muss geändert werden (egal ob manuell oder nicht)
-					needsUpdate = true;
-					newIsOpen = targetIsOpen;
-					newManualOverride = false; // Automatik übernimmt/überschreibt
-				} else if (isManual) {
-					// Status stimmt zufällig, war aber manuell -> Override entfernen
-					needsUpdate = true;
-					// newIsOpen bleibt currentIsOpen
-					newManualOverride = false; // Automatik übernimmt
-				}
-			} else {
-				// Keine Regel aktiv
-				if (currentIsOpen && !isManual) {
-					// Raum ist offen, aber nicht manuell (also von alter Regel) -> Schließen
+			// 1. Nachtruhe-Prüfung (Priorität 1)
+			if (isNightModeActive) {
+				// Nachtruhe ist aktiv.
+				// Sie schließt *alles*, was automatisch offen ist.
+				if (currentIsOpen && !isManual) { 
+					// Raum ist automatisch offen -> Schließen
 					needsUpdate = true;
 					newIsOpen = false;
-					newManualOverride = false; // Bleibt automatisch
+					newManualOverride = false; 
 				}
-				// Wenn manuell offen/geschlossen ohne Regel -> so lassen
+				// Wenn manuell offen -> bleibt offen (gewollt).
+				// Wenn manuell/automatisch zu -> bleibt zu.
+			
+			} else {
+				// 2. Keine Nachtruhe - Prüfe, ob ein Raum geöffnet werden soll
+				
+				if (!currentIsOpen && !isManual) {
+					// Raum ist aktuell AUTOMATISCH GESCHLOSSEN
+					const openTime = parseTime(config?.open_time);
+
+					if (openTime !== null && now >= openTime) {
+						// Es gibt eine Öffnungszeit, die Zeit ist erreicht.
+						// -> AUTOMATISCH ÖFFNEN
+						needsUpdate = true;
+						newIsOpen = true;
+						newManualOverride = false;
+					}
+				}
+				
+				// WENN RAUM MANUELL GESCHLOSSEN IST (!currentIsOpen && isManual):
+				// -> Nichts tun. Manuell bleibt manuell.
+				
+				// WENN RAUM OFFEN IST (currentIsOpen):
+				// -> Nichts tun. Er bleibt offen, bis die Nachtruhe kommt oder er manuell geschlossen wird.
 			}
 
-			// Wenn ein Update nötig ist, zum Array hinzufügen
+			// 3. Update-Objekt erstellen, wenn sich was geändert hat
 			if (needsUpdate) {
-				// Nur hinzufügen, wenn sich der DB-Wert tatsächlich ändert
 				const existingDbStatus = { is_open: currentIsOpen, manual_override: isManual };
 				const newDbStatus = { is_open: newIsOpen, manual_override: newManualOverride };
 				if (existingDbStatus.is_open !== newDbStatus.is_open || existingDbStatus.manual_override !== newDbStatus.manual_override) {
@@ -535,14 +514,13 @@ if (typeof window !== 'undefined') {
 
 		// 4. Führe Updates in Supabase aus (wenn es welche gibt)
 		if (updates.length > 0) {
-			console.log(`[AutoService V4] Aktualisiere ${updates.length} Räume...`, updates.map(u=>`${u.room_id.substring(0,4)}->${u.is_open?'O':'C'}(M:${u.manual_override})`));
+			console.log(`[AutoService V5] Aktualisiere ${updates.length} Räume...`, updates.map(u=>`${u.room_id.substring(0,4)}->${u.is_open?'O':'C'}(M:${u.manual_override})`));
 			supabase
 				.from('room_status')
 				.upsert(updates, { onConflict: 'room_id' })
 				.then(({ error }) => {
 					if (error) {
-						console.error("[AutoService V4] Fehler bei DB-Update:", error);
-						// Bei Fehler: Lokalen Store *nicht* ändern, auf nächsten Realtime-Sync hoffen
+						console.error("[AutoService V5] Fehler bei DB-Update:", error);
 					} else {
 						// Optimistisches Update im Store (lokal)
 						roomStatuses.update(map => {
@@ -564,10 +542,7 @@ if (typeof window !== 'undefined') {
 	}; // Ende runAutomation
 
 	// Starte den Service nach kurzem Delay (damit Daten geladen sind)
-
-	// === KORREKTUR FÜR TYPE ERROR ===
 	let intervalId: ReturnType<typeof setInterval> | null = null;
-	// ===============================
 
 	const startAutomation = () => {
 		// Stoppe evtl. laufenden Timer (wichtig für HMR)
@@ -576,14 +551,14 @@ if (typeof window !== 'undefined') {
 
 		runAutomation(); // Einmal sofort ausführen
 		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
-		console.log('[AutoService] Gestartet.');
+		console.log('[AutoService V5] Gestartet.');
 
 		// Funktion zum Stoppen global verfügbar machen
 		(window as any).clearAutomationInterval = () => {
 			if (intervalId) {
 				clearInterval(intervalId);
 				intervalId = null; // Wichtig: ID zurücksetzen
-				console.log('[AutoService] Gestoppt.');
+				console.log('[AutoService V5] Gestoppt.');
 			}
 		};
 	};
@@ -592,4 +567,4 @@ if (typeof window !== 'undefined') {
 
 } // Ende if (typeof window !== 'undefined')
 
-// ========== NEUER AUTOMATIK-SERVICE (ENDE - Version 4) ==========
+// ========== NEUER AUTOMATIK-SERVICE (ENDE - Version 5 - Vereinfacht) ==========

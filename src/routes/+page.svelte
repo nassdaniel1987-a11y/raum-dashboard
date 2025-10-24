@@ -1,35 +1,17 @@
 <script lang="ts">
-	// import { onMount, onDestroy } from 'svelte'; // ENTFERNT
-	// import { loadAllData, subscribeToRealtimeUpdates, unsubscribeFromRealtimeUpdates } from '$lib/stores/appState'; // ENTFERNT
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
 	import AdminToolbar from '$lib/components/AdminToolbar.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
-	import SchedulerModal from '$lib/components/SchedulerModal.svelte';
+	// NEUER Import
+	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	let editingRoom: RoomWithConfig | null = null;
+	// Logik für den Tagesplaner wiederhergestellt
 	let showScheduler = false;
 	let showSettings = false;
-
-	// Beim Start: Daten laden + Realtime aktivieren // ENTFERNT
-	/*
-	onMount(async () => {
-		console.log('🚀 Dashboard mounted - Loading data...');
-		await loadAllData();
-		console.log('✅ Data loaded - Subscribing to realtime...');
-		subscribeToRealtimeUpdates();
-	});
-	*/
-
-	// Beim Beenden: Realtime deaktivieren // ENTFERNT
-	/*
-	onDestroy(() => {
-		console.log('👋 Dashboard unmounting - Unsubscribing from realtime...');
-		unsubscribeFromRealtimeUpdates();
-	});
-	*/
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -39,10 +21,12 @@
 		editingRoom = null;
 	}
 
+	// Wiederhergestellt
 	function openScheduler() {
 		showScheduler = true;
 	}
 
+	// Wiederhergestellt
 	function closeScheduler() {
 		showScheduler = false;
 	}
@@ -66,7 +50,7 @@
 	{/if}
 
 	{#if showScheduler}
-		<SchedulerModal onClose={closeScheduler} />
+		<DailySchedulerModal onClose={closeScheduler} />
 	{/if}
 
 	{#if showSettings}
