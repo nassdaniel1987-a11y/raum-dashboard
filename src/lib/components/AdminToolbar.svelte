@@ -11,7 +11,23 @@
 	export let onOpenSettings: () => void;
 
 	let newRoomName = '';
-	let newRoomFloor = 'eg'; // Standard: Erdgeschoss
+	let newRoomFloor = 'eg';
+	// Standard: Erdgeschoss
+
+	// NEUE FUNKTION: Vollbild umschalten
+	function toggleFullscreen() {
+		if (typeof document === 'undefined') return;
+
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen().catch((err) => {
+				console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+			});
+		} else {
+			if (document.exitFullscreen) {
+				document.exitFullscreen();
+			}
+		}
+	}
 
 	async function handleBulkOpen() {
 		await bulkOpenAllRooms();
@@ -94,6 +110,11 @@
 	{/if}
 
 	<div class="toolbar-section ml-auto">
+		<button class="btn btn-settings" on:click={toggleFullscreen}>
+			<span class="icon">🖥️</span>
+			Vollbild
+		</button>
+
 		<button class="btn btn-settings" on:click={onOpenSettings}>
 			<span class="icon">⚙️</span>
 			Einstellungen

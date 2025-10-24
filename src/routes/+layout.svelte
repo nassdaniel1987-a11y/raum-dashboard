@@ -7,12 +7,12 @@
 	} from '$lib/stores/appState';
 
 	let { children } = $props();
-
 	onMount(async () => {
 		await loadAllData();
 		subscribeToRealtimeUpdates();
 
-		// Vollbild-Modus aktivieren
+		// Vollbild-Modus aktivieren // ENTFERNT
+		/*
 		const enterFullscreen = async () => {
 			try {
 				if (document.documentElement.requestFullscreen) {
@@ -28,12 +28,13 @@
 				console.log('Fullscreen nicht verfügbar:', err);
 			}
 		};
+		*/
 
-		// Warte 1 Sekunde, dann Vollbild aktivieren
-		setTimeout(enterFullscreen, 1000);
+		// Warte 1 Sekunde, dann Vollbild aktivieren // ENTFERNT
+		// setTimeout(enterFullscreen, 1000);
 
-		// Optional: Bei Klick auch Vollbild versuchen (falls automatisch nicht klappt)
-		document.addEventListener('click', enterFullscreen, { once: true });
+		// Optional: Bei Klick auch Vollbild versuchen (falls automatisch nicht klappt) // ENTFERNT
+		// document.addEventListener('click', enterFullscreen, { once: true });
 
 		return () => {
 			unsubscribeFromRealtimeUpdates();
