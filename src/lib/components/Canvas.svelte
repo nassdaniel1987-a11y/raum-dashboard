@@ -12,7 +12,7 @@
 	}>();
 
 	let scrollContainer: HTMLElement;
-	let autoScrollEnabled = $state(true); // $state für Reaktivität, falls du es änderbar machen willst
+	let autoScrollEnabled = $state(true);
 	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
 
 	// Auto-Scroll
@@ -34,9 +34,9 @@
 
 				scrollContainer.scrollBy({
 					top: scrollDirection * 1,
-					behavior: 'auto' // 'smooth' kann bei Intervallen ruckeln
+					behavior: 'auto'
 				});
-			}, 50); // Intervall nach Bedarf anpassen
+			}, 50);
 		}
 	});
 
@@ -46,10 +46,8 @@
 		}
 	});
 
-	// Funktion, um das automatische Scrollen bei Nutzerinteraktion (optional) zu stoppen
 	function handleUserScroll() {
-		// autoScrollEnabled = false; // Optional: Scrollen stoppen
-		// if (scrollInterval) clearInterval(scrollInterval); // Optional: Timer stoppen
+		// Hier kannst du Logik hinzufügen, wenn der User manuell scrollt
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -93,7 +91,7 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
-	onwheel={handleUserScroll} {/* EVENT HANDLER FIX: on:wheel -> onwheel */}
+	onwheel={handleUserScroll}  {/* FEHLERBEHEBUNG: Kommentar entfernt */}
 	transition:fade
 >
 	<div class="canvas">
