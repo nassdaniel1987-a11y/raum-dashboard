@@ -6,7 +6,7 @@
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
 	
-	// SVELTE 5 PROPS SYNTAX
+	// SVELTE 5 PROPS SYNTAX (Bleibt wie im letzten Fix)
 	let { handleEditRoom } = $props<{
 		handleEditRoom: (room: RoomWithConfig) => void;
 	}>();
@@ -48,15 +48,18 @@
 
 	function handleUserScroll() {}
 
-	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
-	$: roomsByFloor = {
+	// --- HIER IST DER FIX ---
+	// $: roomsByFloor = ... (Alt)
+	// let roomsByFloor = $derived(...) (Neu)
+	let roomsByFloor = $derived({
 		extern: $visibleRooms.filter(r => r.floor === 'extern').sort((a, b) => a.position_x - b.position_x),
 		dach: $visibleRooms.filter(r => r.floor === 'dach').sort((a, b) => a.position_x - b.position_x),
 		og2: $visibleRooms.filter(r => r.floor === 'og2').sort((a, b) => a.position_x - b.position_x),
 		og1: $visibleRooms.filter(r => r.floor === 'og1').sort((a, b) => a.position_x - b.position_x),
 		eg: $visibleRooms.filter(r => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter(r => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
-	};
+	});
+	// --- ENDE DES FIXES ---
 
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
