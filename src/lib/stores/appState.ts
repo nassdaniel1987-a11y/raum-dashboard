@@ -71,13 +71,15 @@ export function subscribeToRealtimeUpdates() {
 				console.log('📊 Room status change:', payload);
 				if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
 					roomStatuses.update((map) => {
-						map.set(payload.new.room_id, payload.new as RoomStatus);
-						return new Map(map);
+						const newMap = new Map(map); // Immer Kopie erstellen
+						newMap.set(payload.new.room_id, payload.new as RoomStatus);
+						return newMap;
 					});
 				} else if (payload.eventType === 'DELETE') {
 					roomStatuses.update((map) => {
-						map.delete(payload.old.room_id);
-						return new Map(map);
+						const newMap = new Map(map); // Immer Kopie erstellen
+						newMap.delete(payload.old.room_id);
+						return newMap;
 					});
 				}
 			}
@@ -114,15 +116,17 @@ export function subscribeToRealtimeUpdates() {
 				const config = payload.new as DailyConfig;
 				const key = `${config.room_id}-${config.weekday}`;
 				dailyConfigs.update((map) => {
-					map.set(key, config);
-					return new Map(map);
+					const newMap = new Map(map); // Immer Kopie erstellen
+					newMap.set(key, config);
+					return newMap;
 				});
 			} else if (payload.eventType === 'DELETE') {
 				const config = payload.old as DailyConfig;
 				const key = `${config.room_id}-${config.weekday}`;
 				dailyConfigs.update((map) => {
-					map.delete(key);
-					return new Map(map);
+					const newMap = new Map(map); // Immer Kopie erstellen
+					newMap.delete(key);
+					return newMap;
 				});
 			}
 		})
@@ -197,9 +201,10 @@ export async function toggleRoomStatus(roomId: string) {
 
 	// 1. Optimistisches Update (sofort UI aktualisieren)
 	roomStatuses.update((map) => {
-		const existing = map.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-		map.set(roomId, { ...existing, is_open: newStatus, manual_override: true, last_updated: new Date().toISOString() });
-		return new Map(map);
+		const newMap = new Map(map); // Kopie erstellen
+		const existing = newMap.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+		newMap.set(roomId, { ...existing, is_open: newStatus, manual_override: true, last_updated: new Date().toISOString() });
+		return newMap;
 	});
 
 	// 2. Datenbank-Update im Hintergrund
@@ -215,14 +220,15 @@ export async function toggleRoomStatus(roomId: string) {
 		console.error('Error toggling room status:', error);
 		// Setze den Status auf den *alten* Wert zurück
 		roomStatuses.update((map) => {
+			const newMap = new Map(map); // Kopie erstellen
 			if (currentStatus) {
-				map.set(roomId, currentStatus);
+				newMap.set(roomId, currentStatus);
 			} else {
 				// Fallback, falls es vorher keinen Status gab
 				const fallbackStatus = { room_id: roomId, is_open: !newStatus, manual_override: false, last_updated: new Date().toISOString() };
-				map.set(roomId, fallbackStatus);
+				newMap.set(roomId, fallbackStatus);
 			}
-			return new Map(map);
+			return newMap;
 		});
 	}
 }
@@ -306,11 +312,12 @@ export async function bulkOpenAllRooms() {
 
 	// Optimistisches Update
 	roomStatuses.update((map) => {
+		const newMap = new Map(map); // Kopie erstellen
 		allRooms.forEach((room) => {
-			const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-			map.set(room.id, { ...existing, is_open: true, manual_override: true });
+			const existing = newMap.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+			newMap.set(room.id, { ...existing, is_open: true, manual_override: true });
 		});
-		return new Map(map);
+		return newMap;
 	});
 
 	// DB-Update
@@ -333,16 +340,17 @@ export async function bulkCloseAllRooms() {
 
 	// Optimistisches Update
 	roomStatuses.update((map) => {
+		const newMap = new Map(map); // Kopie erstellen
 		allRooms.forEach((room) => {
-			const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-			map.set(room.id, { ...existing, is_open: false, manual_override: true });
+			const existing = newMap.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+			newMap.set(room.id, { ...existing, is_open: false, manual_override: true });
 		});
-		return new Map(map);
+		return newMap;
 	});
 
 	// DB-Update
 	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
-	
+
 	// Rollback (vereinfacht: lade alle Daten neu bei Fehler)
 	if (error) {
 		console.error("Fehler bei Bulk Close: ", error);
@@ -354,30 +362,36 @@ export async function deleteRoom(roomId: string) {
 	// Optimistisches Update
 	rooms.update(list => list.filter(r => r.id !== roomId));
 	roomStatuses.update(map => {
-		map.delete(roomId);
-		return new Map(map);
+		const newMap = new Map(map); // Kopie erstellen
+		newMap.delete(roomId);
+		return newMap;
 	});
-	// TODO: dailyConfigs auch optimistich löschen
+	dailyConfigs.update(map => { // AUCH Configs löschen
+		const newMap = new Map(map);
+		for (let i = 0; i <= 6; i++) {
+			newMap.delete(`${roomId}-${i}`);
+		}
+		return newMap;
+	});
 
-	// DB-Update
+	// DB-Update (CASCADE sollte Status und Configs löschen)
 	await supabase.from('rooms').delete().eq('id', roomId);
 }
 
 export async function createNewRoom(name: string, floor: string = 'eg') {
 	// Berechne die nächste position_x für das Stockwerk
 	const existingRooms = get(rooms).filter(r => r.floor === floor);
-	const maxPosition = existingRooms.length > 0 
-		? Math.max(...existingRooms.map(r => r.position_x))
-		: 0;
+	const maxPosition = existingRooms.length > 0
+		? Math.max(0, ...existingRooms.map(r => r.position_x || 0)) // Stelle sicher, dass nur Zahlen verglichen werden
+		: -100; // Startwert, damit der erste Raum bei 0 oder 100 landet
 
 	const { data } = await supabase
 		.from('rooms')
-		.insert({ 
-			name, 
+		.insert({
+			name,
 			floor,
 			position_x: maxPosition + 100, // Stellt sicher, dass neue Räume eine höhere pos_x haben
 			position_y: 100,
-			// Standardwerte explizit setzen, damit sie im 'new' Payload der Subscription sind
 			background_color: '#4CAF50',
 			width: 300,
 			height: 250,
@@ -389,20 +403,21 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 
 	if (data) {
 		// Status initialisieren
-		await supabase.from('room_status').insert({ 
-			room_id: data.id, 
-			is_open: false 
+		await supabase.from('room_status').insert({
+			room_id: data.id,
+			is_open: false,
+			manual_override: false // Explizit setzen
 		});
 	}
 }
 
 
-// ========== NEUER AUTOMATIK-SERVICE (START) ==========
+// ========== NEUER AUTOMATIK-SERVICE (START - Version 4) ==========
 // Prüft alle 10 Sekunden, ob Raum-Status aktualisiert werden müssen
 
 if (typeof window !== 'undefined') {
 	// Prüf-Intervall (z.B. alle 10 Sekunden)
-	const AUTOMATION_INTERVAL_MS = 10000; 
+	const AUTOMATION_INTERVAL_MS = 10000;
 
 	const runAutomation = () => {
 		// Holt die aktuellen Werte aus den Stores
@@ -412,8 +427,8 @@ if (typeof window !== 'undefined') {
 		const $settings = get(appSettings);
 		const $weekday = get(currentWeekday);
 		const $time = get(currentTime);
-		
-		if (!$settings) return; // Einstellungen noch nicht geladen
+
+		if (!$settings || $rooms.length === 0) return; // Warten, bis alles geladen ist
 
 		// 1. Ist Nachtruhe aktiv?
 		let isNightModeActive = false;
@@ -422,109 +437,159 @@ if (typeof window !== 'undefined') {
 		const nightEnd = parseTime($settings.night_end);
 
 		if ($settings.night_mode_enabled && nightStart !== null && nightEnd !== null) {
-			if (nightStart > nightEnd) { // z.B. 22:00 - 06:00
-				if (now >= nightStart || now < nightEnd) isNightModeActive = true;
-			} else { // z.B. 09:00 - 17:00
-				if (now >= nightStart && now < nightEnd) isNightModeActive = true;
+			if (nightStart !== nightEnd) { // Verhindert Endlosschleife falls Start == Ende
+				if (nightStart > nightEnd) { // z.B. 22:00 - 06:00
+					if (now >= nightStart || now < nightEnd) isNightModeActive = true;
+				} else { // z.B. 09:00 - 17:00 (Nachtruhe tagsüber?) oder 06:00 - 22:00 (Normalfall umgekehrt)
+					if (now >= nightStart && now < nightEnd) isNightModeActive = true;
+				}
 			}
 		}
 
-		// ========== HIER IST DIE KORREKTUR (START) ==========
-		// Wir geben 'updates' hier einen expliziten Typ
-		const updates: { room_id: string; is_open: boolean; manual_override: boolean }[] = []; 
-		// ========== HIER IST DIE KORREKTUR (ENDE) ==========
+		// Typ für die Update-Objekte definieren
+		type StatusUpdate = { room_id: string; is_open: boolean; manual_override: boolean };
+		const updates: StatusUpdate[] = [];
 
 		for (const room of $rooms) {
 			const status = $statuses.get(room.id);
-			const currentStatus = status?.is_open ?? false;
+			const currentIsOpen = status?.is_open ?? false;
 			const isManual = status?.manual_override ?? false;
-			
+
 			const configKey = `${room.id}-${$weekday}`;
 			const config = $configs.get(configKey);
 
-			let shouldBeOpen = false; // Standard: geschlossen
-			let isScheduled = false; // Ob eine Automatik (Zeitplan/Nachtruhe) greift
+			// 2. Ziel-Status basierend auf Zeitplan / Nachtruhe berechnen
+			let targetIsOpen = false; // Standard: geschlossen
+			let hasScheduleRule = false; // Gibt es überhaupt eine Regel für jetzt?
 
 			if (isNightModeActive) {
-				shouldBeOpen = false;
-				isScheduled = true; // Nachtruhe ist ein "Zeitplan"
+				targetIsOpen = false;
+				hasScheduleRule = true; // Nachtruhe ist eine Regel
 			} else if (config && config.open_time && config.close_time) {
-				// Zeitplan-Prüfung
 				const openTime = parseTime(config.open_time);
 				const closeTime = parseTime(config.close_time);
 
-				if (openTime !== null && closeTime !== null) {
-					isScheduled = true; // Ein Zeitplan existiert
+				// Gültigen Zeitplan prüfen
+				if (openTime !== null && closeTime !== null && openTime !== closeTime) {
+					hasScheduleRule = true; // Ein Zeitplan existiert
 					if (openTime < closeTime) { // Normaler Tag (z.B. 08:00 - 16:00)
 						if (now >= openTime && now < closeTime) {
-							shouldBeOpen = true;
+							targetIsOpen = true;
+						} else {
+							targetIsOpen = false; // Explizit außerhalb setzen
 						}
 					} else { // Über Mitternacht (z.B. 22:00 - 04:00)
 						if (now >= openTime || now < closeTime) {
-							shouldBeOpen = true;
+							targetIsOpen = true;
+						} else {
+							targetIsOpen = false; // Explizit außerhalb setzen
 						}
 					}
 				}
 			}
 
-			// Jetzt die Logik:
-			if (isManual) {
-				// Manuell gesetzt. Prüfen, ob die Automatik den manuellen Status "einholt".
-				if (isScheduled && shouldBeOpen === currentStatus) {
-					// Beispiel: Nutzer hat manuell um 10:00 geöffnet.
-					// Zeitplan (11:00-12:00) wird um 11:00 aktiv.
-					// shouldBeOpen ist true, currentStatus ist true.
-					// -> Automatik übernimmt wieder.
-					updates.push({
-						room_id: room.id,
-						is_open: currentStatus, // Status bleibt gleich
-						manual_override: false // Override aufheben
-					});
+			// 3. Entscheiden, ob ein Update nötig ist - ÜBERARBEITETE LOGIK
+			let needsUpdate = false;
+			let newIsOpen = currentIsOpen;
+			let newManualOverride = isManual;
+
+			if (hasScheduleRule) {
+				// Eine Regel ist aktiv (Zeitplan oder Nachtruhe)
+				if (currentIsOpen !== targetIsOpen) {
+					// Der Status muss geändert werden (egal ob manuell oder nicht)
+					needsUpdate = true;
+					newIsOpen = targetIsOpen;
+					newManualOverride = false; // Automatik übernimmt/überschreibt
+				} else if (isManual) {
+					// Status stimmt zufällig, war aber manuell -> Override entfernen
+					needsUpdate = true;
+					// newIsOpen bleibt currentIsOpen
+					newManualOverride = false; // Automatik übernimmt
 				}
-				// Sonst: Manuell gesetzt, Automatik greift nicht. Nichts tun.
 			} else {
-				// Nicht manuell gesetzt. Prüfen, ob Automatik greifen muss.
-				if (isScheduled && currentStatus !== shouldBeOpen) {
-					// Beispiel: Es ist 11:00, Zeitplan sagt 'open'.
-					// currentStatus ist 'false'.
-					// -> Raum öffnen.
+				// Keine Regel aktiv
+				if (currentIsOpen && !isManual) {
+					// Raum ist offen, aber nicht manuell (also von alter Regel) -> Schließen
+					needsUpdate = true;
+					newIsOpen = false;
+					newManualOverride = false; // Bleibt automatisch
+				}
+				// Wenn manuell offen/geschlossen ohne Regel -> so lassen
+			}
+
+			// Wenn ein Update nötig ist, zum Array hinzufügen
+			if (needsUpdate) {
+				// Nur hinzufügen, wenn sich der DB-Wert tatsächlich ändert
+				const existingDbStatus = { is_open: currentIsOpen, manual_override: isManual };
+				const newDbStatus = { is_open: newIsOpen, manual_override: newManualOverride };
+				if (existingDbStatus.is_open !== newDbStatus.is_open || existingDbStatus.manual_override !== newDbStatus.manual_override) {
 					updates.push({
 						room_id: room.id,
-						is_open: shouldBeOpen,
-						manual_override: false
+						is_open: newIsOpen,
+						manual_override: newManualOverride
 					});
 				}
 			}
-		}
 
-		// Führe Updates in Supabase aus (wenn es welche gibt)
+		} // Ende der Raum-Schleife
+
+		// 4. Führe Updates in Supabase aus (wenn es welche gibt)
 		if (updates.length > 0) {
-			console.log(`[AutoService] Aktualisiere ${updates.length} Räume...`);
+			console.log(`[AutoService V4] Aktualisiere ${updates.length} Räume...`, updates.map(u=>`${u.room_id.substring(0,4)}->${u.is_open?'O':'C'}(M:${u.manual_override})`));
 			supabase
 				.from('room_status')
 				.upsert(updates, { onConflict: 'room_id' })
 				.then(({ error }) => {
 					if (error) {
-						console.error("[AutoService] Fehler bei DB-Update:", error);
+						console.error("[AutoService V4] Fehler bei DB-Update:", error);
+						// Bei Fehler: Lokalen Store *nicht* ändern, auf nächsten Realtime-Sync hoffen
 					} else {
-						// Optimistisches Update im Store (wird eh vom Realtime-Event überschrieben,
-						// aber macht die UI schneller)
+						// Optimistisches Update im Store (lokal)
 						roomStatuses.update(map => {
+							const newMap = new Map(map); // Kopie erstellen
 							for (const update of updates) {
-								const existing = map.get(update.room_id) || { room_id: update.room_id, is_open: !update.is_open, manual_override: true, last_updated: new Date().toISOString() };
-								map.set(update.room_id, { ...existing, is_open: update.is_open, manual_override: false, last_updated: new Date().toISOString() });
+								const existing = newMap.get(update.room_id) || { room_id: update.room_id, is_open: !update.is_open, manual_override: !update.manual_override, last_updated: new Date(0).toISOString() };
+								newMap.set(update.room_id, {
+									...existing,
+									is_open: update.is_open,
+									manual_override: update.manual_override,
+									last_updated: new Date().toISOString()
+								});
 							}
-							return new Map(map);
+							return newMap; // Aktualisierte Kopie zurückgeben
 						});
 					}
 				});
 		}
+	}; // Ende runAutomation
+
+	// Starte den Service nach kurzem Delay (damit Daten geladen sind)
+
+	// === KORREKTUR FÜR TYPE ERROR ===
+	let intervalId: ReturnType<typeof setInterval> | null = null;
+	// ===============================
+
+	const startAutomation = () => {
+		// Stoppe evtl. laufenden Timer (wichtig für HMR)
+		if (intervalId) clearInterval(intervalId);
+		if ((window as any).clearAutomationInterval) (window as any).clearAutomationInterval();
+
+		runAutomation(); // Einmal sofort ausführen
+		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
+		console.log('[AutoService] Gestartet.');
+
+		// Funktion zum Stoppen global verfügbar machen
+		(window as any).clearAutomationInterval = () => {
+			if (intervalId) {
+				clearInterval(intervalId);
+				intervalId = null; // Wichtig: ID zurücksetzen
+				console.log('[AutoService] Gestoppt.');
+			}
+		};
 	};
-	
-	// Starte den Service
-	setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
-	
-	// Führe ihn einmal beim Start aus (nachdem Daten geladen wurden)
-	setTimeout(runAutomation, 2000); // 2 Sek. Puffer
-}
-// ========== NEUER AUTOMATIK-SERVICE (ENDE) ==========
+
+	setTimeout(startAutomation, 3000); // 3 Sek. Puffer
+
+} // Ende if (typeof window !== 'undefined')
+
+// ========== NEUER AUTOMATIK-SERVICE (ENDE - Version 4) ==========
