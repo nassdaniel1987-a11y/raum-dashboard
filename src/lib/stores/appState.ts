@@ -209,10 +209,21 @@ function parseTime(timeString: string): number | null {
 }
 
 // ===== ROOM ACTIONS =====
+
+// ========== HIER IST DIE ÄNDERUNG (START) ==========
+// Diese Funktion ist jetzt korrekt "optimistisch"
 export async function toggleRoomStatus(roomId: string) {
 	const currentStatus = get(roomStatuses).get(roomId);
 	const newStatus = !(currentStatus?.is_open ?? false);
 
+	// 1. Optimistisches Update (sofort UI aktualisieren)
+	roomStatuses.update((map) => {
+		const existing = map.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+		map.set(roomId, { ...existing, is_open: newStatus, manual_override: true, last_updated: new Date().toISOString() });
+		return new Map(map);
+	});
+
+	// 2. Datenbank-Update im Hintergrund
 	const { error } = await supabase
 		.from('room_status')
 		.upsert(
@@ -220,18 +231,24 @@ export async function toggleRoomStatus(roomId: string) {
 			{ onConflict: 'room_id' }
 		);
 
+	// 3. Rollback bei Fehler
 	if (error) {
 		console.error('Error toggling room status:', error);
-		return;
+		// Setze den Status auf den *alten* Wert zurück
+		roomStatuses.update((map) => {
+			if (currentStatus) {
+				map.set(roomId, currentStatus);
+			} else {
+				// Fallback, falls es vorher keinen Status gab
+				const fallbackStatus = { room_id: roomId, is_open: !newStatus, manual_override: false, last_updated: new Date().toISOString() };
+				map.set(roomId, fallbackStatus);
+			}
+			return new Map(map);
+		});
 	}
-
-	// Optimistisches Update (sofort UI aktualisieren)
-	roomStatuses.update((map) => {
-		const existing = map.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-		map.set(roomId, { ...existing, is_open: newStatus, manual_override: true });
-		return new Map(map);
-	});
+	// Bei Erfolg: Nichts tun. Das Realtime-Update bestätigt den Zustand.
 }
+// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 
 export async function updateRoomPosition(roomId: string, x: number, y: number) {
 	const roundedX = Math.round(x);
@@ -310,17 +327,22 @@ export async function bulkOpenAllRooms() {
 		manual_override: true
 	}));
 
+	// Optimistisches Update
+	roomStatuses.update((map) => {
+		allRooms.forEach((room) => {
+			const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+			map.set(room.id, { ...existing, is_open: true, manual_override: true });
+		});
+		return new Map(map);
+	});
+
+	// DB-Update
 	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
 
-	if (!error) {
-		// Optimistisches Update
-		roomStatuses.update((map) => {
-			allRooms.forEach((room) => {
-				const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-				map.set(room.id, { ...existing, is_open: true, manual_override: true });
-			});
-			return new Map(map);
-		});
+	// Rollback (vereinfacht: lade alle Daten neu bei Fehler)
+	if (error) {
+		console.error("Fehler bei Bulk Open: ", error);
+		loadAllData();
 	}
 }
 
@@ -332,21 +354,35 @@ export async function bulkCloseAllRooms() {
 		manual_override: true
 	}));
 
-	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
-
-	if (!error) {
-		// Optimistisches Update
-		roomStatuses.update((map) => {
-			allRooms.forEach((room) => {
-				const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-				map.set(room.id, { ...existing, is_open: false, manual_override: true });
-			});
-			return new Map(map);
+	// Optimistisches Update
+	roomStatuses.update((map) => {
+		allRooms.forEach((room) => {
+			const existing = map.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
+			map.set(room.id, { ...existing, is_open: false, manual_override: true });
 		});
+		return new Map(map);
+	});
+
+	// DB-Update
+	const { error } = await supabase.from('room_status').upsert(updates, { onConflict: 'room_id' });
+	
+	// Rollback (vereinfacht: lade alle Daten neu bei Fehler)
+	if (error) {
+		console.error("Fehler bei Bulk Close: ", error);
+		loadAllData();
 	}
 }
 
 export async function deleteRoom(roomId: string) {
+	// Optimistisches Update
+	rooms.update(list => list.filter(r => r.id !== roomId));
+	roomStatuses.update(map => {
+		map.delete(roomId);
+		return new Map(map);
+	});
+	// TODO: dailyConfigs auch optimistich löschen
+
+	// DB-Update
 	await supabase.from('rooms').delete().eq('id', roomId);
 }
 
@@ -363,13 +399,22 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 			name, 
 			floor,
 			position_x: maxPosition + 100, // Stellt sicher, dass neue Räume eine höhere pos_x haben
-			position_y: 100 
+			position_y: 100,
+			// Standardwerte explizit setzen, damit sie im 'new' Payload der Subscription sind
+			background_color: '#4CAF50',
+			width: 300,
+			height: 250,
+			theme: 'space',
+			image_url: null
 		})
 		.select()
 		.single();
 
 	if (data) {
 		// Status initialisieren
-		await supabase.from('room_status').insert({ room_id: data.id, is_open: false });
+		await supabase.from('room_status').insert({ 
+			room_id: data.id, 
+			is_open: false 
+		});
 	}
 }
