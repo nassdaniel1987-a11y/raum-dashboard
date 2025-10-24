@@ -255,38 +255,44 @@ export async function updateRoomPosition(roomId: string, x: number, y: number) {
 	}
 }
 
-export function swapRoomPositions(draggedRoom: RoomWithConfig, targetRoom: RoomWithConfig) {
-	const draggedPos = draggedRoom.position_x;
-	const targetPos = targetRoom.position_x;
+export function swapRoomPositions(room1: RoomWithConfig, room2: RoomWithConfig) {
+	const pos1 = room1.position_x;
+	const pos2 = room2.position_x;
+
+	// SICHERHEITSPRÜFUNG: Verhindert Tausch, wenn Positionen identisch sind
+	if (pos1 === pos2) {
+		console.error(
+			`[SWAP FEHLER]: Tausch von "${room1.name}" und "${room2.name}" abgebrochen. Beide haben dieselbe position_x: ${pos1}. Bitte Daten in Supabase korrigieren.`
+		);
+		return; // Abbruch
+	}
 
 	// 1. Optimistisches Update (atomar)
-	// Mache ein einziges Update im 'rooms' store, das beide Räume tauscht
 	rooms.update((list) =>
 		list.map((r) => {
-			if (r.id === draggedRoom.id) {
-				return { ...r, position_x: targetPos };
+			if (r.id === room1.id) {
+				return { ...r, position_x: pos2 };
 			}
-			if (r.id === targetRoom.id) {
-				return { ...r, position_x: draggedPos };
+			if (r.id === room2.id) {
+				return { ...r, position_x: pos1 };
 			}
 			return r;
 		})
 	);
 
-	// 2. Datenbank-Updates (fire-and-forget, kein 'await' nötig)
-	// Wir müssen nicht auf die DB warten, die UI ist schon aktualisiert.
+	// 2. Datenbank-Updates (fire-and-forget)
 	supabase
 		.from('rooms')
-		.update({ position_x: targetPos })
-		.eq('id', draggedRoom.id)
+		.update({ position_x: pos2 })
+		.eq('id', room1.id)
 		.then(({ error }) => {
 			if (error) console.error('Error swapping pos 1:', error.message);
 		});
 
 	supabase
 		.from('rooms')
-		.update({ position_x: draggedPos })
-		.eq('id', targetRoom.id)
+		.update({ position_x: pos1 })
+		.eq('id', room2.id)
 		.then(({ error }) => {
 			if (error) console.error('Error swapping pos 2:', error.message);
 		});
@@ -356,7 +362,7 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		.insert({ 
 			name, 
 			floor,
-			position_x: maxPosition + 100, 
+			position_x: maxPosition + 100, // Stellt sicher, dass neue Räume eine höhere pos_x haben
 			position_y: 100 
 		})
 		.select()
