@@ -116,7 +116,12 @@
 	aria-modal="true"
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal-scheduler" onclick|stopPropagation transition:scale={{ duration: 300 }} role="document">
+	<div
+  class="modal-scheduler"
+  on:click|stopPropagation
+  transition:scale={{ duration: 300 }}
+  role="document"
+>
 		<div class="modal-header">
 			<div class="header-content">
 				<h2>📅 Tagesplan für {weekdaysFull[weekday]}</h2>
