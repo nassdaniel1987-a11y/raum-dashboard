@@ -119,8 +119,13 @@
 	aria-modal="true"
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal" onclick|stopPropagation transition:scale role="document">
-		<div class="modal-header">
+	<div
+  class="modal"
+  on:click={(e) => e.stopPropagation()}
+  transition:scale
+  role="document"
+>
+
 			<h2>Raum bearbeiten</h2>
 			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
