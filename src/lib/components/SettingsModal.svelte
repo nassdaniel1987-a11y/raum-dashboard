@@ -2,8 +2,11 @@
 	import { supabase } from '$lib/supabase/client';
 	import { appSettings } from '$lib/stores/appState';
 	import { scale, fade } from 'svelte/transition';
-
-	export let onClose: () => void;
+	
+	// SVELTE 5 PROPS SYNTAX
+	let { onClose } = $props<{
+		onClose: () => void;
+	}>();
 
 	let nightModeEnabled = $appSettings?.night_mode_enabled ?? true;
 	let nightStart = $appSettings?.night_start || '17:00';
@@ -39,15 +42,21 @@
 	}
 </script>
 
-<div class="modal-backdrop" on:click={onClose} transition:fade>
-	<div class="modal" on:click|stopPropagation transition:scale>
+<div 
+	class="modal-backdrop" 
+	on:click={onClose} 
+	transition:fade
+	role="dialog"
+	aria-modal="true"
+	on:keydown={(e) => e.key === 'Escape' && onClose()}
+>
+	<div class="modal" on:click|stopPropagation transition:scale role="document">
 		<div class="modal-header">
 			<h2>⚙️ Einstellungen</h2>
 			<button class="close-btn" on:click={onClose}>✕</button>
 		</div>
 
 		<div class="modal-content">
-			<!-- Nachtruhe-Modus -->
 			<div class="setting-section">
 				<h3>🌙 Nachtruhe-Modus</h3>
 				<div class="toggle-group">
@@ -63,12 +72,12 @@
 				{#if nightModeEnabled}
 					<div class="time-group">
 						<div class="time-input">
-							<label>Nachtruhe beginnt</label>
-							<input type="time" bind:value={nightStart} />
+							<label for="night-start">Nachtruhe beginnt</label>
+							<input id="night-start" type="time" bind:value={nightStart} />
 						</div>
 						<div class="time-input">
-							<label>Nachtruhe endet</label>
-							<input type="time" bind:value={nightEnd} />
+							<label for="night-end">Nachtruhe endet</label>
+							<input id="night-end" type="time" bind:value={nightEnd} />
 						</div>
 					</div>
 					<p class="hint">
@@ -77,7 +86,6 @@
 				{/if}
 			</div>
 
-			<!-- Theme Auswahl -->
 			<div class="setting-section">
 				<h3>🎨 Design-Theme</h3>
 				<div class="theme-grid">
@@ -94,7 +102,6 @@
 				</div>
 			</div>
 
-			<!-- Info -->
 			<div class="info-section">
 				<h4>💡 Hinweise</h4>
 				<ul>
@@ -113,6 +120,7 @@
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;

@@ -1,16 +1,19 @@
 <script lang="ts">
-	import { visibleRooms, isEditMode, swapSelection } from '$lib/stores/appState'; // Geändert
+	import { visibleRooms, isEditMode, swapSelection } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
-	export let handleEditRoom: (room: RoomWithConfig) => void;
+	
+	// SVELTE 5 PROPS SYNTAX
+	let { handleEditRoom } = $props<{
+		handleEditRoom: (room: RoomWithConfig) => void;
+	}>();
 
 	let scrollContainer: HTMLElement;
 	let autoScrollEnabled = true;
 	let scrollInterval: number;
-	// let draggedRoom: RoomWithConfig | null = null; // ENTFERNT
 
 	// Auto-Scroll
 	onMount(() => {
@@ -36,6 +39,7 @@
 			}, 50);
 		}
 	});
+
 	onDestroy(() => {
 		if (scrollInterval) {
 			clearInterval(scrollInterval);
@@ -53,6 +57,7 @@
 		eg: $visibleRooms.filter(r => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter(r => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	};
+
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
 		dach: '🏠 Dachgeschoss',
@@ -61,7 +66,7 @@
 		eg: '🚪 Erdgeschoss',
 		ug: '⬇️ Untergeschoss'
 	};
-	// Definiert die gewünschte Reihenfolge der Stockwerke
+
 	const floorOrder: (keyof typeof floorLabels)[] = [
 		'dach',
 		'og2',
@@ -70,11 +75,6 @@
 		'ug',
 		'extern'
 	];
-	
-	// --- DRAG & DROP LOGIK ENTFERNT ---
-	// function handleDragStart...
-	// function handleDragOver...
-	// function handleDrop...
 
 	// +++ NEUE SWAP-AUSWAHL LOGIK +++
 	function handleSelectForSwap(roomId: string) {
@@ -138,6 +138,7 @@
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.canvas-container {
 		position: fixed;
 		top: 50px;
@@ -195,30 +196,13 @@
 
 	.room-wrapper {
 		transition: transform 0.2s, opacity 0.2s;
-		/* NEU: Styling für Wrapper (damit Flip-Animation besser aussieht) */
-		border-radius: 15px; /* Passt zu RoomCard */
+		border-radius: 15px;
 		transition: all 0.3s;
 	}
 
-	/* NEU: Styling für ausgewählten Wrapper */
 	.room-wrapper.selected {
-		/* Hebt die Karte leicht an, um die Auswahl zu betonen */
 		transform: scale(1.03);
 	}
-
-
-	/* DRAGGABLE CSS ENTFERNT */
-	/*
-	.room-wrapper.draggable {
-		cursor: grab;
-	}
-
-	.room-wrapper.draggable:active {
-		cursor: grabbing;
-		opacity: 0.6;
-		transform: scale(1.05);
-	}
-	*/
 
 	@media (min-width: 1024px) {
 		.rooms-grid {

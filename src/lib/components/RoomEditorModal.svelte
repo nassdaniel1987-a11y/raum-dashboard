@@ -2,10 +2,14 @@
 	import { supabase } from '$lib/supabase/client';
 	import type { RoomWithConfig } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
-	import { currentWeekday } from '$lib/stores/appState';
+	import { currentWeekday, currentTime } from '$lib/stores/appState';
+	import { get } from 'svelte/store';
 
-	export let room: RoomWithConfig;
-	export let onClose: () => void;
+	// SVELTE 5 PROPS SYNTAX
+	let { room, onClose } = $props<{
+		room: RoomWithConfig;
+		onClose: () => void;
+	}>();
 
 	let name = room.name;
 	let floor = room.floor || 'eg';
@@ -17,6 +21,13 @@
 	let textFontSize = room.config?.text_font_size || 28;
 	let imageFile: File | null = null;
 	let uploading = false;
+
+	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
+		if (!timeString) return null;
+		const [hours, minutes] = timeString.split(':').map(Number);
+		if (isNaN(hours) || isNaN(minutes)) return null;
+		return hours * 60 + minutes;
+	};
 
 	async function handleSave() {
 		try {
@@ -40,10 +51,22 @@
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize
 			};
-
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
 			});
+			
+			const $now = get(currentTime);
+			const nowMinutes = $now.getHours() * 60 + $now.getMinutes();
+			const openTimeParsed = parseTimeLocal(openTime);
+
+			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
+				await supabase
+					.from('room_status')
+					.upsert(
+						{ room_id: room.id, is_open: false, manual_override: false },
+						{ onConflict: 'room_id' }
+					);
+			}
 
 			// Upload Image if selected
 			if (imageFile) {
@@ -79,8 +102,15 @@
 	}
 </script>
 
-<div class="modal-backdrop" on:click={onClose} transition:fade>
-	<div class="modal" on:click|stopPropagation transition:scale>
+<div 
+	class="modal-backdrop" 
+	on:click={onClose} 
+	transition:fade
+	role="dialog"
+	aria-modal="true"
+	on:keydown={(e) => e.key === 'Escape' && onClose()}
+>
+	<div class="modal" on:click|stopPropagation transition:scale role="document">
 		<div class="modal-header">
 			<h2>Raum bearbeiten</h2>
 			<button class="close-btn" on:click={onClose}>✕</button>
@@ -88,13 +118,13 @@
 
 		<div class="modal-content">
 			<div class="form-group">
-				<label>Raum-Name</label>
-				<input type="text" bind:value={name} placeholder="z.B. Turnhalle" />
+				<label for="room-name">Raum-Name</label>
+				<input id="room-name" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
 			</div>
 
 			<div class="form-group">
-				<label>Stockwerk</label>
-				<select bind:value={floor}>
+				<label for="room-floor">Stockwerk</label>
+				<select id="room-floor" bind:value={floor}>
 					<option value="extern">🏃 Außenbereich</option>
 					<option value="dach">🏠 Dachgeschoss</option>
 					<option value="og2">2️⃣ 2. OG</option>
@@ -106,8 +136,8 @@
 
 			<div class="form-row">
 				<div class="form-group">
-					<label>Hintergrundfarbe</label>
-					<input type="color" bind:value={backgroundColor} />
+					<label for="room-color">Hintergrundfarbe</label>
+					<input id="room-color" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
 					<label>Vorschau</label>
@@ -116,35 +146,35 @@
 			</div>
 
 			<div class="form-group">
-				<label>Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][$currentWeekday]})</label>
-				<input type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
+				<label for="room-activity">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][$currentWeekday]})</label>
+				<input id="room-activity" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label>Öffnet um</label>
-					<input type="time" bind:value={openTime} />
+					<label for="room-open-time">Öffnet um</label>
+					<input id="room-open-time" type="time" bind:value={openTime} />
 				</div>
 				<div class="form-group">
-					<label>Schließt um</label>
-					<input type="time" bind:value={closeTime} />
+					<label for="room-close-time">Schließt um (Wird ignoriert)</label>
+					<input id="room-close-time" type="time" bind:value={closeTime} />
 				</div>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label>Titel-Schriftgröße: {titleFontSize}px</label>
-					<input type="range" bind:value={titleFontSize} min="24" max="72" />
+					<label for="room-title-font">Titel-Schriftgröße: {titleFontSize}px</label>
+					<input id="room-title-font" type="range" bind:value={titleFontSize} min="24" max="72" />
 				</div>
 				<div class="form-group">
-					<label>Text-Schriftgröße: {textFontSize}px</label>
-					<input type="range" bind:value={textFontSize} min="16" max="48" />
+					<label for="room-text-font">Text-Schriftgröße: {textFontSize}px</label>
+					<input id="room-text-font" type="range" bind:value={textFontSize} min="16" max="48" />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label>Hintergrundbild</label>
-				<input type="file" accept="image/*" on:change={handleFileChange} />
+				<label for="room-image">Hintergrundbild</label>
+				<input id="room-image" type="file" accept="image/*" on:change={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
@@ -161,6 +191,7 @@
 </div>
 
 <style>
+	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;

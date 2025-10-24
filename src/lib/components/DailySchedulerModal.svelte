@@ -4,16 +4,21 @@
 	import { scale, fade, fly } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
-	export let onClose: () => void;
+	// Svelte 5 Syntax für Props
+	let { onClose } = $props<{
+		onClose: () => void;
+	}>();
 
 	const weekdaysFull = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-	const $weekday = get(currentWeekday);
-	const $allRooms = get(rooms);
+	
+	// FEHLERBEHEBUNG: Das '$' wurde aus den Variablennamen entfernt
+	const weekday = get(currentWeekday);
+	const allRooms = get(rooms);
 
 	// Lokaler Status für die Zeiten, um nicht bei jeder Eingabe die DB zu fluten
 	let localOpenTimes = new Map<string, string>();
-	$allRooms.forEach(room => {
-		const configKey = `${room.id}-${$weekday}`;
+	allRooms.forEach(room => {
+		const configKey = `${room.id}-${weekday}`;
 		const config = get(dailyConfigs).get(configKey);
 		localOpenTimes.set(room.id, config?.open_time || '');
 	});
@@ -42,7 +47,7 @@
 			// 1. Config-Update vorbereiten
 			configUpdates.push({
 				room_id: roomId,
-				weekday: $weekday,
+				weekday: weekday, // Korrigierte Variable
 				open_time: openTime || null,
 				close_time: null // Sicherstellen, dass close_time ignoriert wird
 			});
@@ -88,7 +93,7 @@
 
 	// Räume nach Stockwerk sortieren
 	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
-	$: sortedRooms = $allRooms.sort((a, b) => {
+	$: sortedRooms = allRooms.sort((a, b) => {
 		const floorA = floorOrder.indexOf(a.floor);
 		const floorB = floorOrder.indexOf(b.floor);
 		if (floorA !== floorB) {
@@ -98,11 +103,18 @@
 	});
 </script>
 
-<div class="modal-backdrop" on:click={onClose} transition:fade>
-	<div class="modal-scheduler" on:click|stopPropagation transition:scale={{ duration: 300 }}>
+<div 
+	class="modal-backdrop" 
+	on:click={onClose} 
+	transition:fade
+	role="dialog"
+	aria-modal="true"
+	on:keydown={(e) => e.key === 'Escape' && onClose()}
+>
+	<div class="modal-scheduler" on:click|stopPropagation transition:scale={{ duration: 300 }} role="document">
 		<div class="modal-header">
 			<div class="header-content">
-				<h2>📅 Tagesplan für {weekdaysFull[$weekday]}</h2>
+				<h2>📅 Tagesplan für {weekdaysFull[weekday]}</h2>
 				<p class="subtitle">Setze die automatische Öffnungszeit für heute.</p>
 			</div>
 			<button class="close-btn" on:click={onClose}>✕</button>

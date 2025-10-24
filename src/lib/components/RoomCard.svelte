@@ -4,14 +4,18 @@
 	import { supabase } from '$lib/supabase/client';
 	import type { RoomWithConfig } from '$lib/types';
 
-	export let room: RoomWithConfig;
-	export let onEdit: (room: RoomWithConfig) => void;
-	export let onSelect: (roomId: string) => void;
-	export let isSelected: boolean = false;
+	// SVELTE 5 PROPS SYNTAX
+	let { room, onEdit, onSelect, isSelected = false } = $props<{
+		room: RoomWithConfig;
+		onEdit: (room: RoomWithConfig) => void;
+		onSelect: (roomId: string) => void;
+		isSelected?: boolean;
+	}>();
 
 	let showContextMenu = false;
 	let contextMenuX = 0;
 	let contextMenuY = 0;
+
 	async function handleClick() {
 		// Diese Funktion wird jetzt vom card-content aufgerufen
 		if ($isEditMode && !showContextMenu) {
@@ -126,17 +130,19 @@
 		style="left: {contextMenuX}px; top: {contextMenuY}px;"
 		transition:scale={{ duration: 200 }}
 		on:click|stopPropagation
+		role="menu"
 	>
-		<button class="context-item" on:click={() => { onEdit(room); closeContextMenu(); }}>
+		<button class="context-item" on:click={() => { onEdit(room); closeContextMenu(); }} role="menuitem">
 			✏️ Bearbeiten
 		</button>
-		<button class="context-item danger" on:click={handleDelete}>
+		<button class="context-item danger" on:click={handleDelete} role="menuitem">
 			🗑️ Löschen
 		</button>
 	</div>
 {/if}
 
 <style>
+	/* CSS bleibt unverändert */
 	.room-card {
 		position: relative;
 		border-radius: 12px;
