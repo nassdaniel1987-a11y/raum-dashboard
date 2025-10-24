@@ -5,19 +5,49 @@
 	import type { RoomWithConfig } from '$lib/types';
 
 	export let handleEditRoom: (room: RoomWithConfig) => void;
+
+	// Gruppiere Räume nach Stockwerk
+	$: roomsByFloor = {
+		dach: $visibleRooms.filter(r => r.floor === 'dach'),
+		og2: $visibleRooms.filter(r => r.floor === 'og2'),
+		og1: $visibleRooms.filter(r => r.floor === 'og1'),
+		eg: $visibleRooms.filter(r => r.floor === 'eg'),
+		ug: $visibleRooms.filter(r => r.floor === 'ug'),
+		extern: $visibleRooms.filter(r => r.floor === 'extern')
+	};
+
+	const floorLabels = {
+		dach: '🏠 Dachgeschoss',
+		og2: '2️⃣ 2. OG',
+		og1: '1️⃣ 1. OG',
+		eg: '🚪 Erdgeschoss',
+		ug: '⬇️ Untergeschoss',
+		extern: '🏃 Außenbereich'
+	};
 </script>
 
 <div class="canvas-container" transition:fade>
-	<div class="canvas" id="room-canvas">
-		{#each $visibleRooms as room (room.id)}
-			<RoomCard {room} onEdit={handleEditRoom} />
-		{/each}
-
+	<div class="canvas">
 		{#if $visibleRooms.length === 0}
 			<div class="empty-state">
 				<div class="empty-icon">📭</div>
 				<h2>Keine Räume vorhanden</h2>
 				<p>Erstelle deinen ersten Raum über die Admin-Toolbar unten!</p>
+			</div>
+		{:else}
+			<div class="floors-container">
+				{#each Object.entries(roomsByFloor) as [floor, rooms]}
+					{#if rooms.length > 0}
+						<div class="floor-section">
+							<h2 class="floor-title">{floorLabels[floor]}</h2>
+							<div class="rooms-grid">
+								{#each rooms as room (room.id)}
+									<RoomCard {room} onEdit={handleEditRoom} />
+								{/each}
+							</div>
+						</div>
+					{/if}
+				{/each}
 			</div>
 		{/if}
 	</div>
@@ -26,20 +56,67 @@
 <style>
 	.canvas-container {
 		position: fixed;
-		top: 100px;
+		top: 80px;
 		left: 0;
 		right: 0;
-		bottom: 80px;
-		overflow: hidden;
+		bottom: 100px;
+		overflow-y: auto;
+		overflow-x: hidden;
 		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 	}
 
 	.canvas {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-		background-size: 30px 30px;
+		max-width: 1280px;
+		margin: 0 auto;
+		padding: 20px;
+		min-height: 100%;
+	}
+
+	.floors-container {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	.floor-section {
+		background: rgba(255, 255, 255, 0.03);
+		border-radius: 16px;
+		padding: 20px;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.floor-title {
+		color: white;
+		font-size: 24px;
+		font-weight: 700;
+		margin: 0 0 16px 0;
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.rooms-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	/* Responsive für iPad/TV */
+	@media (min-width: 1024px) {
+		.rooms-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	@media (max-width: 768px) {
+		.rooms-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		
+		.floor-title {
+			font-size: 20px;
+		}
 	}
 
 	.empty-state {
@@ -53,23 +130,40 @@
 	}
 
 	.empty-icon {
-		font-size: 120px;
-		margin-bottom: 20px;
+		font-size: 100px;
+		margin-bottom: 16px;
 		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 	}
 
 	.empty-state h2 {
-		font-size: 36px;
+		font-size: 28px;
 		font-weight: 700;
-		margin: 0 0 15px 0;
+		margin: 0 0 12px 0;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	}
 
 	.empty-state p {
-		font-size: 24px;
+		font-size: 18px;
 		margin: 0;
 		opacity: 0.8;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 	}
-</style>
 
+	/* Scrollbar Styling */
+	.canvas-container::-webkit-scrollbar {
+		width: 10px;
+	}
+
+	.canvas-container::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.2);
+	}
+
+	.canvas-container::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 5px;
+	}
+
+	.canvas-container::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.3);
+	}
+</style>

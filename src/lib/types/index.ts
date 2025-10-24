@@ -3,6 +3,7 @@
 export interface Room {
 	id: string;
 	name: string;
+	floor: 'dach' | 'og2' | 'og1' | 'eg' | 'ug' | 'extern';
 	position_x: number;
 	position_y: number;
 	width: number;
