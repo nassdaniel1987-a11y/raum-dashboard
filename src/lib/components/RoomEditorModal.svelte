@@ -16,7 +16,7 @@
 	let backgroundColor = room.background_color;
 	let activity = room.config?.activity || '';
 	let openTime = room.config?.open_time || '';
-	let closeTime = room.config?.close_time || '';
+	let closeTime = room.config?.close_time || ''; // Bleibt drin, wird aber von der Logik ignoriert
 	let titleFontSize = room.config?.title_font_size || 42;
 	let textFontSize = room.config?.text_font_size || 28;
 	let imageFile: File | null = null;
@@ -44,22 +44,26 @@
 			// Update/Insert Daily Config
 			const configData = {
 				room_id: room.id,
-				weekday: $currentWeekday,
+				weekday: get(currentWeekday), // Holen den Wert direkt hier
 				activity,
 				open_time: openTime || null,
-				close_time: closeTime || null,
+				close_time: closeTime || null, // Wird gespeichert, aber ignoriert
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize
 			};
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
 			});
-			
-			const $now = get(currentTime);
-			const nowMinutes = $now.getHours() * 60 + $now.getMinutes();
+
+			// --- HIER IST DER FIX ---
+			// const $now = get(currentTime); // Alt
+			const now = get(currentTime);   // Neu
+			// --- ENDE DES FIXES ---
+			const nowMinutes = now.getHours() * 60 + now.getMinutes(); // Benutzt 'now'
 			const openTimeParsed = parseTimeLocal(openTime);
 
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
+				// Raum sofort schließen (automatisch), wenn zukünftige Öffnungszeit gesetzt
 				await supabase
 					.from('room_status')
 					.upsert(
@@ -102,9 +106,9 @@
 	}
 </script>
 
-<div 
-	class="modal-backdrop" 
-	on:click={onClose} 
+<div
+	class="modal-backdrop"
+	on:click={onClose}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
@@ -118,13 +122,13 @@
 
 		<div class="modal-content">
 			<div class="form-group">
-				<label for="room-name">Raum-Name</label>
-				<input id="room-name" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
+				<label for="room-name-{room.id}">Raum-Name</label> {/* Eindeutige ID */}
+				<input id="room-name-{room.id}" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
 			</div>
 
 			<div class="form-group">
-				<label for="room-floor">Stockwerk</label>
-				<select id="room-floor" bind:value={floor}>
+				<label for="room-floor-{room.id}">Stockwerk</label> {/* Eindeutige ID */}
+				<select id="room-floor-{room.id}" bind:value={floor}>
 					<option value="extern">🏃 Außenbereich</option>
 					<option value="dach">🏠 Dachgeschoss</option>
 					<option value="og2">2️⃣ 2. OG</option>
@@ -136,8 +140,8 @@
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-color">Hintergrundfarbe</label>
-					<input id="room-color" type="color" bind:value={backgroundColor} />
+					<label for="room-color-{room.id}">Hintergrundfarbe</label> {/* Eindeutige ID */}
+					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
 					<label>Vorschau</label>
@@ -146,35 +150,35 @@
 			</div>
 
 			<div class="form-group">
-				<label for="room-activity">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][$currentWeekday]})</label>
-				<input id="room-activity" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
+				<label for="room-activity-{room.id}">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})</label> {/* Eindeutige ID */}
+				<input id="room-activity-{room.id}" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-open-time">Öffnet um</label>
-					<input id="room-open-time" type="time" bind:value={openTime} />
+					<label for="room-open-time-{room.id}">Öffnet um</label> {/* Eindeutige ID */}
+					<input id="room-open-time-{room.id}" type="time" bind:value={openTime} />
 				</div>
 				<div class="form-group">
-					<label for="room-close-time">Schließt um (Wird ignoriert)</label>
-					<input id="room-close-time" type="time" bind:value={closeTime} />
+					<label for="room-close-time-{room.id}">Schließt um (Wird ignoriert)</label> {/* Eindeutige ID */}
+					<input id="room-close-time-{room.id}" type="time" bind:value={closeTime} />
 				</div>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-title-font">Titel-Schriftgröße: {titleFontSize}px</label>
-					<input id="room-title-font" type="range" bind:value={titleFontSize} min="24" max="72" />
+					<label for="room-title-font-{room.id}">Titel-Schriftgröße: {titleFontSize}px</label> {/* Eindeutige ID */}
+					<input id="room-title-font-{room.id}" type="range" bind:value={titleFontSize} min="24" max="72" />
 				</div>
 				<div class="form-group">
-					<label for="room-text-font">Text-Schriftgröße: {textFontSize}px</label>
-					<input id="room-text-font" type="range" bind:value={textFontSize} min="16" max="48" />
+					<label for="room-text-font-{room.id}">Text-Schriftgröße: {textFontSize}px</label> {/* Eindeutige ID */}
+					<input id="room-text-font-{room.id}" type="range" bind:value={textFontSize} min="16" max="48" />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="room-image">Hintergrundbild</label>
-				<input id="room-image" type="file" accept="image/*" on:change={handleFileChange} />
+				<label for="room-image-{room.id}">Hintergrundbild</label> {/* Eindeutige ID */}
+				<input id="room-image-{room.id}" type="file" accept="image/*" on:change={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
