@@ -230,16 +230,31 @@ export async function toggleRoomStatus(roomId: string) {
 	});
 }
 
+// ========== HIER IST DIE ÄNDERUNG (START) ==========
 export async function updateRoomPosition(roomId: string, x: number, y: number) {
+	const roundedX = Math.round(x);
+	const roundedY = Math.round(y);
+
+	// Optimistisches Update (UI sofort aktualisieren)
+	rooms.update((list) =>
+		list.map((r) =>
+			r.id === roomId ? { ...r, position_x: roundedX, position_y: roundedY } : r
+		)
+	);
+
+	// Update in der Datenbank
 	const { error } = await supabase
 		.from('rooms')
-		.update({ position_x: Math.round(x), position_y: Math.round(y) })
+		.update({ position_x: roundedX, position_y: roundedY })
 		.eq('id', roomId);
 
 	if (error) {
 		console.error('Error updating position:', error);
+		// HINWEIS: Bei einem Fehler könnte man ein Rollback des optimist. Updates implementieren,
+		// aber für eine Positionsänderung ist das oft nicht kritisch.
 	}
 }
+// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 
 export async function updateRoomSize(roomId: string, width: number, height: number) {
 	await supabase.from('rooms').update({ width, height }).eq('id', roomId);

@@ -5,7 +5,6 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
-
 	export let handleEditRoom: (room: RoomWithConfig) => void;
 
 	let scrollContainer: HTMLElement;
@@ -37,7 +36,6 @@
 			}, 50);
 		}
 	});
-
 	onDestroy(() => {
 		if (scrollInterval) {
 			clearInterval(scrollInterval);
@@ -55,7 +53,6 @@
 		eg: $visibleRooms.filter(r => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter(r => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	};
-
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
 		dach: '🏠 Dachgeschoss',
@@ -64,6 +61,18 @@
 		eg: '🚪 Erdgeschoss',
 		ug: '⬇️ Untergeschoss'
 	};
+
+	// ========== HIER IST DIE ÄNDERUNG (START) ==========
+	// Definiert die gewünschte Reihenfolge der Stockwerke
+	const floorOrder: (keyof typeof floorLabels)[] = [
+		'dach',
+		'og2',
+		'og1',
+		'eg',
+		'ug',
+		'extern'
+	];
+	// ========== HIER IST DIE ÄNDERUNG (ENDE) ==========
 
 	// Drag & Drop für Reihenfolge (nur im Edit-Modus!)
 	function handleDragStart(room: RoomWithConfig, event: DragEvent) {
@@ -85,7 +94,6 @@
 	async function handleDrop(targetRoom: RoomWithConfig, event: DragEvent) {
 		event.preventDefault();
 		if (!draggedRoom || draggedRoom.id === targetRoom.id || !$isEditMode) return;
-		
 		// Nur innerhalb des gleichen Stockwerks verschieben
 		if (draggedRoom.floor !== targetRoom.floor) {
 			draggedRoom = null;
@@ -96,9 +104,10 @@
 		const draggedPos = draggedRoom.position_x;
 		const targetPos = targetRoom.position_x;
 
+		// WICHTIG: updateRoomPosition stößt jetzt ein optimistisches Update an.
+		// Wir rufen sie nacheinander auf.
 		await updateRoomPosition(draggedRoom.id, targetPos, draggedRoom.position_y);
 		await updateRoomPosition(targetRoom.id, draggedPos, targetRoom.position_y);
-
 		draggedRoom = null;
 	}
 </script>
@@ -118,11 +127,12 @@
 			</div>
 		{:else}
 			<div class="floors-container">
-				{#each Object.entries(roomsByFloor) as [floor, rooms]}
-					{#if rooms.length > 0}
+				{#each floorOrder as floorKey (floorKey)}
+					{@const rooms = roomsByFloor[floorKey]}
+					{#if rooms && rooms.length > 0}
 						<div class="floor-section">
 							<h2 class="floor-title">
-								{floorLabels[floor]}
+								{floorLabels[floorKey]}
 								{#if $isEditMode}
 									<span class="floor-hint">(Ziehen zum Sortieren)</span>
 								{/if}
@@ -145,7 +155,7 @@
 						</div>
 					{/if}
 				{/each}
-			</div>
+				</div>
 		{/if}
 	</div>
 </div>
