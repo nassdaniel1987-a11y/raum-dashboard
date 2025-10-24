@@ -40,8 +40,8 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	{/* FEHLERBEHEBUNG: Kommentar entfernt */}
-	<AdminToolbar {onOpenScheduler} {onOpenSettings} />
+	{/* FEHLERBEHEBUNG: Kommentar jetzt wirklich entfernt */}
+	<AdminToolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
@@ -60,6 +60,6 @@
 	.dashboard {
 		width: 100vw;
 		height: 100vh;
-		overflow: hidden; /* Verhindert Scrollen der Hauptseite */
+		overflow: hidden;
 	}
 </style>
