@@ -6,7 +6,7 @@
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
 
-	// SVELTE 5 PROPS SYNTAX
+	// Svelte 5 Props Syntax
 	let { handleEditRoom } = $props<{
 		handleEditRoom: (room: RoomWithConfig) => void;
 	}>();
@@ -91,7 +91,7 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
-	onwheel={handleUserScroll}  {/* FEHLERBEHEBUNG: Kommentar entfernt */}
+	onwheel={handleUserScroll}  {/* FEHLERBEHEBUNG: Kommentar jetzt wirklich entfernt */}
 	transition:fade
 >
 	<div class="canvas">
