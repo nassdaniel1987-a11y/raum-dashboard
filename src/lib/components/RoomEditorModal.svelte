@@ -5,19 +5,19 @@
 	import { currentWeekday, currentTime } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
 
-	// SVELTE 5 PROPS SYNTAX
+	// Svelte 5 Props Syntax
 	let { room, onClose } = $props<{
 		room: RoomWithConfig;
 		onClose: () => void;
 	}>();
 
-	// SVELTE 5 STATE SYNTAX ($state anstelle von let für reaktive Variablen)
+	// Svelte 5 State Syntax
 	let name = $state(room.name);
 	let floor = $state(room.floor || 'eg');
 	let backgroundColor = $state(room.background_color);
 	let activity = $state(room.config?.activity || '');
 	let openTime = $state(room.config?.open_time || '');
-	let closeTime = $state(room.config?.close_time || ''); // Bleibt drin, wird aber von der Logik ignoriert
+	let closeTime = $state(room.config?.close_time || '');
 	let titleFontSize = $state(room.config?.title_font_size || 42);
 	let textFontSize = $state(room.config?.text_font_size || 28);
 	let imageFile = $state<File | null>(null);
@@ -31,7 +31,7 @@
 	};
 
 	async function handleSave() {
-		uploading = true; // Setze uploading am Anfang
+		uploading = true;
 		try {
 			// Update Room
 			await supabase
@@ -46,10 +46,10 @@
 			// Update/Insert Daily Config
 			const configData = {
 				room_id: room.id,
-				weekday: get(currentWeekday), // Holen den Wert direkt hier
+				weekday: get(currentWeekday),
 				activity,
 				open_time: openTime || null,
-				close_time: closeTime || null, // Wird gespeichert, aber ignoriert
+				close_time: closeTime || null,
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize
 			};
@@ -62,7 +62,6 @@
 			const openTimeParsed = parseTimeLocal(openTime);
 
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
-				// Raum sofort schließen (automatisch), wenn zukünftige Öffnungszeit gesetzt
 				await supabase
 					.from('room_status')
 					.upsert(
@@ -73,7 +72,6 @@
 
 			// Upload Image if selected
 			if (imageFile) {
-				// uploading = true; // Schon oben gesetzt
 				const fileExt = imageFile.name.split('.').pop();
 				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
 				const { error: uploadError } = await supabase.storage
@@ -87,11 +85,9 @@
 
 					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
 				} else {
-					// Fehler beim Upload anzeigen, aber trotzdem weitermachen? Oder hier abbrechen?
 					console.error('Error uploading image:', uploadError);
 					alert('Fehler beim Bild-Upload!');
 				}
-				// uploading = false; // Wird im finally Block gesetzt
 			}
 
 			onClose();
@@ -99,7 +95,7 @@
 			console.error('Error saving room:', error);
 			alert('Fehler beim Speichern!');
 		} finally {
-			uploading = false; // Sicherstellen, dass uploading immer zurückgesetzt wird
+			uploading = false;
 		}
 	}
 
@@ -126,6 +122,7 @@
 		</div>
 
 		<div class="modal-content">
+			{/* FEHLERBEHEBUNG: Kommentare entfernt */}
 			<div class="form-group">
 				<label for="room-name-{room.id}">Raum-Name</label>
 				<input id="room-name-{room.id}" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
@@ -183,7 +180,7 @@
 
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
-				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} /> {/* on:change -> onchange */}
+				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
