@@ -1,377 +1,378 @@
 <script lang="ts">
-	import {
-		isEditMode,
-		bulkOpenAllRooms,
-		bulkCloseAllRooms,
-		createNewRoom,
-		swapSelection,
-		swapRoomPositions,
-		visibleRooms
-	} from '$lib/stores/appState';
-	import { slide } from 'svelte/transition';
+	import { supabase } from '$lib/supabase/client';
+	import type { RoomWithConfig } from '$lib/types';
+	import { scale, fade } from 'svelte/transition';
+	import { currentWeekday, currentTime } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
 
 	// SVELTE 5 PROPS SYNTAX
-	let { onOpenScheduler, onOpenSettings } = $props<{
-		onOpenScheduler: () => void;
-		onOpenSettings: () => void;
+	let { room, onClose } = $props<{
+		room: RoomWithConfig;
+		onClose: () => void;
 	}>();
 
-	let newRoomName = '';
-	let newRoomFloor = 'eg';
-	// Standard: Erdgeschoss
+	// SVELTE 5 STATE SYNTAX ($state anstelle von let für reaktive Variablen)
+	let name = $state(room.name);
+	let floor = $state(room.floor || 'eg');
+	let backgroundColor = $state(room.background_color);
+	let activity = $state(room.config?.activity || '');
+	let openTime = $state(room.config?.open_time || '');
+	let closeTime = $state(room.config?.close_time || ''); // Bleibt drin, wird aber von der Logik ignoriert
+	let titleFontSize = $state(room.config?.title_font_size || 42);
+	let textFontSize = $state(room.config?.text_font_size || 28);
+	let imageFile = $state<File | null>(null);
+	let uploading = $state(false);
 
-	function toggleFullscreen() {
-		if (typeof document === 'undefined') return;
-		if (!document.fullscreenElement) {
-			document.documentElement.requestFullscreen().catch((err) => {
-				console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
+		if (!timeString) return null;
+		const [hours, minutes] = timeString.split(':').map(Number);
+		if (isNaN(hours) || isNaN(minutes)) return null;
+		return hours * 60 + minutes;
+	};
+
+	async function handleSave() {
+		uploading = true; // Setze uploading am Anfang
+		try {
+			// Update Room
+			await supabase
+				.from('rooms')
+				.update({
+					name,
+					floor,
+					background_color: backgroundColor
+				})
+				.eq('id', room.id);
+
+			// Update/Insert Daily Config
+			const configData = {
+				room_id: room.id,
+				weekday: get(currentWeekday), // Holen den Wert direkt hier
+				activity,
+				open_time: openTime || null,
+				close_time: closeTime || null, // Wird gespeichert, aber ignoriert
+				title_font_size: titleFontSize,
+				text_font_size: textFontSize
+			};
+			await supabase.from('daily_configs').upsert(configData, {
+				onConflict: 'room_id,weekday'
 			});
-		} else {
-			if (document.exitFullscreen) {
-				document.exitFullscreen();
+
+			const now = get(currentTime);
+			const nowMinutes = now.getHours() * 60 + now.getMinutes();
+			const openTimeParsed = parseTimeLocal(openTime);
+
+			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
+				// Raum sofort schließen (automatisch), wenn zukünftige Öffnungszeit gesetzt
+				await supabase
+					.from('room_status')
+					.upsert(
+						{ room_id: room.id, is_open: false, manual_override: false },
+						{ onConflict: 'room_id' }
+					);
 			}
+
+			// Upload Image if selected
+			if (imageFile) {
+				// uploading = true; // Schon oben gesetzt
+				const fileExt = imageFile.name.split('.').pop();
+				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
+				const { error: uploadError } = await supabase.storage
+					.from('room-images')
+					.upload(fileName, imageFile);
+
+				if (!uploadError) {
+					const {
+						data: { publicUrl }
+					} = supabase.storage.from('room-images').getPublicUrl(fileName);
+
+					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
+				} else {
+					// Fehler beim Upload anzeigen, aber trotzdem weitermachen? Oder hier abbrechen?
+					console.error('Error uploading image:', uploadError);
+					alert('Fehler beim Bild-Upload!');
+				}
+				// uploading = false; // Wird im finally Block gesetzt
+			}
+
+			onClose();
+		} catch (error) {
+			console.error('Error saving room:', error);
+			alert('Fehler beim Speichern!');
+		} finally {
+			uploading = false; // Sicherstellen, dass uploading immer zurückgesetzt wird
 		}
 	}
 
-	async function handleBulkOpen() {
-		await bulkOpenAllRooms();
-	}
-
-	async function handleBulkClose() {
-		await bulkCloseAllRooms();
-	}
-
-	async function handleCreateRoom() {
-		if (newRoomName.trim()) {
-			await createNewRoom(newRoomName.trim(), newRoomFloor);
-			newRoomName = '';
-			newRoomFloor = 'eg'; // Zurücksetzen
+	function handleFileChange(e: Event) {
+		const target = e.target as HTMLInputElement;
+		if (target.files && target.files[0]) {
+			imageFile = target.files[0];
 		}
-	}
-
-	function toggleEditMode() {
-		isEditMode.update((mode) => !mode);
-		swapSelection.set([]);
-	}
-
-	async function handleSwap() {
-		// --- HIER IST DER FIX ---
-		// const $swapIds = get(swapSelection); // Alt
-		const swapIds = get(swapSelection);   // Neu
-		// --- ENDE DES FIXES ---
-		
-		if (swapIds.length !== 2) return; // Benutzt 'swapIds'
-
-		const [id1, id2] = swapIds;       // Benutzt 'swapIds'
-		const allRooms = get(visibleRooms);
-		
-		const room1 = allRooms.find(r => r.id === id1);
-		const room2 = allRooms.find(r => r.id === id2);
-
-		if (room1 && room2 && room1.floor === room2.floor) {
-			swapRoomPositions(room1, room2);
-		} else if (room1 && room2 && room1.floor !== room2.floor) {
-			alert('Fehler: Räume müssen im selben Stockwerk sein, um sie zu tauschen.');
-		}
-		
-		swapSelection.set([]);
 	}
 </script>
 
-<div class="admin-toolbar" transition:slide={{ duration: 300 }}>
-	<div class="toolbar-section">
-		<button class="mode-toggle" class:active={$isEditMode} on:click={toggleEditMode}>
-			{#if $isEditMode}
-				<span class="icon">🔓</span>
-				<span>Bearbeitungs-Modus</span>
-			{:else}
-				<span class="icon">🔒</span>
-				<span>Anzeige-Modus</span>
-			{/if}
-		</button>
-	</div>
-
-	{#if $isEditMode}
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			{#if $swapSelection.length === 2} 
-				<button class="btn btn-swap" on:click={handleSwap}>
-					<span class="icon">🔄</span>
-					Tauschen
-				</button>
-			{/if}
+<div
+	class="modal-backdrop"
+	onclick={onClose}
+	transition:fade
+	role="dialog"
+	aria-modal="true"
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
+>
+	<div class="modal" onclick|stopPropagation transition:scale role="document">
+		<div class="modal-header">
+			<h2>Raum bearbeiten</h2>
+			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
 
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			<div class="bulk-actions">
-				<button class="btn btn-success" on:click={handleBulkOpen}>
-					<span class="icon">✓</span>
-					Alle öffnen
-				</button>
-
-				<button class="btn btn-danger" on:click={handleBulkClose}>
-					<span class="icon">🔒</span>
-					Alle schließen
-				</button>
+		<div class="modal-content">
+			<div class="form-group">
+				<label for="room-name-{room.id}">Raum-Name</label>
+				<input id="room-name-{room.id}" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
 			</div>
-		</div>
 
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			<div class="create-room">
-				<input
-					type="text"
-					placeholder="Neuer Raum..."
-					bind:value={newRoomName}
-					on:keydown={(e) => e.key === 'Enter' && handleCreateRoom()}
-				/>
-				<select bind:value={newRoomFloor} class="floor-select">
-					<option value="extern">🏃 Außen</option>
-					<option value="dach">🏠 Dach</option>
-					<option value="og2">2️⃣ 2.OG</option>
-					<option value="og1">1️⃣ 1.OG</option>
-					<option value="eg">🚪 EG</option>
-					<option value="ug">⬇️ UG</option>
+			<div class="form-group">
+				<label for="room-floor-{room.id}">Stockwerk</label>
+				<select id="room-floor-{room.id}" bind:value={floor}>
+					<option value="extern">🏃 Außenbereich</option>
+					<option value="dach">🏠 Dachgeschoss</option>
+					<option value="og2">2️⃣ 2. OG</option>
+					<option value="og1">1️⃣ 1. OG</option>
+					<option value="eg">🚪 Erdgeschoss</option>
+					<option value="ug">⬇️ Untergeschoss</option>
 				</select>
-				<button class="btn btn-primary" on:click={handleCreateRoom} disabled={!newRoomName.trim()}>
-					<span class="icon">➕</span>
-					Erstellen
-				</button>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="room-color-{room.id}">Hintergrundfarbe</label>
+					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
+				</div>
+				<div class="form-group">
+					<label>Vorschau</label>
+					<div class="color-preview" style="background: {backgroundColor}"></div>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="room-activity-{room.id}">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})</label>
+				<input id="room-activity-{room.id}" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="room-open-time-{room.id}">Öffnet um</label>
+					<input id="room-open-time-{room.id}" type="time" bind:value={openTime} />
+				</div>
+				<div class="form-group">
+					<label for="room-close-time-{room.id}">Schließt um (Wird ignoriert)</label>
+					<input id="room-close-time-{room.id}" type="time" bind:value={closeTime} />
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="room-title-font-{room.id}">Titel-Schriftgröße: {titleFontSize}px</label>
+					<input id="room-title-font-{room.id}" type="range" bind:value={titleFontSize} min="24" max="72" />
+				</div>
+				<div class="form-group">
+					<label for="room-text-font-{room.id}">Text-Schriftgröße: {textFontSize}px</label>
+					<input id="room-text-font-{room.id}" type="range" bind:value={textFontSize} min="16" max="48" />
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="room-image-{room.id}">Hintergrundbild</label>
+				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} /> {/* on:change -> onchange */}
+				{#if room.image_url}
+					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
+				{/if}
 			</div>
 		</div>
 
-		<div class="toolbar-section" transition:slide={{ axis: 'x', duration: 300 }}>
-			<button class="btn btn-info" on:click={onOpenScheduler}>
-				<span class="icon">📅</span>
-				Tagesplan
+		<div class="modal-footer">
+			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
+			<button class="btn btn-primary" onclick={handleSave} disabled={uploading}>
+				{uploading ? 'Lädt hoch...' : 'Speichern'}
 			</button>
 		</div>
-	{/if}
-
-	<div class="toolbar-section ml-auto">
-		<button class="btn btn-settings" on:click={toggleFullscreen}>
-			<span class="icon">🖥️</span>
-			Vollbild
-		</button>
-
-		<button class="btn btn-settings" on:click={onOpenSettings}>
-			<span class="icon">⚙️</span>
-			Einstellungen
-		</button>
-	</div>
-
-	<div class="toolbar-info">
-		{#if $isEditMode}
-			<span class="info-text">💡 Rechtsklick → Bearbeiten | Kacheln auswählen → Tauschen</span>
-		{:else}
-			<span class="info-text">👀 Anzeige-Modus aktiv</span>
-		{/if}
 	</div>
 </div>
 
 <style>
 	/* CSS bleibt unverändert */
-	.admin-toolbar {
+	.modal-backdrop {
 		position: fixed;
-		bottom: 0;
+		top: 0;
 		left: 0;
 		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.8);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		backdrop-filter: blur(5px);
+	}
+
+	.modal {
 		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-		box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-		padding: 8px 20px;
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		z-index: 100;
-		backdrop-filter: blur(10px);
-		flex-wrap: wrap;
-		min-height: 50px;
-	}
-
-	.toolbar-section {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-
-	.ml-auto {
-		margin-left: auto;
-	}
-
-	.mode-toggle {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 16px;
-		font-size: 14px;
-		font-weight: 600;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.1);
+		border-radius: 24px;
+		width: 90%;
+		max-width: 600px;
+		max-height: 90vh;
+		overflow-y: auto;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 		color: white;
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 24px;
+		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.modal-header h2 {
+		margin: 0;
+		font-size: 28px;
+		font-weight: 700;
+	}
+
+	.close-btn {
+		background: rgba(255, 255, 255, 0.1);
+		border: none;
+		color: white;
+		font-size: 24px;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
 		cursor: pointer;
 		transition: all 0.3s;
-		backdrop-filter: blur(10px);
 	}
 
-	.mode-toggle:hover {
+	.close-btn:hover {
 		background: rgba(255, 255, 255, 0.2);
-		transform: scale(1.05);
+		transform: rotate(90deg);
 	}
 
-	.mode-toggle.active {
-		background: rgba(34, 197, 94, 0.3);
-		border-color: rgba(34, 197, 94, 0.6);
-		box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+	.modal-content {
+		padding: 24px;
 	}
 
-	.bulk-actions {
+	.form-group {
+		margin-bottom: 20px;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 15px;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 8px;
+		font-weight: 600;
+		font-size: 14px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		opacity: 0.9;
+	}
+
+	input[type='text'],
+	input[type='time'],
+	input[type='file'],
+	select {
+		width: 100%;
+		padding: 12px;
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 16px;
+		transition: all 0.3s;
+		cursor: pointer;
+	}
+
+	select option {
+		background: #1e3a8a;
+		color: white;
+	}
+
+	input[type='text']:focus,
+	input[type='time']:focus,
+	select:focus {
+		outline: none;
+		border-color: rgba(59, 130, 246, 0.8);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	input[type='color'] {
+		width: 100%;
+		height: 50px;
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 12px;
+		cursor: pointer;
+	}
+
+	input[type='range'] {
+		width: 100%;
+	}
+
+	.color-preview {
+		width: 100%;
+		height: 50px;
+		border-radius: 12px;
+		border: 2px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.hint {
+		font-size: 12px;
+		opacity: 0.7;
+		margin-top: 5px;
+	}
+
+	.modal-footer {
+		padding: 24px;
+		border-top: 2px solid rgba(255, 255, 255, 0.1);
 		display: flex;
-		gap: 8px;
+		gap: 12px;
+		justify-content: flex-end;
 	}
 
 	.btn {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 12px;
-		font-size: 13px;
-		font-weight: 600;
+		padding: 12px 24px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 12px;
+		font-size: 16px;
+		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s;
+	}
+
+	.btn-secondary {
+		background: rgba(255, 255, 255, 0.1);
 		color: white;
-		white-space: nowrap;
 	}
 
-	.btn:hover:not(:disabled) {
-		transform: translateY(-2px);
-		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-	}
-
-	.btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.btn-success {
-		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-	}
-
-	.btn-danger {
-		background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+	.btn-secondary:hover {
+		background: rgba(255, 255, 255, 0.2);
 	}
 
 	.btn-primary {
 		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-	}
-
-	.btn-info {
-		background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-	}
-
-	.btn-settings {
-		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-	}
-
-	.btn-swap {
-		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-		box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-		border: 2px solid rgba(245, 158, 11, 0.8);
-		padding: 6px 16px;
-		font-size: 14px;
-	}
-
-
-	.icon {
-		font-size: 14px;
-	}
-
-	.create-room {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-	}
-
-	.create-room input {
-		padding: 6px 12px;
-		font-size: 13px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.1);
 		color: white;
-		min-width: 120px;
-		backdrop-filter: blur(10px);
 	}
 
-	.create-room input::placeholder {
-		color: rgba(255, 255, 255, 0.6);
+	.btn-primary:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
 	}
 
-	.create-room input:focus {
-		outline: none;
-		border-color: rgba(59, 130, 246, 0.8);
-		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-	}
-
-	.floor-select {
-		padding: 6px 10px;
-		font-size: 13px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.1);
-		color: white;
-		backdrop-filter: blur(10px);
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.floor-select:focus {
-		outline: none;
-		border-color: rgba(59, 130, 246, 0.8);
-		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-	}
-
-	.floor-select option {
-		background: #1e3a8a;
-		color: white;
-		font-weight: 600;
-	}
-
-	.toolbar-info {
-		flex-basis: 100%;
-		padding: 6px 12px;
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 8px;
-		backdrop-filter: blur(10px);
-		text-align: center;
-	}
-
-	.info-text {
-		font-size: 12px;
-		font-weight: 500;
-		color: rgba(255, 255, 255, 0.9);
-	}
-
-	@media (max-width: 1200px) {
-		.admin-toolbar {
-			padding: 6px 15px;
-			gap: 8px;
-		}
-
-		.btn {
-			font-size: 12px;
-			padding: 5px 10px;
-		}
-
-		.create-room input {
-			min-width: 100px;
-			font-size: 12px;
-		}
-
-		.floor-select {
-			font-size: 12px;
-			padding: 5px 8px;
-		}
+	.btn-primary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>

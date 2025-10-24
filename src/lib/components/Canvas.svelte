@@ -5,21 +5,21 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
-	
-	// SVELTE 5 PROPS SYNTAX (Bleibt wie im letzten Fix)
+
+	// SVELTE 5 PROPS SYNTAX
 	let { handleEditRoom } = $props<{
 		handleEditRoom: (room: RoomWithConfig) => void;
 	}>();
 
 	let scrollContainer: HTMLElement;
-	let autoScrollEnabled = true;
-	let scrollInterval: number;
+	let autoScrollEnabled = $state(true); // $state für Reaktivität, falls du es änderbar machen willst
+	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
 
 	// Auto-Scroll
 	onMount(() => {
 		if (scrollContainer && autoScrollEnabled) {
 			let scrollDirection = 1;
-			
+
 			scrollInterval = setInterval(() => {
 				if (!scrollContainer) return;
 
@@ -34,9 +34,9 @@
 
 				scrollContainer.scrollBy({
 					top: scrollDirection * 1,
-					behavior: 'auto'
+					behavior: 'auto' // 'smooth' kann bei Intervallen ruckeln
 				});
-			}, 50);
+			}, 50); // Intervall nach Bedarf anpassen
 		}
 	});
 
@@ -46,11 +46,13 @@
 		}
 	});
 
-	function handleUserScroll() {}
+	// Funktion, um das automatische Scrollen bei Nutzerinteraktion (optional) zu stoppen
+	function handleUserScroll() {
+		// autoScrollEnabled = false; // Optional: Scrollen stoppen
+		// if (scrollInterval) clearInterval(scrollInterval); // Optional: Timer stoppen
+	}
 
-	// --- HIER IST DER FIX ---
-	// $: roomsByFloor = ... (Alt)
-	// let roomsByFloor = $derived(...) (Neu)
+	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
 	let roomsByFloor = $derived({
 		extern: $visibleRooms.filter(r => r.floor === 'extern').sort((a, b) => a.position_x - b.position_x),
 		dach: $visibleRooms.filter(r => r.floor === 'dach').sort((a, b) => a.position_x - b.position_x),
@@ -59,7 +61,6 @@
 		eg: $visibleRooms.filter(r => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter(r => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	});
-	// --- ENDE DES FIXES ---
 
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
@@ -79,22 +80,20 @@
 		'extern'
 	];
 
-	// +++ NEUE SWAP-AUSWAHL LOGIK +++
 	function handleSelectForSwap(roomId: string) {
 		swapSelection.update(ids => {
 			if (ids.includes(roomId)) {
-				return ids.filter(id => id !== roomId); // Bereits ausgewählt -> Abwählen
+				return ids.filter(id => id !== roomId);
 			}
-			// Neuen hinzufügen und auf 2 begrenzen (die letzten 2)
 			return [...ids, roomId].slice(-2);
 		});
 	}
 </script>
 
-<div 
-	class="canvas-container" 
+<div
+	class="canvas-container"
 	bind:this={scrollContainer}
-	on:wheel={handleUserScroll}
+	onwheel={handleUserScroll} {/* EVENT HANDLER FIX: on:wheel -> onwheel */}
 	transition:fade
 >
 	<div class="canvas">
@@ -123,8 +122,8 @@
 										class="room-wrapper"
 										class:selected={$swapSelection.includes(room.id)}
 									>
-										<RoomCard 
-											{room} 
+										<RoomCard
+											{room}
 											onEdit={handleEditRoom}
 											onSelect={handleSelectForSwap}
 											isSelected={$swapSelection.includes(room.id)}
@@ -217,7 +216,7 @@
 		.rooms-grid {
 			grid-template-columns: repeat(2, 1fr);
 		}
-		
+
 		.floor-title {
 			font-size: 20px;
 		}

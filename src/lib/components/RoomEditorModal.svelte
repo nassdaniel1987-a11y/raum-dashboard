@@ -11,16 +11,17 @@
 		onClose: () => void;
 	}>();
 
-	let name = room.name;
-	let floor = room.floor || 'eg';
-	let backgroundColor = room.background_color;
-	let activity = room.config?.activity || '';
-	let openTime = room.config?.open_time || '';
-	let closeTime = room.config?.close_time || ''; // Bleibt drin, wird aber von der Logik ignoriert
-	let titleFontSize = room.config?.title_font_size || 42;
-	let textFontSize = room.config?.text_font_size || 28;
-	let imageFile: File | null = null;
-	let uploading = false;
+	// SVELTE 5 STATE SYNTAX ($state anstelle von let für reaktive Variablen)
+	let name = $state(room.name);
+	let floor = $state(room.floor || 'eg');
+	let backgroundColor = $state(room.background_color);
+	let activity = $state(room.config?.activity || '');
+	let openTime = $state(room.config?.open_time || '');
+	let closeTime = $state(room.config?.close_time || ''); // Bleibt drin, wird aber von der Logik ignoriert
+	let titleFontSize = $state(room.config?.title_font_size || 42);
+	let textFontSize = $state(room.config?.text_font_size || 28);
+	let imageFile = $state<File | null>(null);
+	let uploading = $state(false);
 
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
@@ -30,6 +31,7 @@
 	};
 
 	async function handleSave() {
+		uploading = true; // Setze uploading am Anfang
 		try {
 			// Update Room
 			await supabase
@@ -55,11 +57,8 @@
 				onConflict: 'room_id,weekday'
 			});
 
-			// --- HIER IST DER FIX ---
-			// const $now = get(currentTime); // Alt
-			const now = get(currentTime);   // Neu
-			// --- ENDE DES FIXES ---
-			const nowMinutes = now.getHours() * 60 + now.getMinutes(); // Benutzt 'now'
+			const now = get(currentTime);
+			const nowMinutes = now.getHours() * 60 + now.getMinutes();
 			const openTimeParsed = parseTimeLocal(openTime);
 
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
@@ -74,7 +73,7 @@
 
 			// Upload Image if selected
 			if (imageFile) {
-				uploading = true;
+				// uploading = true; // Schon oben gesetzt
 				const fileExt = imageFile.name.split('.').pop();
 				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
 				const { error: uploadError } = await supabase.storage
@@ -87,14 +86,20 @@
 					} = supabase.storage.from('room-images').getPublicUrl(fileName);
 
 					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
+				} else {
+					// Fehler beim Upload anzeigen, aber trotzdem weitermachen? Oder hier abbrechen?
+					console.error('Error uploading image:', uploadError);
+					alert('Fehler beim Bild-Upload!');
 				}
-				uploading = false;
+				// uploading = false; // Wird im finally Block gesetzt
 			}
 
 			onClose();
 		} catch (error) {
 			console.error('Error saving room:', error);
 			alert('Fehler beim Speichern!');
+		} finally {
+			uploading = false; // Sicherstellen, dass uploading immer zurückgesetzt wird
 		}
 	}
 
@@ -108,26 +113,26 @@
 
 <div
 	class="modal-backdrop"
-	on:click={onClose}
+	onclick={onClose}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
-	on:keydown={(e) => e.key === 'Escape' && onClose()}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal" on:click|stopPropagation transition:scale role="document">
+	<div class="modal" onclick|stopPropagation transition:scale role="document">
 		<div class="modal-header">
 			<h2>Raum bearbeiten</h2>
-			<button class="close-btn" on:click={onClose}>✕</button>
+			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
 
 		<div class="modal-content">
 			<div class="form-group">
-				<label for="room-name-{room.id}">Raum-Name</label> {/* Eindeutige ID */}
+				<label for="room-name-{room.id}">Raum-Name</label>
 				<input id="room-name-{room.id}" type="text" bind:value={name} placeholder="z.B. Turnhalle" />
 			</div>
 
 			<div class="form-group">
-				<label for="room-floor-{room.id}">Stockwerk</label> {/* Eindeutige ID */}
+				<label for="room-floor-{room.id}">Stockwerk</label>
 				<select id="room-floor-{room.id}" bind:value={floor}>
 					<option value="extern">🏃 Außenbereich</option>
 					<option value="dach">🏠 Dachgeschoss</option>
@@ -140,7 +145,7 @@
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-color-{room.id}">Hintergrundfarbe</label> {/* Eindeutige ID */}
+					<label for="room-color-{room.id}">Hintergrundfarbe</label>
 					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
@@ -150,35 +155,35 @@
 			</div>
 
 			<div class="form-group">
-				<label for="room-activity-{room.id}">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})</label> {/* Eindeutige ID */}
+				<label for="room-activity-{room.id}">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})</label>
 				<input id="room-activity-{room.id}" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-open-time-{room.id}">Öffnet um</label> {/* Eindeutige ID */}
+					<label for="room-open-time-{room.id}">Öffnet um</label>
 					<input id="room-open-time-{room.id}" type="time" bind:value={openTime} />
 				</div>
 				<div class="form-group">
-					<label for="room-close-time-{room.id}">Schließt um (Wird ignoriert)</label> {/* Eindeutige ID */}
+					<label for="room-close-time-{room.id}">Schließt um (Wird ignoriert)</label>
 					<input id="room-close-time-{room.id}" type="time" bind:value={closeTime} />
 				</div>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<label for="room-title-font-{room.id}">Titel-Schriftgröße: {titleFontSize}px</label> {/* Eindeutige ID */}
+					<label for="room-title-font-{room.id}">Titel-Schriftgröße: {titleFontSize}px</label>
 					<input id="room-title-font-{room.id}" type="range" bind:value={titleFontSize} min="24" max="72" />
 				</div>
 				<div class="form-group">
-					<label for="room-text-font-{room.id}">Text-Schriftgröße: {textFontSize}px</label> {/* Eindeutige ID */}
+					<label for="room-text-font-{room.id}">Text-Schriftgröße: {textFontSize}px</label>
 					<input id="room-text-font-{room.id}" type="range" bind:value={textFontSize} min="16" max="48" />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="room-image-{room.id}">Hintergrundbild</label> {/* Eindeutige ID */}
-				<input id="room-image-{room.id}" type="file" accept="image/*" on:change={handleFileChange} />
+				<label for="room-image-{room.id}">Hintergrundbild</label>
+				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} /> {/* on:change -> onchange */}
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
@@ -186,8 +191,8 @@
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-secondary" on:click={onClose}>Abbrechen</button>
-			<button class="btn btn-primary" on:click={handleSave} disabled={uploading}>
+			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
+			<button class="btn btn-primary" onclick={handleSave} disabled={uploading}>
 				{uploading ? 'Lädt hoch...' : 'Speichern'}
 			</button>
 		</div>
