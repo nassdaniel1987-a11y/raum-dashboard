@@ -229,15 +229,25 @@ export function applyTheme(themeId: string) {
 	root.style.setProperty('--card-bg', theme.colors.cardBg);
 
 	// Hintergrundbild setzen (falls vorhanden)
+	const body = document.body;
 	if (theme.backgroundImageUrl) {
-		document.body.style.backgroundImage = `url('${theme.backgroundImageUrl}')`;
-		document.body.style.backgroundSize = 'cover';
-		document.body.style.backgroundPosition = 'center';
-		document.body.style.backgroundAttachment = 'fixed';
-		document.body.style.backgroundRepeat = 'no-repeat';
+		// Erst Hintergrundfarbe setzen als Fallback
+		body.style.backgroundColor = theme.colors.background;
+		
+		// Dann Hintergrundbild setzen
+		body.style.backgroundImage = `url('${theme.backgroundImageUrl}')`;
+		body.style.backgroundSize = 'cover';
+		body.style.backgroundPosition = 'center';
+		body.style.backgroundAttachment = 'fixed';
+		body.style.backgroundRepeat = 'no-repeat';
+		
+		console.log(`🖼️ Hintergrundbild geladen: ${theme.backgroundImageUrl}`);
 	} else {
-		document.body.style.backgroundImage = 'none';
-		document.body.style.backgroundColor = theme.colors.background;
+		// Kein Bild - nur Hintergrundfarbe
+		body.style.backgroundImage = 'none';
+		body.style.backgroundColor = theme.colors.background;
+		
+		console.log(`🎨 Nur Hintergrundfarbe: ${theme.colors.background}`);
 	}
 
 	// Theme-Klasse am Body setzen

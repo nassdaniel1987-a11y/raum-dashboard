@@ -71,10 +71,10 @@
 	:global(body) {
 		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 		overflow: hidden;
-		background: var(--color-background);
 		color: var(--color-text-primary);
 		transition: background 0.5s ease, color 0.3s ease;
 		position: relative;
+		/* Background wird von themes.ts per JS gesetzt */
 	}
 
 	:global(button) {

@@ -146,7 +146,8 @@
 		bottom: 50px;
 		overflow-y: auto;
 		overflow-x: hidden;
-		background: var(--color-background);
+		/* Kein Background - damit Body-Hintergrundbild sichtbar ist */
+		background: transparent;
 	}
 
 	.canvas {
