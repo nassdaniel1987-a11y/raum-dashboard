@@ -132,6 +132,12 @@
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.stopPropagation();
+			}
+		}}
 	>
 		<div class="modal-header">
 			<h2 id="modal-title">Raum bearbeiten</h2>
@@ -196,7 +202,6 @@
 
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
-				<!-- Datei-Upload für Hintergrundbild -->
 				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>

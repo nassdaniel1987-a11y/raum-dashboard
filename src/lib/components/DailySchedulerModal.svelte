@@ -11,11 +11,10 @@
 
 	const weekdaysFull = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 	const weekday = get(currentWeekday);
-	const allRooms = get(rooms); // Holen nur einmal beim Initialisieren
+	const allRooms = get(rooms);
 
 	// SVELTE 5 STATE SYNTAX
 	let localOpenTimes = $state(new Map<string, string>());
-	// Initialisiere die Map nach der Deklaration
 	allRooms.forEach(room => {
 		const configKey = `${room.id}-${weekday}`;
 		const config = get(dailyConfigs).get(configKey);
@@ -76,12 +75,9 @@
 		} catch (error) {
 			console.error('Fehler beim Speichern:', error);
 			showMessage('Fehler beim Speichern!', 'error');
-		}
-		// Saving wird im finally Block gesetzt
-		finally {
+		} finally {
 			saving = false;
 		}
-		// onClose(); // Wird jetzt im showMessage Timeout aufgerufen bei Erfolg
 	}
 
 	function showMessage(text: string, type: 'success' | 'error') {
@@ -98,14 +94,21 @@
 
 	// Räume nach Stockwerk sortieren mit $derived
 	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
-	let sortedRooms = $derived(allRooms.slice().sort((a, b) => { // .slice() für Kopie, da sort() inplace arbeitet
+	let sortedRooms = $derived(allRooms.slice().sort((a, b) => {
 		const floorA = floorOrder.indexOf(a.floor);
 		const floorB = floorOrder.indexOf(b.floor);
 		if (floorA !== floorB) {
 			return floorA - floorB;
 		}
-		return a.position_x - b.position_x; // Zweitsortierung nach Position
+		return a.position_x - b.position_x;
 	}));
+
+	// Funktion zum Aktualisieren der Zeit für einen Raum
+	function updateRoomTime(roomId: string, value: string) {
+		const newMap = new Map(localOpenTimes);
+		newMap.set(roomId, value);
+		localOpenTimes = newMap;
+	}
 </script>
 
 <div
@@ -127,7 +130,7 @@
 				<h2>📅 Tagesplan für {weekdaysFull[weekday]}</h2>
 				<p class="subtitle">Setze die automatische Öffnungszeit für heute.</p>
 			</div>
-			<button class="close-btn" onclick={onClose}>✕</button>
+			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
 
 		{#if message}
@@ -153,7 +156,8 @@
 							<input
 								type="time"
 								class="time-input"
-								bind:value={localOpenTimes.get(room.id)}
+								value={localOpenTimes.get(room.id) || ''}
+								oninput={(e) => updateRoomTime(room.id, e.currentTarget.value)}
 							/>
 						</div>
 					</div>
@@ -171,7 +175,6 @@
 </div>
 
 <style>
-	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;
@@ -261,7 +264,7 @@
 		position: sticky;
 		top: 0;
 		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-		z-index: 1; /* Sicherstellen, dass der Header über dem Inhalt liegt */
+		z-index: 1;
 	}
 
 	.room-list {
@@ -285,8 +288,8 @@
 		align-items: center;
 		gap: 12px;
 		flex: 1;
-		min-width: 0; /* Verhindert Überlaufen */
-		margin-right: 16px; /* Abstand zum Input */
+		min-width: 0;
+		margin-right: 16px;
 	}
 
 	.room-color {
@@ -299,9 +302,9 @@
 
 	.room-name {
 		font-weight: 600;
-		white-space: nowrap; /* Verhindert Umbruch */
-		overflow: hidden; /* Versteckt überlaufenden Text */
-		text-overflow: ellipsis; /* Fügt "..." hinzu */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.floor-badge {
@@ -313,7 +316,7 @@
 	}
 
 	.time-input-wrapper {
-		flex-shrink: 0; /* Verhindert, dass das Input schrumpft */
+		flex-shrink: 0;
 	}
 
 	.time-input {

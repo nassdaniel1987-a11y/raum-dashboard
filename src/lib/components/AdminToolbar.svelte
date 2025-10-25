@@ -130,6 +130,11 @@
 		aria-modal="true"
 		aria-labelledby="modal-title"
 		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.stopPropagation();
+			}
+		}}
 	>
 		<div class="modal-header">
 			<h2 id="modal-title">Raum bearbeiten</h2>
