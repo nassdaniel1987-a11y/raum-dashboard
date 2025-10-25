@@ -11,13 +11,13 @@
 		onClose: () => void;
 	}>();
 
-	// SVELTE 5 STATE SYNTAX ($state anstelle von let für reaktive Variablen)
+	// SVELTE 5 STATE SYNTAX
 	let name = $state(room.name);
 	let floor = $state(room.floor || 'eg');
 	let backgroundColor = $state(room.background_color);
 	let activity = $state(room.config?.activity || '');
 	let openTime = $state(room.config?.open_time || '');
-	let closeTime = $state(room.config?.close_time || ''); // Bleibt drin, wird aber von der Logik ignoriert
+	let closeTime = $state(room.config?.close_time || '');
 	let titleFontSize = $state(room.config?.title_font_size || 42);
 	let textFontSize = $state(room.config?.text_font_size || 28);
 	let imageFile = $state<File | null>(null);
@@ -31,9 +31,8 @@
 	};
 
 	async function handleSave() {
-		uploading = true; // Setze uploading am Anfang
+		uploading = true;
 		try {
-			// Update Room
 			await supabase
 				.from('rooms')
 				.update({
@@ -43,13 +42,12 @@
 				})
 				.eq('id', room.id);
 
-			// Update/Insert Daily Config
 			const configData = {
 				room_id: room.id,
-				weekday: get(currentWeekday), // Holen den Wert direkt hier
+				weekday: get(currentWeekday),
 				activity,
 				open_time: openTime || null,
-				close_time: closeTime || null, // Wird gespeichert, aber ignoriert
+				close_time: closeTime || null,
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize
 			};
@@ -62,7 +60,6 @@
 			const openTimeParsed = parseTimeLocal(openTime);
 
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
-				// Raum sofort schließen (automatisch), wenn zukünftige Öffnungszeit gesetzt
 				await supabase
 					.from('room_status')
 					.upsert(
@@ -71,7 +68,6 @@
 					);
 			}
 
-			// Upload Image if selected
 			if (imageFile) {
 				const fileExt = imageFile.name.split('.').pop();
 				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
@@ -106,37 +102,34 @@
 			imageFile = target.files[0];
 		}
 	}
-	
+
 	function handleBackdropClick(e: MouseEvent) {
 		if (e.target === e.currentTarget) {
 			onClose();
 		}
 	}
-	
-	function handleBackdropKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			onClose();
-		}
+
+	function handleModalClick(e: MouseEvent) {
+		e.stopPropagation();
 	}
 </script>
 
-<!-- FIX: role="dialog" verschoben zum modal-div, backdrop bekommt role="presentation" -->
 <div
 	class="modal-backdrop"
 	onclick={handleBackdropClick}
-	onkeydown={handleBackdropKeydown}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
 	transition:fade
 	role="presentation"
 	tabindex="-1"
 >
-	<!-- FIX: Geändert zu button-Element mit role="dialog" -->
 	<div
 		class="modal"
-		onclick={(e) => e.stopPropagation()}
+		onclick={handleModalClick}
 		transition:scale
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
+		tabindex="0"
 	>
 		<div class="modal-header">
 			<h2 id="modal-title">Raum bearbeiten</h2>
@@ -167,7 +160,6 @@
 					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
-					<!-- FIX: Label mit for-Attribut verbunden -->
 					<label for="color-preview-{room.id}">Vorschau</label>
 					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}" role="img" aria-label="Farbvorschau"></div>
 				</div>
@@ -208,7 +200,6 @@
 					accept="image/*"
 					onchange={handleFileChange}
 				/>
-
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
 				{/if}
@@ -225,7 +216,6 @@
 </div>
 
 <style>
-	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;

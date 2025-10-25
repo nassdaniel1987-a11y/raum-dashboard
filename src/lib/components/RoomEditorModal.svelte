@@ -105,20 +105,37 @@
 			imageFile = target.files[0];
 		}
 	}
+
+	function handleBackdropClick(e: MouseEvent) {
+		if (e.target === e.currentTarget) {
+			onClose();
+		}
+	}
+
+	function handleModalClick(e: MouseEvent) {
+		e.stopPropagation();
+	}
 </script>
 
 <div
 	class="modal-backdrop"
-	onclick={onClose}
-	transition:fade
-	role="dialog"
-	aria-modal="true"
+	onclick={handleBackdropClick}
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
+	transition:fade
+	role="presentation"
+	tabindex="-1"
 >
-	<div class="modal" onclick|stopPropagation transition:scale role="document">
+	<div
+		class="modal"
+		onclick={handleModalClick}
+		transition:scale
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
 		<div class="modal-header">
-			<h2>Raum bearbeiten</h2>
-			<button class="close-btn" onclick={onClose}>✕</button>
+			<h2 id="modal-title">Raum bearbeiten</h2>
+			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
 
 		<div class="modal-content">
@@ -145,8 +162,8 @@
 					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
-					<label>Vorschau</label>
-					<div class="color-preview" style="background: {backgroundColor}"></div>
+					<label for="color-preview-{room.id}">Vorschau</label>
+					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}" role="img" aria-label="Farbvorschau"></div>
 				</div>
 			</div>
 
@@ -179,7 +196,7 @@
 
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
-				<!-- Hintergrundbild Upload -->
+				<!-- Datei-Upload für Hintergrundbild -->
 				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
@@ -197,7 +214,6 @@
 </div>
 
 <style>
-	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;
