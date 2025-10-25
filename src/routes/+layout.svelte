@@ -53,22 +53,19 @@
 	}
 
 	:global(:root) {
-		/* Default Theme (Space) - wird von themes.ts überschrieben */
-		--color-primary: #667eea;
-		--color-secondary: #764ba2;
-		--color-accent: #3b82f6;
-		--color-background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+		/* Default Theme - wird von themes.ts überschrieben */
+		--color-primary: #6b7280;
+		--color-secondary: #4b5563;
+		--color-accent: #9ca3af;
+		--color-background: #000000;
 		--color-text-primary: #ffffff;
-		--color-text-secondary: rgba(255, 255, 255, 0.9);
+		--color-text-secondary: rgba(255, 255, 255, 0.85);
 		--color-open-badge: rgba(34, 197, 94, 0.9);
 		--color-closed-badge: rgba(239, 68, 68, 0.9);
-		--color-time-badge: rgba(251, 146, 60, 0.95);
-		--gradient-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		--gradient-toolbar: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		--gradient-card: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-		--background-pattern: 
-			radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-			radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+		--color-time-badge: rgba(156, 163, 175, 0.9);
+		--header-bg: #1a1a1a;
+		--toolbar-bg: #1a1a1a;
+		--card-bg: #2d2d2d;
 	}
 
 	:global(body) {
@@ -80,21 +77,6 @@
 		position: relative;
 	}
 
-	/* Hintergrund-Pattern als Pseudo-Element */
-	:global(body::before) {
-		content: '';
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: var(--background-pattern);
-		pointer-events: none;
-		z-index: 0;
-		opacity: 1;
-		transition: opacity 0.5s ease;
-	}
-
 	:global(button) {
 		font-family: inherit;
 	}
@@ -104,24 +86,20 @@
 		/* Weltraum-Theme hat schon gute Defaults */
 	}
 
-	:global(.theme-dino body::before) {
+	:global(.theme-dino body) {
 		/* Dschungel-Effekt für Dino-Theme */
-		opacity: 0.8;
 	}
 
-	:global(.theme-ocean body::before) {
+	:global(.theme-ocean body) {
 		/* Wellen-Effekt für Ozean-Theme */
-		opacity: 0.7;
 	}
 
-	:global(.theme-pokemon body::before) {
+	:global(.theme-pokemon body) {
 		/* Energie-Effekt für Pokémon-Theme */
-		opacity: 0.9;
 	}
 
-	:global(.theme-minecraft body::before) {
+	:global(.theme-minecraft body) {
 		/* Block-Pattern für Minecraft-Theme */
-		opacity: 0.4;
 	}
 
 	/* Vollbild-Optimierungen */

@@ -128,7 +128,7 @@
 		left: 0;
 		right: 0;
 		height: 60px;
-		background: var(--gradient-toolbar);
+		background: var(--toolbar-bg);
 		box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
 		display: flex;
 		align-items: center;

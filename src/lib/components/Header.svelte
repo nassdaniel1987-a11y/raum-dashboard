@@ -126,7 +126,7 @@
 		left: 0;
 		right: 0;
 		height: 50px;
-		background: var(--gradient-header);
+		background: var(--header-bg);
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 		display: flex;
 		align-items: center;

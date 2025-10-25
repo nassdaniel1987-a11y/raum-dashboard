@@ -117,10 +117,6 @@
 			<div class="lock-icon">🔒</div>
 		</div>
 	{/if}
-
-	{#if room.isOpen}
-		<div class="glow-effect" transition:fade={{ duration: 500 }}></div>
-	{/if}
 </div>
 
 {#if showContextMenu}
@@ -166,12 +162,12 @@
 	}
 
 	.room-card.open {
-		box-shadow: 0 0 15px var(--color-open-badge, rgba(76, 175, 80, 0.5));
+		/* Kein extra Glow mehr - nur einfarbige Kachel */
 	}
 
 	.room-card.open.selected {
 		border-color: #f59e0b;
-		box-shadow: 0 0 15px var(--color-open-badge, rgba(76, 175, 80, 0.5)), 0 0 25px rgba(245, 158, 11, 0.7);
+		box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
 	}
 
 	.card-bg-image {
@@ -319,21 +315,9 @@
 		filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
 	}
 
-	.glow-effect {
-		position: absolute;
-		top: -3px;
-		left: -3px;
-		right: -3px;
-		bottom: -3px;
-		border-radius: 15px;
-		background: radial-gradient(circle, var(--color-open-badge, rgba(76, 175, 80, 0.2)) 0%, transparent 70%);
-		z-index: -1;
-		pointer-events: none;
-	}
-
 	.context-menu {
 		position: fixed;
-		background: var(--gradient-card);
+		background: var(--card-bg);
 		border-radius: 10px;
 		padding: 6px;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
