@@ -199,12 +199,19 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 		gap: 16px;
+		/* WICHTIG: Erlaubt variable Kartenhöhen - jede Karte kann so hoch sein wie sie braucht */
+		grid-auto-rows: auto;
+		align-items: start; /* Karten am oberen Rand ausrichten */
 	}
 
 	.room-wrapper {
 		transition: transform 0.2s, opacity 0.2s;
 		border-radius: 15px;
 		transition: all 0.3s;
+		/* Erlaubt der Karte, ihre eigene Höhe zu bestimmen */
+		height: auto;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.room-wrapper.selected {

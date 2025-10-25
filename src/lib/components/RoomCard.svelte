@@ -158,7 +158,7 @@
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 140px; /* ERHÖHT von 120px auf 140px */
+		min-height: 140px; /* Mindesthöhe für Räume ohne viel Text */
 		display: flex;
 		flex-direction: column;
 		border: 3px solid transparent;
@@ -270,40 +270,20 @@
 
 	.room-activity {
 		margin: auto 0;
-		font-size: 20px; /* REDUZIERT von 28px auf 20px */
+		font-size: 20px; /* Gute Lesbarkeit */
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
-		padding: 8px 4px; /* ANGEPASST: Mehr horizontales Padding */
+		padding: 8px 4px;
 		
-		/* NEU: Ermöglicht mehrzeilige Anzeige */
+		/* Ermöglicht mehrzeilige Anzeige */
 		white-space: pre-wrap; /* Erhält Zeilenumbrüche aus dem Text */
 		word-wrap: break-word; /* Bricht lange Wörter um */
 		overflow-wrap: break-word;
-		line-height: 1.3; /* NEU: Besserer Zeilenabstand */
+		line-height: 1.4; /* Guter Zeilenabstand */
 		
-		/* NEU: Scrollbar falls Text zu lang wird */
-		max-height: 80px; /* ANGEPASST: Mehr Platz für Text */
-		overflow-y: auto;
-	}
-
-	/* NEU: Schönere Scrollbar für den Activity-Text */
-	.room-activity::-webkit-scrollbar {
-		width: 4px;
-	}
-
-	.room-activity::-webkit-scrollbar-track {
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 2px;
-	}
-
-	.room-activity::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.3);
-		border-radius: 2px;
-	}
-
-	.room-activity::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.5);
+		/* KEIN SCROLLEN - Text wird komplett angezeigt */
+		/* Die Kachel passt sich automatisch der Textlänge an */
 	}
 
 	.status-badge {
@@ -405,7 +385,10 @@
 	@media (max-width: 768px) {
 		.room-activity {
 			font-size: 16px;
-			max-height: 60px;
+		}
+		
+		.room-card {
+			min-height: 120px;
 		}
 	}
 </style>
