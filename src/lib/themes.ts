@@ -5,9 +5,9 @@ export interface ThemeColors {
 	secondary: string;
 	accent: string;
 	background: string;
-	headerGradient: string;
-	toolbarGradient: string;
-	cardGradient: string;
+	headerBg: string;
+	toolbarBg: string;
+	cardBg: string;
 	textPrimary: string;
 	textSecondary: string;
 	openBadge: string;
@@ -20,11 +20,32 @@ export interface ThemeConfig {
 	name: string;
 	emoji: string;
 	colors: ThemeColors;
-	backgroundPattern?: string;
+	backgroundImageUrl?: string | null;
 	customStyles?: string;
 }
 
 export const themes: Record<string, ThemeConfig> = {
+	default: {
+		id: 'default',
+		name: '🖤 Default',
+		emoji: '🖤',
+		colors: {
+			primary: '#6b7280',
+			secondary: '#4b5563',
+			accent: '#9ca3af',
+			background: '#000000',
+			headerBg: '#1a1a1a',
+			toolbarBg: '#1a1a1a',
+			cardBg: '#2d2d2d',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.85)',
+			openBadge: 'rgba(34, 197, 94, 0.9)',
+			closedBadge: 'rgba(239, 68, 68, 0.9)',
+			timeBadge: 'rgba(156, 163, 175, 0.9)'
+		},
+		backgroundImageUrl: null
+	},
+
 	space: {
 		id: 'space',
 		name: '🚀 Weltraum',
@@ -33,20 +54,17 @@ export const themes: Record<string, ThemeConfig> = {
 			primary: '#667eea',
 			secondary: '#764ba2',
 			accent: '#3b82f6',
-			background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-			headerGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-			toolbarGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-			cardGradient: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%)',
+			background: '#0a0a1e',
+			headerBg: '#1a1a2e',
+			toolbarBg: '#1a1a2e',
+			cardBg: '#1e3a8a',
 			textPrimary: '#ffffff',
 			textSecondary: 'rgba(255, 255, 255, 0.9)',
 			openBadge: 'rgba(34, 197, 94, 0.9)',
 			closedBadge: 'rgba(239, 68, 68, 0.9)',
 			timeBadge: 'rgba(251, 146, 60, 0.95)'
 		},
-		backgroundPattern: `
-			radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-			radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%)
-		`
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/space-background.png'
 	},
 
 	dino: {
@@ -57,20 +75,17 @@ export const themes: Record<string, ThemeConfig> = {
 			primary: '#22c55e',
 			secondary: '#16a34a',
 			accent: '#84cc16',
-			background: 'linear-gradient(135deg, #1a3a1a 0%, #2d5016 100%)',
-			headerGradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-			toolbarGradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-			cardGradient: 'linear-gradient(135deg, #166534 0%, #15803d 100%)',
+			background: '#0d1f0d',
+			headerBg: '#1a3a1a',
+			toolbarBg: '#1a3a1a',
+			cardBg: '#166534',
 			textPrimary: '#ffffff',
 			textSecondary: 'rgba(255, 255, 255, 0.9)',
 			openBadge: 'rgba(132, 204, 22, 0.9)',
 			closedBadge: 'rgba(220, 38, 38, 0.9)',
 			timeBadge: 'rgba(234, 179, 8, 0.95)'
 		},
-		backgroundPattern: `
-			radial-gradient(circle at 30% 40%, rgba(34, 197, 94, 0.15) 0%, transparent 50%),
-			radial-gradient(circle at 70% 70%, rgba(22, 163, 74, 0.15) 0%, transparent 50%)
-		`
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/dino-background.png'
 	},
 
 	ocean: {
@@ -81,20 +96,17 @@ export const themes: Record<string, ThemeConfig> = {
 			primary: '#06b6d4',
 			secondary: '#0891b2',
 			accent: '#0ea5e9',
-			background: 'linear-gradient(135deg, #0c2340 0%, #164e63 100%)',
-			headerGradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-			toolbarGradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-			cardGradient: 'linear-gradient(135deg, #155e75 0%, #0e7490 100%)',
+			background: '#0a1929',
+			headerBg: '#0c2340',
+			toolbarBg: '#0c2340',
+			cardBg: '#155e75',
 			textPrimary: '#ffffff',
 			textSecondary: 'rgba(255, 255, 255, 0.9)',
 			openBadge: 'rgba(6, 182, 212, 0.9)',
 			closedBadge: 'rgba(225, 29, 72, 0.9)',
 			timeBadge: 'rgba(251, 191, 36, 0.95)'
 		},
-		backgroundPattern: `
-			radial-gradient(circle at 25% 35%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
-			radial-gradient(circle at 75% 65%, rgba(8, 145, 178, 0.12) 0%, transparent 50%)
-		`
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/ocean-background.png'
 	},
 
 	pokemon: {
@@ -105,20 +117,17 @@ export const themes: Record<string, ThemeConfig> = {
 			primary: '#eab308',
 			secondary: '#f59e0b',
 			accent: '#ef4444',
-			background: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)',
-			headerGradient: 'linear-gradient(135deg, #eab308 0%, #f59e0b 100%)',
-			toolbarGradient: 'linear-gradient(135deg, #eab308 0%, #f59e0b 100%)',
-			cardGradient: 'linear-gradient(135deg, #991b1b 0%, #b91c1c 100%)',
+			background: '#1a0505',
+			headerBg: '#450a0a',
+			toolbarBg: '#450a0a',
+			cardBg: '#991b1b',
 			textPrimary: '#ffffff',
 			textSecondary: 'rgba(255, 255, 255, 0.9)',
 			openBadge: 'rgba(234, 179, 8, 0.9)',
 			closedBadge: 'rgba(127, 29, 29, 0.9)',
 			timeBadge: 'rgba(239, 68, 68, 0.95)'
 		},
-		backgroundPattern: `
-			radial-gradient(circle at 30% 30%, rgba(234, 179, 8, 0.15) 0%, transparent 50%),
-			radial-gradient(circle at 70% 70%, rgba(245, 158, 11, 0.15) 0%, transparent 50%)
-		`
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/pokemon-background.png'
 	},
 
 	minecraft: {
@@ -129,37 +138,64 @@ export const themes: Record<string, ThemeConfig> = {
 			primary: '#84cc16',
 			secondary: '#65a30d',
 			accent: '#a3e635',
-			background: 'linear-gradient(135deg, #1c2817 0%, #365314 100%)',
-			headerGradient: 'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)',
-			toolbarGradient: 'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)',
-			cardGradient: 'linear-gradient(135deg, #3f6212 0%, #4d7c0f 100%)',
+			background: '#0f1a0a',
+			headerBg: '#1c2817',
+			toolbarBg: '#1c2817',
+			cardBg: '#3f6212',
 			textPrimary: '#ffffff',
 			textSecondary: 'rgba(255, 255, 255, 0.9)',
 			openBadge: 'rgba(132, 204, 22, 0.9)',
 			closedBadge: 'rgba(153, 27, 27, 0.9)',
 			timeBadge: 'rgba(217, 119, 6, 0.95)'
 		},
-		backgroundPattern: `
-			repeating-linear-gradient(
-				0deg,
-				rgba(132, 204, 22, 0.03) 0px,
-				rgba(132, 204, 22, 0.03) 16px,
-				transparent 16px,
-				transparent 32px
-			),
-			repeating-linear-gradient(
-				90deg,
-				rgba(132, 204, 22, 0.03) 0px,
-				rgba(132, 204, 22, 0.03) 16px,
-				transparent 16px,
-				transparent 32px
-			)
-		`
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/minecraft-background.png'
+	},
+
+	pippi: {
+		id: 'pippi',
+		name: '🎨 Pippi Langstrumpf',
+		emoji: '🦋',
+		colors: {
+			primary: '#f97316',
+			secondary: '#ea580c',
+			accent: '#fb923c',
+			background: '#1a0f0a',
+			headerBg: '#3d1f0a',
+			toolbarBg: '#3d1f0a',
+			cardBg: '#c2410c',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(251, 146, 60, 0.9)',
+			closedBadge: 'rgba(185, 28, 28, 0.9)',
+			timeBadge: 'rgba(245, 158, 11, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/pippi-background.png'
+	},
+
+	candyland: {
+		id: 'candyland',
+		name: '🍭 Candyland',
+		emoji: '🍬',
+		colors: {
+			primary: '#ec4899',
+			secondary: '#db2777',
+			accent: '#f472b6',
+			background: '#1a0a14',
+			headerBg: '#3d0a2e',
+			toolbarBg: '#3d0a2e',
+			cardBg: '#be185d',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(236, 72, 153, 0.9)',
+			closedBadge: 'rgba(190, 18, 60, 0.9)',
+			timeBadge: 'rgba(244, 114, 182, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/candyland-background.png'
 	}
 };
 
 export function getTheme(themeId: string): ThemeConfig {
-	return themes[themeId] || themes.space;
+	return themes[themeId] || themes.default;
 }
 
 export function applyTheme(themeId: string) {
@@ -176,12 +212,20 @@ export function applyTheme(themeId: string) {
 	root.style.setProperty('--color-open-badge', theme.colors.openBadge);
 	root.style.setProperty('--color-closed-badge', theme.colors.closedBadge);
 	root.style.setProperty('--color-time-badge', theme.colors.timeBadge);
-	root.style.setProperty('--gradient-header', theme.colors.headerGradient);
-	root.style.setProperty('--gradient-toolbar', theme.colors.toolbarGradient);
-	root.style.setProperty('--gradient-card', theme.colors.cardGradient);
+	root.style.setProperty('--header-bg', theme.colors.headerBg);
+	root.style.setProperty('--toolbar-bg', theme.colors.toolbarBg);
+	root.style.setProperty('--card-bg', theme.colors.cardBg);
 
-	if (theme.backgroundPattern) {
-		root.style.setProperty('--background-pattern', theme.backgroundPattern);
+	// Hintergrundbild setzen (falls vorhanden)
+	if (theme.backgroundImageUrl) {
+		document.body.style.backgroundImage = `url('${theme.backgroundImageUrl}')`;
+		document.body.style.backgroundSize = 'cover';
+		document.body.style.backgroundPosition = 'center';
+		document.body.style.backgroundAttachment = 'fixed';
+		document.body.style.backgroundRepeat = 'no-repeat';
+	} else {
+		document.body.style.backgroundImage = 'none';
+		document.body.style.backgroundColor = theme.colors.background;
 	}
 
 	// Theme-Klasse am Body setzen
