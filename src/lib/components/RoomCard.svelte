@@ -60,8 +60,8 @@
 	class:open={room.isOpen}
 	class:selected={isSelected}
 	style={roomStyle}
-	oncontextmenu={handleContextMenu}  {/* EVENT HANDLER FIX */}
-	onkeydown={(e) => e.key === 'Enter' && handleClick()} {/* EVENT HANDLER FIX */}
+	oncontextmenu={handleContextMenu}
+	onkeydown={(e) => e.key === 'Enter' && handleClick()}
 	in:scale={{ duration: 300, start: 0.8 }}
 	out:fade={{ duration: 200 }}
 	role="button"
@@ -77,12 +77,12 @@
 				class="select-button"
 				class:selected={isSelected}
 				title="Für Tausch auswählen"
-				onclick={(e) => { e.stopPropagation(); onSelect(room.id); }} {/* EVENT HANDLER FIX */}
+				onclick={(e) => { e.stopPropagation(); onSelect(room.id); }}
 			>
 				{isSelected ? '✓' : '⮀'}
 			</button>
 
-			<button class="edit-button" title="Bearbeiten" onclick={(e) => { e.stopPropagation(); onEdit(room); }}> {/* EVENT HANDLER FIX */}
+			<button class="edit-button" title="Bearbeiten" onclick={(e) => { e.stopPropagation(); onEdit(room); }}>
 				✏️
 			</button>
 		{/if}
@@ -104,7 +104,7 @@
 
 	<div
 		class="card-content"
-		onclick={handleClick} {/* EVENT HANDLER FIX */}
+		onclick={handleClick}
 	>
 		<h3 class="room-title">{room.name}</h3>
 
@@ -129,13 +129,13 @@
 		class="context-menu"
 		style="left: {contextMenuX}px; top: {contextMenuY}px;"
 		transition:scale={{ duration: 200 }}
-		onclick={(e) => e.stopPropagation()} {/* EVENT HANDLER FIX */}
+		onclick={(e) => e.stopPropagation()}
 		role="menu"
 	>
-		<button class="context-item" onclick={() => { onEdit(room); closeContextMenu(); }} role="menuitem"> {/* EVENT HANDLER FIX */}
+		<button class="context-item" onclick={() => { onEdit(room); closeContextMenu(); }} role="menuitem">
 			✏️ Bearbeiten
 		</button>
-		<button class="context-item danger" onclick={handleDelete} role="menuitem"> {/* EVENT HANDLER FIX */}
+		<button class="context-item danger" onclick={handleDelete} role="menuitem">
 			🗑️ Löschen
 		</button>
 	</div>

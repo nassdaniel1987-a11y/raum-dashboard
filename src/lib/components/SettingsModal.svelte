@@ -51,7 +51,7 @@
 	aria-modal="true"
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="modal" onclick|stopPropagation transition:scale role="document">
+	<div class="modal" onclick={(e) => e.stopPropagation()} transition:scale role="document">
 		<div class="modal-header">
 			<h2>⚙️ Einstellungen</h2>
 			<button class="close-btn" onclick={onClose}>✕</button>
@@ -106,7 +106,7 @@
 			<div class="info-section">
 				<h4>💡 Hinweise</h4>
 				<ul>
-					<li>Nachtruhe schließt alle Räume automatisch außerhalb der Schulzeiten (manuelle Öffnungen bleiben)</li>
+					<li>Nachtruhe schließt alle Räume automatisch außerhalb der Schulzeiten</li>
 					<li>Themes ändern das visuelle Erscheinungsbild</li>
 					<li>Einstellungen gelten für alle Geräte</li>
 				</ul>
@@ -121,7 +121,6 @@
 </div>
 
 <style>
-	/* CSS bleibt unverändert */
 	.modal-backdrop {
 		position: fixed;
 		top: 0;
@@ -207,7 +206,6 @@
 	}
 
 	.toggle input {
-		/* display: none; */ /* Besser zugänglich, wenn sichtbar aber gestyled */
 		opacity: 0;
 		position: absolute;
 		width: 0;
@@ -247,11 +245,9 @@
 		font-weight: 600;
 	}
 
-	/* Fokusanzeige für Barrierefreiheit */
 	.toggle input:focus-visible ~ .toggle-slider {
- 		box-shadow: 0 0 0 2px #3b82f6;
- 	}
-
+		box-shadow: 0 0 0 2px #3b82f6;
+	}
 
 	.time-group {
 		display: grid;
@@ -298,7 +294,7 @@
 		cursor: pointer;
 		transition: all 0.3s;
 		text-align: center;
-		color: white; /* Sicherstellen, dass Text weiß ist */
+		color: white;
 	}
 
 	.theme-card.active {
@@ -312,11 +308,10 @@
 		border-color: rgba(255, 255, 255, 0.4);
 	}
 
-	/* Fokusanzeige */
- 	.theme-card:focus-visible {
- 		outline: 2px solid #3b82f6;
- 		outline-offset: 2px;
- 	}
+	.theme-card:focus-visible {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
 
 	.theme-emoji {
 		font-size: 36px;
@@ -354,4 +349,37 @@
 	.modal-footer {
 		padding: 24px;
 		border-top: 2px solid rgba(255, 255, 255, 0.1);
-		display:
+		display: flex;
+		gap: 12px;
+		justify-content: flex-end;
+	}
+
+	.btn {
+		padding: 12px 24px;
+		border: none;
+		border-radius: 12px;
+		font-size: 16px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.3s;
+	}
+
+	.btn-secondary {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+	}
+
+	.btn-secondary:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.btn-primary {
+		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		color: white;
+	}
+
+	.btn-primary:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+	}
+</style>
