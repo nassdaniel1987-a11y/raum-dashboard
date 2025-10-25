@@ -61,6 +61,10 @@
 		filter: ${room.isOpen ? 'brightness(1) saturate(1)' : 'grayscale(40%) brightness(0.8)'};
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
+	
+	// ✅ NEU: Dynamische Schriftgrößen aus Config
+	let titleFontSize = $derived(room.config?.title_font_size || 16);
+	let textFontSize = $derived(room.config?.text_font_size || 20);
 </script>
 
 <svelte:window onclick={closeContextMenu} />
@@ -117,11 +121,12 @@
 		class="card-content"
 		onclick={handleClick}
 	>
-		<h3 class="room-title">{room.name}</h3>
+		<!-- ✅ GEÄNDERT: Dynamische Schriftgröße für Titel -->
+		<h3 class="room-title" style="font-size: {titleFontSize}px;">{room.name}</h3>
 
 		{#if room.config?.activity}
-			<!-- GEÄNDERT: Jetzt mit white-space: pre-wrap für Zeilenumbrüche -->
-			<p class="room-activity">{room.config.activity}</p>
+			<!-- ✅ GEÄNDERT: Dynamische Schriftgröße für Text -->
+			<p class="room-activity" style="font-size: {textFontSize}px;">{room.config.activity}</p>
 		{/if}
 	</div>
 
@@ -158,7 +163,7 @@
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 140px; /* Mindesthöhe für Räume ohne viel Text */
+		min-height: 140px;
 		display: flex;
 		flex-direction: column;
 		border: 3px solid transparent;
@@ -259,7 +264,6 @@
 
 	.room-title {
 		margin: 0 0 8px 0;
-		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
@@ -270,20 +274,15 @@
 
 	.room-activity {
 		margin: auto 0;
-		font-size: 20px; /* Gute Lesbarkeit */
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
 		padding: 8px 4px;
 		
-		/* Ermöglicht mehrzeilige Anzeige */
-		white-space: pre-wrap; /* Erhält Zeilenumbrüche aus dem Text */
-		word-wrap: break-word; /* Bricht lange Wörter um */
+		white-space: pre-wrap;
+		word-wrap: break-word;
 		overflow-wrap: break-word;
-		line-height: 1.4; /* Guter Zeilenabstand */
-		
-		/* KEIN SCROLLEN - Text wird komplett angezeigt */
-		/* Die Kachel passt sich automatisch der Textlänge an */
+		line-height: 1.4;
 	}
 
 	.status-badge {
@@ -381,12 +380,7 @@
 		background: rgba(239, 68, 68, 0.2);
 	}
 
-	/* RESPONSIVE: Kleinere Schrift auf Mobile */
 	@media (max-width: 768px) {
-		.room-activity {
-			font-size: 16px;
-		}
-		
 		.room-card {
 			min-height: 120px;
 		}
