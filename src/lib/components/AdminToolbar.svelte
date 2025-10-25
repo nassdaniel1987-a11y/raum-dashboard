@@ -120,12 +120,12 @@
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
 	<div
-  class="modal"
-  on:click={(e) => e.stopPropagation()}
-  transition:scale
-  role="document"
->
-
+		class="modal"
+		onclick={(e) => e.stopPropagation()}
+		transition:scale
+		role="document"
+	>
+		<div class="modal-header">
 			<h2>Raum bearbeiten</h2>
 			<button class="close-btn" onclick={onClose}>✕</button>
 		</div>
@@ -189,11 +189,11 @@
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
 				<input
-  id="room-image-{room.id}"
-  type="file"
-  accept="image/*"
-  on:change={handleFileChange}
-/>
+					id="room-image-{room.id}"
+					type="file"
+					accept="image/*"
+					onchange={handleFileChange}
+				/>
 
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
@@ -208,6 +208,7 @@
 			</button>
 		</div>
 	</div>
+</div>
 
 <style>
 	/* CSS bleibt unverändert */
