@@ -5,6 +5,7 @@
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -41,6 +42,7 @@
 	<Header />
 	<Canvas {handleEditRoom} />
 	<Toolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
+	<ToastContainer />
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />

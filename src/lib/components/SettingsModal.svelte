@@ -2,6 +2,7 @@
 	import { supabase } from '$lib/supabase/client';
 	import { appSettings, userTheme } from '$lib/stores/appState';
 	import { themes, applyTheme } from '$lib/themes';
+	import { toasts } from '$lib/stores/toastStore';
 	import { scale, fade } from 'svelte/transition';
 
 	// Svelte 5 Props Syntax
@@ -33,11 +34,11 @@
 			// Theme im LocalStorage speichern (benutzerspezifisch)
 			userTheme.set(currentTheme);
 
-			alert('Einstellungen gespeichert!');
+			toasts.show('✓ Einstellungen erfolgreich gespeichert!', 'success');
 			onClose();
 		} catch (error) {
 			console.error('Error saving settings:', error);
-			alert('Fehler beim Speichern!');
+			toasts.show('✕ Fehler beim Speichern der Einstellungen', 'error');
 		}
 	}
 

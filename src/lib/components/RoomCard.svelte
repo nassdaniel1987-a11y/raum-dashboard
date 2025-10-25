@@ -78,7 +78,7 @@
 				title="Für Tausch auswählen"
 				onclick={(e) => { e.stopPropagation(); onSelect(room.id); }}
 			>
-				{isSelected ? '✓' : '⮀'}
+				{isSelected ? '✓' : '⇄'}
 			</button>
 
 			<button class="edit-button" title="Bearbeiten" onclick={(e) => { e.stopPropagation(); onEdit(room); }}>
@@ -196,10 +196,17 @@
 		background: rgba(0, 0, 0, 0.7);
 		border: none;
 		border-radius: 6px;
-		font-size: 14px;
+		font-size: 16px;
 		cursor: pointer;
 		transition: all 0.2s;
 		color: white;
+		font-weight: bold;
+		line-height: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 32px;
+		min-height: 28px;
 	}
 
 	.edit-button:hover,
