@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
 	import { isEditMode, toggleRoomStatus, swapSelection } from '$lib/stores/appState';
+	import { confirmDialog } from '$lib/stores/toastStore';
 	import { supabase } from '$lib/supabase/client';
 	import type { RoomWithConfig } from '$lib/types';
 
@@ -36,10 +37,21 @@
 	}
 
 	async function handleDelete() {
-		if (confirm(`Raum "${room.name}" wirklich löschen?`)) {
-			swapSelection.update(ids => ids.filter(id => id !== room.id));
-			await supabase.from('rooms').delete().eq('id', room.id);
+		const confirmed = await confirmDialog.ask({
+			title: 'Raum löschen?',
+			message: `Möchtest du den Raum "${room.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+			confirmText: 'Löschen',
+			cancelText: 'Abbrechen',
+			type: 'danger'
+		});
+
+		if (!confirmed) {
+			closeContextMenu();
+			return;
 		}
+
+		swapSelection.update(ids => ids.filter(id => id !== room.id));
+		await supabase.from('rooms').delete().eq('id', room.id);
 		closeContextMenu();
 	}
 

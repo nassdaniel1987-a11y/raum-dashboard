@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
+	import { toasts } from '$lib/stores/toastStore';
 	import type { RoomWithConfig } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { currentWeekday, currentTime } from '$lib/stores/appState';
@@ -83,14 +84,15 @@
 					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
 				} else {
 					console.error('Error uploading image:', uploadError);
-					alert('Fehler beim Bild-Upload!');
+					toasts.show('✕ Fehler beim Bild-Upload!', 'error');
 				}
 			}
 
+			toasts.show('✓ Raum erfolgreich aktualisiert!', 'success');
 			onClose();
 		} catch (error) {
 			console.error('Error saving room:', error);
-			alert('Fehler beim Speichern!');
+			toasts.show('✕ Fehler beim Speichern!', 'error');
 		} finally {
 			uploading = false;
 		}

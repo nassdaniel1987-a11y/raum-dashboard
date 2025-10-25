@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { toasts } from '$lib/stores/toastStore';
+	import { toasts, confirmDialog } from '$lib/stores/toastStore';
 	import Toast from './Toast.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 </script>
 
 <div class="toast-container">
@@ -13,6 +14,18 @@
 		/>
 	{/each}
 </div>
+
+{#if $confirmDialog}
+	<ConfirmDialog
+		title={$confirmDialog.title}
+		message={$confirmDialog.message}
+		confirmText={$confirmDialog.confirmText}
+		cancelText={$confirmDialog.cancelText}
+		type={$confirmDialog.type}
+		onConfirm={$confirmDialog.onConfirm}
+		onCancel={$confirmDialog.onCancel}
+	/>
+{/if}
 
 <style>
 	.toast-container {

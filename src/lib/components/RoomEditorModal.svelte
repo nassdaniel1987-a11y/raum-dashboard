@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
+	import { toasts } from '$lib/stores/toastStore';
+	import ColorPicker from './ColorPicker.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { currentWeekday, currentTime } from '$lib/stores/appState';
@@ -86,14 +88,15 @@
 					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
 				} else {
 					console.error('Error uploading image:', uploadError);
-					alert('Fehler beim Bild-Upload!');
+					toasts.show('✕ Fehler beim Bild-Upload!', 'error');
 				}
 			}
 
+			toasts.show('✓ Raum erfolgreich aktualisiert!', 'success');
 			onClose();
 		} catch (error) {
 			console.error('Error saving room:', error);
-			alert('Fehler beim Speichern!');
+			toasts.show('✕ Fehler beim Speichern!', 'error');
 		} finally {
 			uploading = false;
 		}
@@ -163,11 +166,17 @@
 			</div>
 
 			<div class="form-row">
-				<div class="form-group">
+				<div class="form-group full-width">
 					<label for="room-color-{room.id}">Hintergrundfarbe</label>
-					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
+					<ColorPicker
+						value={backgroundColor}
+						onChange={(color) => backgroundColor = color}
+					/>
 				</div>
-				<div class="form-group">
+			</div>
+
+			<div class="form-row">
+				<div class="form-group full-width">
 					<label for="color-preview-{room.id}">Vorschau</label>
 					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}" role="img" aria-label="Farbvorschau"></div>
 				</div>
