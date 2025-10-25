@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
-	import AdminToolbar from '$lib/components/AdminToolbar.svelte';
+	import Toolbar from '$lib/components/Toolbar.svelte';  // ← GEÄNDERT!
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -40,7 +40,7 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	<AdminToolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
+	<Toolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
