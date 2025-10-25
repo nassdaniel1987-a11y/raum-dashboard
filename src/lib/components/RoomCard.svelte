@@ -18,7 +18,6 @@
 	let contextMenuY = $state(0);
 
 	async function handleClick() {
-		// Wird vom card-content aufgerufen
 		if ($isEditMode && !showContextMenu) {
 			await toggleRoomStatus(room.id);
 		}
@@ -142,7 +141,6 @@
 {/if}
 
 <style>
-	/* CSS bleibt unverändert */
 	.room-card {
 		position: relative;
 		border-radius: 12px;
@@ -167,20 +165,14 @@
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 	}
 
-	.room-card.locked {
-		/* cursor: not-allowed; */ /* Entfernt, da der Klick jetzt im Edit-Modus funktioniert */
-		/* pointer-events: none; */ /* Entfernt, um Kontextmenü zu ermöglichen */
-	}
-
 	.room-card.open {
-		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+		box-shadow: 0 0 15px var(--color-open-badge, rgba(76, 175, 80, 0.5));
 	}
 
 	.room-card.open.selected {
 		border-color: #f59e0b;
-		box-shadow: 0 0 15px rgba(76, 175, 80, 0.5), 0 0 25px rgba(245, 158, 11, 0.7);
+		box-shadow: 0 0 15px var(--color-open-badge, rgba(76, 175, 80, 0.5)), 0 0 25px rgba(245, 158, 11, 0.7);
 	}
-
 
 	.card-bg-image {
 		position: absolute;
@@ -233,7 +225,6 @@
 		background: rgba(245, 158, 11, 1);
 	}
 
-
 	.card-content {
 		position: relative;
 		z-index: 1;
@@ -241,33 +232,33 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-start; /* Titel oben */
-		align-items: center; /* Zentriert horizontal */
+		justify-content: flex-start;
+		align-items: center;
 		color: white;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 		text-align: center;
 		cursor: pointer;
-		flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+		flex-grow: 1;
 	}
 
 	.room-title {
 		margin: 0 0 8px 0;
-		font-size: 16px; /* Etwas kleiner? */
+		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
 		width: 100%;
-		padding-top: 4px; /* Kleiner Abstand oben */
-		flex-shrink: 0; /* Verhindert Schrumpfen */
+		padding-top: 4px;
+		flex-shrink: 0;
 	}
 
 	.room-activity {
-		margin: auto 0; /* Vertikal zentrieren im Restplatz */
-		font-size: 28px; /* Oder dynamisch? */
+		margin: auto 0;
+		font-size: 28px;
 		font-weight: 600;
-		opacity: 1; /* War vorher 0.9 */
+		opacity: 1;
 		width: 100%;
-		padding: 8px 0; /* Etwas Luft */
+		padding: 8px 0;
 	}
 
 	.status-badge {
@@ -279,23 +270,23 @@
 		font-size: 12px;
 		font-weight: 700;
 		z-index: 5;
-		background: rgba(239, 68, 68, 0.9); /* Rot für Geschlossen */
+		background: var(--color-closed-badge);
 		color: white;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
 	.status-badge.open {
-		background: rgba(34, 197, 94, 0.9); /* Grün für Offen */
+		background: var(--color-open-badge);
 	}
 
 	.time-badge-top {
 		position: absolute;
-		top: 35px; /* Etwas unter dem Status Badge */
+		top: 35px;
 		left: 50%;
 		transform: translateX(-50%);
 		padding: 8px 16px;
-		background: rgba(251, 146, 60, 0.95); /* Orange */
-		border: 2px solid rgba(249, 115, 22, 1);
+		background: var(--color-time-badge);
+		border: 2px solid var(--color-accent);
 		border-radius: 12px;
 		font-size: 14px;
 		font-weight: 700;
@@ -313,13 +304,13 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background: rgba(0, 0, 0, 0.4); /* Leichter Grauschleier */
+		background: rgba(0, 0, 0, 0.4);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 2;
-		pointer-events: none; /* Lässt Klicks durch */
-		border-radius: 12px; /* Passt zur Karte */
+		pointer-events: none;
+		border-radius: 12px;
 	}
 
 	.lock-icon {
@@ -334,15 +325,15 @@
 		left: -3px;
 		right: -3px;
 		bottom: -3px;
-		border-radius: 15px; /* Etwas größer als die Karte */
-		background: radial-gradient(circle, rgba(76, 175, 80, 0.2) 0%, transparent 70%);
+		border-radius: 15px;
+		background: radial-gradient(circle, var(--color-open-badge, rgba(76, 175, 80, 0.2)) 0%, transparent 70%);
 		z-index: -1;
 		pointer-events: none;
 	}
 
 	.context-menu {
 		position: fixed;
-		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+		background: var(--gradient-card);
 		border-radius: 10px;
 		padding: 6px;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);

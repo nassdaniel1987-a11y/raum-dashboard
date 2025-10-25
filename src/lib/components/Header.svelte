@@ -126,7 +126,7 @@
 		left: 0;
 		right: 0;
 		height: 50px;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: var(--gradient-header);
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 		display: flex;
 		align-items: center;
@@ -162,7 +162,7 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		color: white;
+		color: var(--color-text-primary);
 	}
 
 	.logo-icon {
@@ -180,7 +180,7 @@
 	.weekday {
 		font-size: 18px;
 		font-weight: 700;
-		color: white;
+		color: var(--color-text-primary);
 		text-transform: uppercase;
 		letter-spacing: 1px;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
@@ -188,7 +188,7 @@
 
 	.date {
 		font-size: 13px;
-		color: rgba(255, 255, 255, 0.9);
+		color: var(--color-text-secondary);
 		font-weight: 500;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
@@ -202,7 +202,7 @@
 	.fullscreen-btn {
 		background: rgba(255, 255, 255, 0.2);
 		border: none;
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 20px;
 		width: 40px;
 		height: 40px;
@@ -241,7 +241,7 @@
 	.time {
 		font-size: 20px;
 		font-weight: 600;
-		color: white;
+		color: var(--color-text-primary);
 		font-family: 'Courier New', monospace;
 		letter-spacing: 1px;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);

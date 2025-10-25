@@ -128,7 +128,7 @@
 		left: 0;
 		right: 0;
 		height: 60px;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: var(--gradient-toolbar);
 		box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
 		display: flex;
 		align-items: center;
@@ -153,7 +153,7 @@
 		background: rgba(255, 255, 255, 0.1);
 		border: 2px solid rgba(255, 255, 255, 0.3);
 		border-radius: 12px;
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
@@ -187,7 +187,7 @@
 		background: rgba(255, 255, 255, 0.1);
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 10px;
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
@@ -224,7 +224,7 @@
 		border: 2px solid rgba(255, 255, 255, 0.3);
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 14px;
 		min-width: 200px;
 	}
@@ -238,22 +238,22 @@
 		border: 2px solid rgba(255, 255, 255, 0.3);
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 14px;
 		cursor: pointer;
 	}
 
 	.create-form select option {
-		background: #1e3a8a;
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text-primary);
 	}
 
 	.create-btn {
 		padding: 8px 16px;
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
 		border: none;
 		border-radius: 8px;
-		color: white;
+		color: var(--color-text-primary);
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s;
@@ -269,7 +269,7 @@
 		background: rgba(239, 68, 68, 0.3);
 		border: 2px solid rgba(239, 68, 68, 0.5);
 		border-radius: 8px;
-		color: white;
+		color: var(--color-text-primary);
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s;

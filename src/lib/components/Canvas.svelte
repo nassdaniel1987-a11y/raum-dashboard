@@ -138,7 +138,6 @@
 </div>
 
 <style>
-	/* CSS bleibt unverändert */
 	.canvas-container {
 		position: fixed;
 		top: 50px;
@@ -147,7 +146,7 @@
 		bottom: 50px;
 		overflow-y: auto;
 		overflow-x: hidden;
-		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+		background: var(--color-background);
 	}
 
 	.canvas {
@@ -168,10 +167,15 @@
 		border-radius: 16px;
 		padding: 20px;
 		border: 2px solid rgba(255, 255, 255, 0.1);
+		transition: border-color 0.3s ease;
+	}
+
+	.floor-section:hover {
+		border-color: rgba(255, 255, 255, 0.15);
 	}
 
 	.floor-title {
-		color: white;
+		color: var(--color-text-primary);
 		font-size: 24px;
 		font-weight: 700;
 		margin: 0 0 16px 0;
@@ -226,7 +230,7 @@
 		left: 50%;
 		transform: translate(-50%, -50%);
 		text-align: center;
-		color: white;
+		color: var(--color-text-primary);
 		opacity: 0.7;
 	}
 
