@@ -5,21 +5,22 @@
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
-	$: formattedTime = $currentTime.toLocaleTimeString('de-DE', {
+	// SVELTE 5 DERIVED SYNTAX
+	let formattedTime = $derived($currentTime.toLocaleTimeString('de-DE', {
 		hour: '2-digit',
 		minute: '2-digit',
 		second: '2-digit'
-	});
+	}));
 
-	$: formattedDate = $currentTime.toLocaleDateString('de-DE', {
+	let formattedDate = $derived($currentTime.toLocaleDateString('de-DE', {
 		day: '2-digit',
 		month: 'long',
 		year: 'numeric'
-	});
+	}));
 
-	$: weekdayName = weekdayNames[$currentWeekday % 7];
+	let weekdayName = $derived(weekdayNames[$currentWeekday % 7]);
 
-	// Vollbild-State
+	// SVELTE 5 STATE für Vollbild
 	let isFullscreen = $state(false);
 
 	onMount(() => {
@@ -37,6 +38,9 @@
 		document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 		document.addEventListener('mozfullscreenchange', handleFullscreenChange);
 		document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+		// Initial Status setzen
+		handleFullscreenChange();
 
 		return () => {
 			document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -99,11 +103,16 @@
 		<button 
 			class="fullscreen-btn" 
 			onclick={toggleFullscreen}
-			title={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
+			title={isFullscreen ? 'Vollbild verlassen (ESC)' : 'Vollbild aktivieren'}
 			aria-label={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
 		>
-			{isFullscreen ? '⛶' : '⛶'}
+			{#if isFullscreen}
+				<span class="icon">⛶</span>
+			{:else}
+				<span class="icon">⛶</span>
+			{/if}
 		</button>
+		
 		<div class="clock">
 			<span class="time">{formattedTime}</span>
 		</div>
@@ -195,8 +204,8 @@
 		border: none;
 		color: white;
 		font-size: 20px;
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
 		border-radius: 8px;
 		cursor: pointer;
 		transition: all 0.3s;
@@ -204,11 +213,21 @@
 		align-items: center;
 		justify-content: center;
 		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
 	.fullscreen-btn:hover {
 		background: rgba(255, 255, 255, 0.3);
-		transform: scale(1.1);
+		transform: scale(1.05);
+	}
+
+	.fullscreen-btn:active {
+		transform: scale(0.95);
+	}
+
+	.fullscreen-btn .icon {
+		font-size: 22px;
+		line-height: 1;
 	}
 
 	.clock {
@@ -242,6 +261,12 @@
 		}
 
 		.time {
+			font-size: 18px;
+		}
+
+		.fullscreen-btn {
+			width: 36px;
+			height: 36px;
 			font-size: 18px;
 		}
 	}
