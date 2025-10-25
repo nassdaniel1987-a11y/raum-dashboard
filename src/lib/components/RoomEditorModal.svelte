@@ -182,9 +182,19 @@
 				</div>
 			</div>
 
+			<!-- GEÄNDERT: Input zu Textarea für mehrzeilige Eingabe -->
 			<div class="form-group">
-				<label for="room-activity-{room.id}">Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})</label>
-				<input id="room-activity-{room.id}" type="text" bind:value={activity} placeholder="z.B. Freies Spielen" />
+				<label for="room-activity-{room.id}">
+					Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})
+					<span class="hint-inline">Mehrzeiliger Text möglich</span>
+				</label>
+				<textarea 
+					id="room-activity-{room.id}" 
+					bind:value={activity} 
+					placeholder="z.B. Freies Spielen&#10;Bewegung & Sport&#10;08:00-12:00 Uhr"
+					rows="4"
+				></textarea>
+				<p class="hint">💡 Tipp: Drücke Enter für neue Zeilen</p>
 			</div>
 
 			<div class="form-row">
@@ -308,10 +318,19 @@
 		opacity: 0.9;
 	}
 
+	.hint-inline {
+		font-size: 11px;
+		font-weight: 400;
+		text-transform: none;
+		opacity: 0.7;
+		margin-left: 8px;
+	}
+
 	input[type='text'],
 	input[type='time'],
 	input[type='file'],
-	select {
+	select,
+	textarea {
 		width: 100%;
 		padding: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
@@ -321,6 +340,20 @@
 		font-size: 16px;
 		transition: all 0.3s;
 		cursor: pointer;
+		font-family: inherit;
+	}
+
+	/* NEU: Spezielle Styles für Textarea */
+	textarea {
+		resize: vertical;
+		min-height: 80px;
+		line-height: 1.4;
+		cursor: text;
+	}
+
+	textarea::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+		line-height: 1.4;
 	}
 
 	select option {
@@ -330,7 +363,8 @@
 
 	input[type='text']:focus,
 	input[type='time']:focus,
-	select:focus {
+	select:focus,
+	textarea:focus {
 		outline: none;
 		border-color: rgba(59, 130, 246, 0.8);
 		background: rgba(255, 255, 255, 0.15);

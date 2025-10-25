@@ -120,6 +120,7 @@
 		<h3 class="room-title">{room.name}</h3>
 
 		{#if room.config?.activity}
+			<!-- GEÄNDERT: Jetzt mit white-space: pre-wrap für Zeilenumbrüche -->
 			<p class="room-activity">{room.config.activity}</p>
 		{/if}
 	</div>
@@ -157,7 +158,7 @@
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 120px;
+		min-height: 140px; /* ERHÖHT von 120px auf 140px */
 		display: flex;
 		flex-direction: column;
 		border: 3px solid transparent;
@@ -269,11 +270,40 @@
 
 	.room-activity {
 		margin: auto 0;
-		font-size: 28px;
+		font-size: 20px; /* REDUZIERT von 28px auf 20px */
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
-		padding: 8px 0;
+		padding: 8px 4px; /* ANGEPASST: Mehr horizontales Padding */
+		
+		/* NEU: Ermöglicht mehrzeilige Anzeige */
+		white-space: pre-wrap; /* Erhält Zeilenumbrüche aus dem Text */
+		word-wrap: break-word; /* Bricht lange Wörter um */
+		overflow-wrap: break-word;
+		line-height: 1.3; /* NEU: Besserer Zeilenabstand */
+		
+		/* NEU: Scrollbar falls Text zu lang wird */
+		max-height: 80px; /* ANGEPASST: Mehr Platz für Text */
+		overflow-y: auto;
+	}
+
+	/* NEU: Schönere Scrollbar für den Activity-Text */
+	.room-activity::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.room-activity::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 2px;
+	}
+
+	.room-activity::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 2px;
+	}
+
+	.room-activity::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	.status-badge {
@@ -369,5 +399,13 @@
 
 	.context-item.danger:hover {
 		background: rgba(239, 68, 68, 0.2);
+	}
+
+	/* RESPONSIVE: Kleinere Schrift auf Mobile */
+	@media (max-width: 768px) {
+		.room-activity {
+			font-size: 16px;
+			max-height: 60px;
+		}
 	}
 </style>
