@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
 	import { appSettings } from '$lib/stores/appState';
+	import { themes, applyTheme } from '$lib/themes';
 	import { scale, fade } from 'svelte/transition';
 
 	// Svelte 5 Props Syntax
@@ -13,14 +14,9 @@
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
 	let currentTheme = $state($appSettings?.current_theme || 'space');
+	let previewTheme = $state(currentTheme); // Für Live-Vorschau
 
-	const themes = [
-		{ id: 'space', name: '🚀 Weltraum', emoji: '🌌' },
-		{ id: 'dino', name: '🦖 Dino-Land', emoji: '🦕' },
-		{ id: 'ocean', name: '🌊 Ozean', emoji: '🐠' },
-		{ id: 'pokemon', name: '⚡ Pokémon', emoji: '⚡' },
-		{ id: 'minecraft', name: '⛏️ Minecraft', emoji: '🧱' }
-	];
+	const themeList = Object.values(themes);
 
 	async function handleSave() {
 		try {
@@ -34,6 +30,9 @@
 				})
 				.eq('id', 1);
 
+			// Theme anwenden
+			applyTheme(currentTheme);
+
 			alert('Einstellungen gespeichert!');
 			onClose();
 		} catch (error) {
@@ -41,23 +40,68 @@
 			alert('Fehler beim Speichern!');
 		}
 	}
+
+	function handleThemePreview(themeId: string) {
+		previewTheme = themeId;
+		applyTheme(themeId);
+	}
+
+	function handleThemeSelect(themeId: string) {
+		currentTheme = themeId;
+		handleThemePreview(themeId);
+	}
+
+	function handleCancel() {
+		// Theme auf Original zurücksetzen
+		applyTheme($appSettings?.current_theme || 'space');
+		onClose();
+	}
 </script>
 
 <div
 	class="modal-backdrop"
-	onclick={onClose}
+	onclick={handleCancel}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
-	onkeydown={(e) => e.key === 'Escape' && onClose()}
+	onkeydown={(e) => e.key === 'Escape' && handleCancel()}
 >
 	<div class="modal" onclick={(e) => e.stopPropagation()} transition:scale role="document">
 		<div class="modal-header">
 			<h2>⚙️ Einstellungen</h2>
-			<button class="close-btn" onclick={onClose}>✕</button>
+			<button class="close-btn" onclick={handleCancel}>✕</button>
 		</div>
 
 		<div class="modal-content">
+			<!-- Theme-Auswahl mit Live-Vorschau -->
+			<div class="setting-section">
+				<h3>🎨 Design-Theme</h3>
+				<p class="hint">Klicke auf ein Theme für eine Live-Vorschau</p>
+				<div class="theme-grid">
+					{#each themeList as theme}
+						<button
+							class="theme-card"
+							class:active={currentTheme === theme.id}
+							class:preview={previewTheme === theme.id && currentTheme !== theme.id}
+							onclick={() => handleThemeSelect(theme.id)}
+							onmouseenter={() => handleThemePreview(theme.id)}
+							onmouseleave={() => handleThemePreview(currentTheme)}
+							style="
+								background: {theme.colors.cardGradient};
+								border-color: {currentTheme === theme.id ? theme.colors.accent : 'rgba(255, 255, 255, 0.2)'};
+							"
+						>
+							<div class="theme-emoji">{theme.emoji}</div>
+							<div class="theme-name">{theme.name}</div>
+							{#if currentTheme === theme.id}
+								<div class="theme-check">✓</div>
+							{/if}
+						</button>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Nachtruhe-Modus -->
 			<div class="setting-section">
 				<h3>🌙 Nachtruhe-Modus</h3>
 				<div class="toggle-group">
@@ -87,35 +131,23 @@
 				{/if}
 			</div>
 
-			<div class="setting-section">
-				<h3>🎨 Design-Theme</h3>
-				<div class="theme-grid">
-					{#each themes as theme}
-						<button
-							class="theme-card"
-							class:active={currentTheme === theme.id}
-							onclick={() => (currentTheme = theme.id)}
-						>
-							<div class="theme-emoji">{theme.emoji}</div>
-							<div class="theme-name">{theme.name}</div>
-						</button>
-					{/each}
-				</div>
-			</div>
-
+			<!-- Info-Section -->
 			<div class="info-section">
 				<h4>💡 Hinweise</h4>
 				<ul>
 					<li>Nachtruhe schließt alle Räume automatisch außerhalb der Schulzeiten</li>
-					<li>Themes ändern das visuelle Erscheinungsbild</li>
+					<li>Themes ändern das visuelle Erscheinungsbild sofort</li>
+					<li>Hover über ein Theme für eine Vorschau</li>
 					<li>Einstellungen gelten für alle Geräte</li>
 				</ul>
 			</div>
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
-			<button class="btn btn-primary" onclick={handleSave}>Speichern</button>
+			<button class="btn btn-secondary" onclick={handleCancel}>Abbrechen</button>
+			<button class="btn btn-primary" onclick={handleSave}>
+				Speichern & Anwenden
+			</button>
 		</div>
 	</div>
 </div>
@@ -136,10 +168,10 @@
 	}
 
 	.modal {
-		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+		background: var(--gradient-card, linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%));
 		border-radius: 24px;
 		width: 90%;
-		max-width: 600px;
+		max-width: 700px;
 		max-height: 90vh;
 		overflow-y: auto;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -282,30 +314,54 @@
 
 	.theme-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		gap: 12px;
+		margin-top: 15px;
 	}
 
 	.theme-card {
-		padding: 20px 15px;
+		position: relative;
+		padding: 24px 15px;
 		background: rgba(255, 255, 255, 0.05);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 12px;
+		border: 3px solid rgba(255, 255, 255, 0.2);
+		border-radius: 16px;
 		cursor: pointer;
 		transition: all 0.3s;
 		text-align: center;
 		color: white;
+		overflow: hidden;
+	}
+
+	.theme-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: var(--background-pattern, none);
+		opacity: 0.3;
+		pointer-events: none;
 	}
 
 	.theme-card.active {
-		background: rgba(59, 130, 246, 0.3);
-		border-color: rgba(59, 130, 246, 0.8);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+		border-width: 4px;
+		box-shadow: 0 0 30px currentColor;
+		transform: scale(1.05);
+	}
+
+	.theme-card.preview {
+		border-color: rgba(255, 255, 255, 0.5);
+		transform: scale(1.02);
 	}
 
 	.theme-card:hover {
-		transform: translateY(-3px);
+		transform: translateY(-3px) scale(1.02);
 		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.theme-card.active:hover {
+		transform: translateY(-3px) scale(1.05);
 	}
 
 	.theme-card:focus-visible {
@@ -314,20 +370,42 @@
 	}
 
 	.theme-emoji {
-		font-size: 36px;
-		margin-bottom: 8px;
+		font-size: 42px;
+		margin-bottom: 10px;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+		position: relative;
+		z-index: 1;
 	}
 
 	.theme-name {
-		font-size: 13px;
+		font-size: 14px;
 		font-weight: 600;
+		position: relative;
+		z-index: 1;
+	}
+
+	.theme-check {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		width: 28px;
+		height: 28px;
+		background: rgba(34, 197, 94, 0.9);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 16px;
+		font-weight: bold;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+		z-index: 2;
 	}
 
 	.info-section {
 		padding: 15px;
 		background: rgba(59, 130, 246, 0.1);
 		border-radius: 12px;
-		border-left: 4px solid #3b82f6;
+		border-left: 4px solid var(--color-accent, #3b82f6);
 	}
 
 	.info-section h4 {
@@ -374,7 +452,7 @@
 	}
 
 	.btn-primary {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		background: linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-primary, #2563eb) 100%);
 		color: white;
 	}
 
