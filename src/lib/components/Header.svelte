@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { currentTime, currentWeekday } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
@@ -17,6 +18,67 @@
 	});
 
 	$: weekdayName = weekdayNames[$currentWeekday % 7];
+
+	// Vollbild-State
+	let isFullscreen = $state(false);
+
+	onMount(() => {
+		// Überwache Vollbild-Status
+		const handleFullscreenChange = () => {
+			isFullscreen = !!(
+				document.fullscreenElement ||
+				(document as any).webkitFullscreenElement ||
+				(document as any).mozFullScreenElement ||
+				(document as any).msFullscreenElement
+			);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+		document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+		document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+			document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+		};
+	});
+
+	async function toggleFullscreen() {
+		if (!isFullscreen) {
+			// Vollbild aktivieren
+			try {
+				if (document.documentElement.requestFullscreen) {
+					await document.documentElement.requestFullscreen();
+				} else if ((document.documentElement as any).webkitRequestFullscreen) {
+					await (document.documentElement as any).webkitRequestFullscreen();
+				} else if ((document.documentElement as any).mozRequestFullScreen) {
+					await (document.documentElement as any).mozRequestFullScreen();
+				} else if ((document.documentElement as any).msRequestFullscreen) {
+					await (document.documentElement as any).msRequestFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht aktiviert werden:', err);
+			}
+		} else {
+			// Vollbild verlassen
+			try {
+				if (document.exitFullscreen) {
+					await document.exitFullscreen();
+				} else if ((document as any).webkitExitFullscreen) {
+					await (document as any).webkitExitFullscreen();
+				} else if ((document as any).mozCancelFullScreen) {
+					await (document as any).mozCancelFullScreen();
+				} else if ((document as any).msExitFullscreen) {
+					await (document as any).msExitFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht verlassen werden:', err);
+			}
+		}
+	}
 </script>
 
 <header class="dashboard-header" transition:fade>
@@ -34,6 +96,14 @@
 	</div>
 
 	<div class="header-right">
+		<button 
+			class="fullscreen-btn" 
+			onclick={toggleFullscreen}
+			title={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
+			aria-label={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
+		>
+			{isFullscreen ? '⛶' : '⛶'}
+		</button>
 		<div class="clock">
 			<span class="time">{formattedTime}</span>
 		</div>
@@ -46,13 +116,13 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 50px; /* Vorher: 100px */
+		height: 50px;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0 20px; /* Vorher: 40px */
+		padding: 0 20px;
 		z-index: 100;
 		backdrop-filter: blur(10px);
 	}
@@ -76,6 +146,7 @@
 
 	.header-right {
 		justify-content: flex-end;
+		gap: 12px;
 	}
 
 	.logo {
@@ -86,19 +157,19 @@
 	}
 
 	.logo-icon {
-		font-size: 24px; /* Vorher: 48px */
+		font-size: 24px;
 		filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
 	}
 
 	.logo-text {
-		font-size: 18px; /* Vorher: 32px */
+		font-size: 18px;
 		font-weight: 700;
 		letter-spacing: 0.5px;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.weekday {
-		font-size: 18px; /* Vorher: 36px */
+		font-size: 18px;
 		font-weight: 700;
 		color: white;
 		text-transform: uppercase;
@@ -107,7 +178,7 @@
 	}
 
 	.date {
-		font-size: 13px; /* Vorher: 20px */
+		font-size: 13px;
 		color: rgba(255, 255, 255, 0.9);
 		font-weight: 500;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -119,16 +190,37 @@
 		margin: 0 8px;
 	}
 
+	.fullscreen-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: none;
+		color: white;
+		font-size: 20px;
+		width: 36px;
+		height: 36px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+	}
+
+	.fullscreen-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.1);
+	}
+
 	.clock {
 		background: rgba(255, 255, 255, 0.2);
-		padding: 6px 12px; /* Vorher: 15px 30px */
+		padding: 6px 12px;
 		border-radius: 8px;
 		backdrop-filter: blur(10px);
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
 	.time {
-		font-size: 20px; /* Vorher: 42px */
+		font-size: 20px;
 		font-weight: 600;
 		color: white;
 		font-family: 'Courier New', monospace;

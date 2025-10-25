@@ -7,12 +7,12 @@
 	} from '$lib/stores/appState';
 
 	let { children } = $props();
+
 	onMount(async () => {
 		await loadAllData();
 		subscribeToRealtimeUpdates();
 
-		// Vollbild-Modus aktivieren // ENTFERNT
-		/*
+		// Vollbild-Modus aktivieren
 		const enterFullscreen = async () => {
 			try {
 				if (document.documentElement.requestFullscreen) {
@@ -23,18 +23,20 @@
 				} else if ((document.documentElement as any).mozRequestFullScreen) {
 					// Firefox
 					await (document.documentElement as any).mozRequestFullScreen();
+				} else if ((document.documentElement as any).msRequestFullscreen) {
+					// IE/Edge
+					await (document.documentElement as any).msRequestFullscreen();
 				}
 			} catch (err) {
-				console.log('Fullscreen nicht verfügbar:', err);
+				console.log('Vollbild nicht verfügbar:', err);
 			}
 		};
-		*/
 
-		// Warte 1 Sekunde, dann Vollbild aktivieren // ENTFERNT
-		// setTimeout(enterFullscreen, 1000);
+		// Warte 1 Sekunde, dann Vollbild aktivieren
+		setTimeout(enterFullscreen, 1000);
 
-		// Optional: Bei Klick auch Vollbild versuchen (falls automatisch nicht klappt) // ENTFERNT
-		// document.addEventListener('click', enterFullscreen, { once: true });
+		// Optional: Bei Klick auch Vollbild versuchen (falls automatisch nicht klappt)
+		document.addEventListener('click', enterFullscreen, { once: true });
 
 		return () => {
 			unsubscribeFromRealtimeUpdates();
@@ -44,6 +46,7 @@
 
 <svelte:head>
 	<title>Digitales Raum-Dashboard</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 </svelte:head>
 
 {@render children?.()}
@@ -64,5 +67,22 @@
 
 	:global(button) {
 		font-family: inherit;
+	}
+
+	/* Vollbild-Optimierungen */
+	:global(html:fullscreen) {
+		overflow: hidden;
+	}
+
+	:global(html:-webkit-full-screen) {
+		overflow: hidden;
+	}
+
+	:global(html:-moz-full-screen) {
+		overflow: hidden;
+	}
+
+	:global(html:-ms-fullscreen) {
+		overflow: hidden;
 	}
 </style>
