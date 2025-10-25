@@ -73,7 +73,6 @@
 
 			// Upload Image if selected
 			if (imageFile) {
-				// uploading = true; // Schon oben gesetzt
 				const fileExt = imageFile.name.split('.').pop();
 				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
 				const { error: uploadError } = await supabase.storage
@@ -87,11 +86,9 @@
 
 					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
 				} else {
-					// Fehler beim Upload anzeigen, aber trotzdem weitermachen? Oder hier abbrechen?
 					console.error('Error uploading image:', uploadError);
 					alert('Fehler beim Bild-Upload!');
 				}
-				// uploading = false; // Wird im finally Block gesetzt
 			}
 
 			onClose();
@@ -99,7 +96,7 @@
 			console.error('Error saving room:', error);
 			alert('Fehler beim Speichern!');
 		} finally {
-			uploading = false; // Sicherstellen, dass uploading immer zurückgesetzt wird
+			uploading = false;
 		}
 	}
 
@@ -109,25 +106,41 @@
 			imageFile = target.files[0];
 		}
 	}
+	
+	function handleBackdropClick(e: MouseEvent) {
+		if (e.target === e.currentTarget) {
+			onClose();
+		}
+	}
+	
+	function handleBackdropKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			onClose();
+		}
+	}
 </script>
 
+<!-- FIX: role="dialog" verschoben zum modal-div, backdrop bekommt role="presentation" -->
 <div
 	class="modal-backdrop"
-	onclick={onClose}
+	onclick={handleBackdropClick}
+	onkeydown={handleBackdropKeydown}
 	transition:fade
-	role="dialog"
-	aria-modal="true"
-	onkeydown={(e) => e.key === 'Escape' && onClose()}
+	role="presentation"
+	tabindex="-1"
 >
+	<!-- FIX: Geändert zu button-Element mit role="dialog" -->
 	<div
 		class="modal"
 		onclick={(e) => e.stopPropagation()}
 		transition:scale
-		role="document"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
 	>
 		<div class="modal-header">
-			<h2>Raum bearbeiten</h2>
-			<button class="close-btn" onclick={onClose}>✕</button>
+			<h2 id="modal-title">Raum bearbeiten</h2>
+			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
 
 		<div class="modal-content">
@@ -154,8 +167,9 @@
 					<input id="room-color-{room.id}" type="color" bind:value={backgroundColor} />
 				</div>
 				<div class="form-group">
-					<label>Vorschau</label>
-					<div class="color-preview" style="background: {backgroundColor}"></div>
+					<!-- FIX: Label mit for-Attribut verbunden -->
+					<label for="color-preview-{room.id}">Vorschau</label>
+					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}" role="img" aria-label="Farbvorschau"></div>
 				</div>
 			</div>
 

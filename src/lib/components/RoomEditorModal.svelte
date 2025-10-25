@@ -179,7 +179,7 @@
 
 			<div class="form-group">
 				<label for="room-image-{room.id}">Hintergrundbild</label>
-				{/* FEHLERBEHEBUNG: Kommentar entfernt */}
+				<!-- Hintergrundbild Upload -->
 				<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} />
 				{#if room.image_url}
 					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
