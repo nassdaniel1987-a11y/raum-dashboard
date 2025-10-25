@@ -27,13 +27,21 @@ export const roomStatuses = writable<Map<string, RoomStatus>>(new Map());
 export const dailyConfigs = writable<Map<string, DailyConfig>>(new Map());
 export const appSettings = writable<AppSettings | null>(null);
 
-// ===== THEME HANDLING =====
-// Wenn sich die App-Settings ändern, Theme anwenden
+// ===== THEME HANDLING (BENUTZERSPEZIFISCH) =====
+// Neuer Store für benutzerspezifisches Theme (im Browser LocalStorage)
+export const userTheme = writable<string>('default');
+
+// Theme aus LocalStorage laden beim Start
 if (typeof window !== 'undefined') {
-	appSettings.subscribe(($settings) => {
-		if ($settings && $settings.current_theme) {
-			applyTheme($settings.current_theme);
-		}
+	const savedTheme = localStorage.getItem('user-theme');
+	if (savedTheme) {
+		userTheme.set(savedTheme);
+	}
+	
+	// Wenn sich das User-Theme ändert, speichern und anwenden
+	userTheme.subscribe(($theme) => {
+		localStorage.setItem('user-theme', $theme);
+		applyTheme($theme);
 	});
 }
 
@@ -185,10 +193,7 @@ export async function loadAllData() {
 		.single();
 	if (settingsData) {
 		appSettings.set(settingsData);
-		// Theme sofort anwenden
-		if (typeof window !== 'undefined' && settingsData.current_theme) {
-			applyTheme(settingsData.current_theme);
-		}
+		// Theme wird nicht mehr hier geladen - jeder User hat sein eigenes Theme im LocalStorage
 	}
 }
 

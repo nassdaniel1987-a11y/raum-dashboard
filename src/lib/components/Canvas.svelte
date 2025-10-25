@@ -164,11 +164,13 @@
 	}
 
 	.floor-section {
-		background: rgba(255, 255, 255, 0.03);
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(10px);
 		border-radius: 16px;
 		padding: 20px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
+		border: 2px solid rgba(255, 255, 255, 0.15);
 		transition: border-color 0.3s ease;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 	}
 
 	.floor-section:hover {
@@ -180,7 +182,7 @@
 		font-size: 24px;
 		font-weight: 700;
 		margin: 0 0 16px 0;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
 		gap: 10px;

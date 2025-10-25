@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
-	import { appSettings } from '$lib/stores/appState';
+	import { appSettings, userTheme } from '$lib/stores/appState';
 	import { themes, applyTheme } from '$lib/themes';
 	import { scale, fade } from 'svelte/transition';
 
@@ -13,25 +13,25 @@
 	let nightModeEnabled = $state($appSettings?.night_mode_enabled ?? true);
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
-	let currentTheme = $state($appSettings?.current_theme || 'space');
+	let currentTheme = $state($userTheme); // Aus LocalStorage
 	let previewTheme = $state(currentTheme); // Für Live-Vorschau
 
 	const themeList = Object.values(themes);
 
 	async function handleSave() {
 		try {
+			// Nur Nachtmodus-Settings in Supabase speichern (global)
 			await supabase
 				.from('app_settings')
 				.update({
 					night_mode_enabled: nightModeEnabled,
 					night_start: nightStart,
-					night_end: nightEnd,
-					current_theme: currentTheme
+					night_end: nightEnd
 				})
 				.eq('id', 1);
 
-			// Theme anwenden
-			applyTheme(currentTheme);
+			// Theme im LocalStorage speichern (benutzerspezifisch)
+			userTheme.set(currentTheme);
 
 			alert('Einstellungen gespeichert!');
 			onClose();
@@ -52,8 +52,8 @@
 	}
 
 	function handleCancel() {
-		// Theme auf Original zurücksetzen
-		applyTheme($appSettings?.current_theme || 'space');
+		// Theme auf User-Theme zurücksetzen
+		applyTheme($userTheme);
 		onClose();
 	}
 </script>
@@ -75,8 +75,8 @@
 		<div class="modal-content">
 			<!-- Theme-Auswahl mit Live-Vorschau -->
 			<div class="setting-section">
-				<h3>🎨 Design-Theme</h3>
-				<p class="hint">Klicke auf ein Theme für eine Live-Vorschau</p>
+				<h3>🎨 Dein persönliches Design-Theme</h3>
+				<p class="hint">Jeder Nutzer sieht sein eigenes Theme 👤</p>
 				<div class="theme-grid">
 					{#each themeList as theme}
 						<button
@@ -87,7 +87,7 @@
 							onmouseenter={() => handleThemePreview(theme.id)}
 							onmouseleave={() => handleThemePreview(currentTheme)}
 							style="
-								background: {theme.colors.cardGradient};
+								background: {theme.colors.cardBg};
 								border-color: {currentTheme === theme.id ? theme.colors.accent : 'rgba(255, 255, 255, 0.2)'};
 							"
 						>
