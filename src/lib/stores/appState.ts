@@ -28,7 +28,6 @@ export const dailyConfigs = writable<Map<string, DailyConfig>>(new Map());
 export const appSettings = writable<AppSettings | null>(null);
 
 // ===== THEME HANDLING (BENUTZERSPEZIFISCH) =====
-// Neuer Store für benutzerspezifisches Theme (im Browser LocalStorage)
 export const userTheme = writable<string>('default');
 
 // Theme aus LocalStorage laden beim Start
@@ -193,7 +192,6 @@ export async function loadAllData() {
 		.single();
 	if (settingsData) {
 		appSettings.set(settingsData);
-		// Theme wird nicht mehr hier geladen - jeder User hat sein eigenes Theme im LocalStorage
 	}
 }
 
@@ -205,15 +203,25 @@ function parseTime(timeString: string | null | undefined): number | null {
 	return hours * 60 + minutes;
 }
 
+// ✅ KORRIGIERT: Hilfsfunktion für sicheres Erstellen von RoomStatus
+function createRoomStatus(roomId: string, isOpen: boolean, manualOverride: boolean): RoomStatus {
+	return {
+		room_id: roomId,
+		is_open: isOpen,
+		manual_override: manualOverride,
+		last_updated: new Date().toISOString() // ✅ FIX: Jetzt immer dabei
+	};
+}
+
 // ===== ROOM ACTIONS =====
 export async function toggleRoomStatus(roomId: string) {
 	const currentStatus = get(roomStatuses).get(roomId);
 	const newStatus = !(currentStatus?.is_open ?? false);
 
+	// ✅ KORRIGIERT: Verwende Helper-Funktion
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
-		const existing = newMap.get(roomId) || { room_id: roomId, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-		newMap.set(roomId, { ...existing, is_open: newStatus, manual_override: true, last_updated: new Date().toISOString() });
+		newMap.set(roomId, createRoomStatus(roomId, newStatus, true));
 		return newMap;
 	});
 
@@ -226,13 +234,13 @@ export async function toggleRoomStatus(roomId: string) {
 
 	if (error) {
 		console.error('Error toggling room status:', error);
+		// ✅ KORRIGIERT: Fallback mit last_updated
 		roomStatuses.update((map) => {
 			const newMap = new Map(map);
 			if (currentStatus) {
 				newMap.set(roomId, currentStatus);
 			} else {
-				const fallbackStatus = { room_id: roomId, is_open: !newStatus, manual_override: false, last_updated: new Date().toISOString() };
-				newMap.set(roomId, fallbackStatus);
+				newMap.set(roomId, createRoomStatus(roomId, !newStatus, false));
 			}
 			return newMap;
 		});
@@ -303,6 +311,7 @@ export async function updateRoomSize(roomId: string, width: number, height: numb
 	await supabase.from('rooms').update({ width, height }).eq('id', roomId);
 }
 
+// ✅ KORRIGIERT: Bulk-Operationen mit last_updated
 export async function bulkOpenAllRooms() {
 	const allRooms = get(rooms);
 	const updates = allRooms.map((room) => ({
@@ -314,8 +323,7 @@ export async function bulkOpenAllRooms() {
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
 		allRooms.forEach((room) => {
-			const existing = newMap.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-			newMap.set(room.id, { ...existing, is_open: true, manual_override: true });
+			newMap.set(room.id, createRoomStatus(room.id, true, true));
 		});
 		return newMap;
 	});
@@ -339,8 +347,7 @@ export async function bulkCloseAllRooms() {
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
 		allRooms.forEach((room) => {
-			const existing = newMap.get(room.id) || { room_id: room.id, is_open: false, manual_override: false, last_updated: new Date().toISOString() };
-			newMap.set(room.id, { ...existing, is_open: false, manual_override: true });
+			newMap.set(room.id, createRoomStatus(room.id, false, true));
 		});
 		return newMap;
 	});
@@ -486,16 +493,15 @@ if (typeof window !== 'undefined') {
 					if (error) {
 						console.error("[AutoService] Fehler bei DB-Update:", error);
 					} else {
+						// ✅ KORRIGIERT: Lokale Updates mit last_updated
 						roomStatuses.update(map => {
 							const newMap = new Map(map);
 							for (const update of updates) {
-								const existing = newMap.get(update.room_id) || { room_id: update.room_id, is_open: !update.is_open, manual_override: !update.manual_override, last_updated: new Date(0).toISOString() };
-								newMap.set(update.room_id, {
-									...existing,
-									is_open: update.is_open,
-									manual_override: update.manual_override,
-									last_updated: new Date().toISOString()
-								});
+								newMap.set(update.room_id, createRoomStatus(
+									update.room_id,
+									update.is_open,
+									update.manual_override
+								));
 							}
 							return newMap;
 						});
