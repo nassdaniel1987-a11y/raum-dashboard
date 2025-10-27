@@ -12,7 +12,8 @@
 		await loadAllData();
 		subscribeToRealtimeUpdates();
 
-		// Vollbild-Modus aktivieren
+		// ✅ GEÄNDERT: Fullscreen nur bei explizitem User-Click
+		// Nicht automatisch, da Browser das blockieren
 		const enterFullscreen = async () => {
 			try {
 				if (document.documentElement.requestFullscreen) {
@@ -29,8 +30,12 @@
 			}
 		};
 
-		setTimeout(enterFullscreen, 1000);
-		document.addEventListener('click', enterFullscreen, { once: true });
+		// ✅ NUR bei User-Click aktivieren (nicht automatisch)
+		// Entferne automatischen Start nach 1 Sekunde
+		// setTimeout(enterFullscreen, 1000); // ← DEAKTIVIERT
+		
+		// User kann manuell Vollbild aktivieren (z.B. F11 oder Button)
+		document.addEventListener('dblclick', enterFullscreen, { once: true });
 
 		return () => {
 			unsubscribeFromRealtimeUpdates();
