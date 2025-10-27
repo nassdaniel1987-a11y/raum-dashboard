@@ -172,9 +172,9 @@
 	}
 
 	.canvas {
-		max-width: 1600px;
+		max-width: 1400px;
 		margin: 0 auto;
-		padding: 30px;
+		padding: 20px;
 		min-height: 100%;
 		/* Bessere Performance durch GPU-Layer */
 		transform: translateZ(0);
@@ -183,7 +183,7 @@
 	.floors-container {
 		display: flex;
 		flex-direction: column;
-		gap: 40px;
+		gap: 24px;
 		/* Verhindert Layout-Shifts während des Scrollens */
 		contain: layout;
 	}
@@ -191,11 +191,11 @@
 	.floor-section {
 		background: rgba(0, 0, 0, 0.6);
 		backdrop-filter: blur(10px);
-		border-radius: 20px;
-		padding: 30px;
+		border-radius: 16px;
+		padding: 20px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		transition: border-color 0.3s ease;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
@@ -207,20 +207,20 @@
 
 	.floor-title {
 		color: var(--color-text-primary);
-		font-size: 32px;
+		font-size: 22px;
 		font-weight: 700;
-		margin: 0 0 24px 0;
-		text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9), 
-					 0 0 30px rgba(0, 0, 0, 0.8);
+		margin: 0 0 16px 0;
+		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9), 
+					 0 0 20px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 10px;
 		/* Bessere Lesbarkeit auf großen Displays */
-		letter-spacing: 0.5px;
+		letter-spacing: 0.3px;
 	}
 
 	.floor-hint {
-		font-size: 16px;
+		font-size: 12px;
 		font-weight: 400;
 		opacity: 0.7;
 		font-style: italic;
@@ -228,8 +228,8 @@
 
 	.rooms-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 24px;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
 		grid-auto-rows: auto;
 		align-items: start;
 		/* Performance-Optimierung */
@@ -253,46 +253,8 @@
 		filter: brightness(1.1);
 	}
 
-	/* Große Displays (82 Zoll TV) */
-	@media (min-width: 1920px) {
-		.canvas {
-			max-width: 1800px;
-			padding: 50px;
-		}
-
-		.floors-container {
-			gap: 50px;
-		}
-
-		.floor-section {
-			padding: 40px;
-		}
-
-		.floor-title {
-			font-size: 48px;
-			margin-bottom: 32px;
-		}
-
-		.rooms-grid {
-			grid-template-columns: repeat(4, 1fr);
-			gap: 32px;
-		}
-	}
-
-	/* Extra große Displays */
-	@media (min-width: 2560px) {
-		.floor-title {
-			font-size: 56px;
-		}
-
-		.rooms-grid {
-			grid-template-columns: repeat(5, 1fr);
-			gap: 40px;
-		}
-	}
-
 	/* Desktop */
-	@media (min-width: 1024px) and (max-width: 1919px) {
+	@media (min-width: 1024px) {
 		.rooms-grid {
 			grid-template-columns: repeat(4, 1fr);
 		}
@@ -345,23 +307,23 @@
 	}
 
 	.empty-icon {
-		font-size: 120px;
-		margin-bottom: 24px;
-		filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+		font-size: 80px;
+		margin-bottom: 16px;
+		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 	}
 
 	.empty-state h2 {
-		font-size: 36px;
+		font-size: 24px;
 		font-weight: 700;
-		margin: 0 0 16px 0;
-		text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+		margin: 0 0 12px 0;
+		text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
 	}
 
 	.empty-state p {
-		font-size: 22px;
+		font-size: 16px;
 		margin: 0;
 		opacity: 0.8;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 	}
 
 	/* Verbesserter Scrollbar für große Displays */

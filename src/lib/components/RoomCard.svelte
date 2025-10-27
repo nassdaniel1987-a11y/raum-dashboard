@@ -13,30 +13,15 @@
 		isSelected?: boolean;
 	}>();
 
-	// SVELTE 5 STATE SYNTAX
-	let showContextMenu = $state(false);
-	let contextMenuX = $state(0);
-	let contextMenuY = $state(0);
-
 	async function handleClick() {
-		if ($isEditMode && !showContextMenu) {
+		if ($isEditMode) {
 			await toggleRoomStatus(room.id);
 		}
 	}
 
-	function handleContextMenu(e: MouseEvent) {
-		if (!$isEditMode) return;
-		e.preventDefault();
-		contextMenuX = e.clientX;
-		contextMenuY = e.clientY;
-		showContextMenu = true;
-	}
-
-	function closeContextMenu() {
-		showContextMenu = false;
-	}
-
-	async function handleDelete() {
+	async function handleDelete(e: MouseEvent) {
+		e.stopPropagation();
+		
 		const confirmed = await confirmDialog.ask({
 			title: 'Raum löschen?',
 			message: `Möchtest du den Raum "${room.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
@@ -45,14 +30,10 @@
 			type: 'danger'
 		});
 
-		if (!confirmed) {
-			closeContextMenu();
-			return;
-		}
+		if (!confirmed) return;
 
 		swapSelection.update(ids => ids.filter(id => id !== room.id));
 		await supabase.from('rooms').delete().eq('id', room.id);
-		closeContextMenu();
 	}
 
 	// SVELTE 5 DERIVED SYNTAX
@@ -62,12 +43,10 @@
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
 	
-	// ✅ NEU: Dynamische Schriftgrößen aus Config
-	let titleFontSize = $derived(room.config?.title_font_size || 16);
-	let textFontSize = $derived(room.config?.text_font_size || 20);
+	// ✅ Kleinere Default-Schriftgrößen für iPad
+	let titleFontSize = $derived(room.config?.title_font_size || 18);
+	let textFontSize = $derived(room.config?.text_font_size || 14);
 </script>
-
-<svelte:window onclick={closeContextMenu} />
 
 <div
 	class="room-card"
@@ -75,7 +54,6 @@
 	class:open={room.isOpen}
 	class:selected={isSelected}
 	style={roomStyle}
-	oncontextmenu={handleContextMenu}
 	onkeydown={(e) => e.key === 'Enter' && handleClick()}
 	in:scale={{ duration: 300, start: 0.8 }}
 	out:fade={{ duration: 200 }}
@@ -86,10 +64,11 @@
 		<img src={room.image_url} alt={room.name} class="card-bg-image" />
 	{/if}
 
-	<div class="button-container">
-		{#if $isEditMode}
+	<!-- ✅ NEU: Button-Container rechts oben im Edit-Modus -->
+	{#if $isEditMode}
+		<div class="button-container">
 			<button
-				class="select-button"
+				class="icon-button select-button"
 				class:selected={isSelected}
 				title="Für Tausch auswählen"
 				onclick={(e) => { e.stopPropagation(); onSelect(room.id); }}
@@ -97,12 +76,26 @@
 				{isSelected ? '✓' : '⇄'}
 			</button>
 
-			<button class="edit-button" title="Bearbeiten" onclick={(e) => { e.stopPropagation(); onEdit(room); }}>
+			<button 
+				class="icon-button edit-button" 
+				title="Bearbeiten" 
+				onclick={(e) => { e.stopPropagation(); onEdit(room); }}
+			>
 				✏️
 			</button>
-		{/if}
-	</div>
 
+			<!-- ✅ NEU: Lösch-Button direkt sichtbar -->
+			<button 
+				class="icon-button delete-button" 
+				title="Löschen" 
+				onclick={handleDelete}
+			>
+				🗑️
+			</button>
+		</div>
+	{/if}
+
+	<!-- Status Badge -->
 	<div class="status-badge" class:open={room.isOpen}>
 		{#if room.isOpen}
 			<span in:scale={{ duration: 300 }}>✓</span>
@@ -121,11 +114,9 @@
 		class="card-content"
 		onclick={handleClick}
 	>
-		<!-- ✅ GEÄNDERT: Dynamische Schriftgröße für Titel -->
 		<h3 class="room-title" style="font-size: {titleFontSize}px;">{room.name}</h3>
 
 		{#if room.config?.activity}
-			<!-- ✅ GEÄNDERT: Dynamische Schriftgröße für Text -->
 			<p class="room-activity" style="font-size: {textFontSize}px;">{room.config.activity}</p>
 		{/if}
 	</div>
@@ -137,23 +128,6 @@
 	{/if}
 </div>
 
-{#if showContextMenu}
-	<div
-		class="context-menu"
-		style="left: {contextMenuX}px; top: {contextMenuY}px;"
-		transition:scale={{ duration: 200 }}
-		onclick={(e) => e.stopPropagation()}
-		role="menu"
-	>
-		<button class="context-item" onclick={() => { onEdit(room); closeContextMenu(); }} role="menuitem">
-			✏️ Bearbeiten
-		</button>
-		<button class="context-item danger" onclick={handleDelete} role="menuitem">
-			🗑️ Löschen
-		</button>
-	</div>
-{/if}
-
 <style>
 	.room-card {
 		position: relative;
@@ -163,7 +137,7 @@
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 140px;
+		min-height: 120px; /* ✅ Reduziert von 140px */
 		display: flex;
 		flex-direction: column;
 		border: 3px solid transparent;
@@ -179,15 +153,6 @@
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 	}
 
-	.room-card.open {
-		/* Kein extra Glow mehr - nur einfarbige Kachel */
-	}
-
-	.room-card.open.selected {
-		border-color: #f59e0b;
-		box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
-	}
-
 	.card-bg-image {
 		position: absolute;
 		top: 0;
@@ -199,21 +164,21 @@
 		z-index: 0;
 	}
 
+	/* ✅ Button Container - optimiert für Touch */
 	.button-container {
 		position: absolute;
-		top: 6px;
-		right: 6px;
+		top: 8px;
+		right: 8px;
 		z-index: 10;
 		display: flex;
 		gap: 6px;
 	}
 
-	.edit-button,
-	.select-button {
-		padding: 4px 8px;
-		background: rgba(0, 0, 0, 0.7);
-		border: none;
-		border-radius: 6px;
+	.icon-button {
+		padding: 6px 10px; /* ✅ Größere Touch-Targets */
+		background: rgba(0, 0, 0, 0.8);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 8px;
 		font-size: 16px;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -223,33 +188,56 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-width: 32px;
-		min-height: 28px;
+		min-width: 36px; /* ✅ Mindestens 44x44px für Touch */
+		min-height: 36px;
 	}
 
-	.edit-button:hover,
-	.select-button:hover {
-		background: rgba(0, 0, 0, 0.9);
-		transform: scale(1.1);
+	.icon-button:hover {
+		background: rgba(0, 0, 0, 1);
+		transform: scale(1.05);
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.icon-button:active {
+		transform: scale(0.95);
 	}
 
 	.select-button {
-		background: rgba(59, 130, 246, 0.7);
+		background: rgba(59, 130, 246, 0.8);
+		border-color: rgba(59, 130, 246, 0.5);
 	}
 	.select-button:hover {
 		background: rgba(59, 130, 246, 1);
+		border-color: rgba(59, 130, 246, 0.8);
 	}
 	.select-button.selected {
 		background: rgba(245, 158, 11, 0.9);
+		border-color: rgba(245, 158, 11, 0.8);
 	}
-	.select-button.selected:hover {
-		background: rgba(245, 158, 11, 1);
+
+	.edit-button {
+		background: rgba(34, 197, 94, 0.8);
+		border-color: rgba(34, 197, 94, 0.5);
+	}
+	.edit-button:hover {
+		background: rgba(34, 197, 94, 1);
+		border-color: rgba(34, 197, 94, 0.8);
+	}
+
+	/* ✅ NEU: Lösch-Button Styling */
+	.delete-button {
+		background: rgba(239, 68, 68, 0.8);
+		border-color: rgba(239, 68, 68, 0.5);
+	}
+	.delete-button:hover {
+		background: rgba(239, 68, 68, 1);
+		border-color: rgba(239, 68, 68, 0.8);
 	}
 
 	.card-content {
 		position: relative;
 		z-index: 1;
-		padding: 12px;
+		padding: 10px; /* ✅ Reduziert von 12px */
 		height: 100%;
 		display: flex;
 		flex-direction: column;
@@ -263,12 +251,12 @@
 	}
 
 	.room-title {
-		margin: 0 0 8px 0;
+		margin: 0 0 6px 0; /* ✅ Reduziert von 8px */
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
 		width: 100%;
-		padding-top: 4px;
+		padding-top: 2px; /* ✅ Reduziert von 4px */
 		flex-shrink: 0;
 	}
 
@@ -277,21 +265,20 @@
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
-		padding: 8px 4px;
-		
+		padding: 6px 4px; /* ✅ Reduziert von 8px */
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		overflow-wrap: break-word;
-		line-height: 1.4;
+		line-height: 1.3; /* ✅ Reduziert von 1.4 */
 	}
 
 	.status-badge {
 		position: absolute;
-		top: 6px;
-		left: 6px;
-		padding: 4px 10px;
+		top: 8px;
+		left: 8px;
+		padding: 4px 8px; /* ✅ Kompakter */
 		border-radius: 6px;
-		font-size: 12px;
+		font-size: 11px; /* ✅ Reduziert von 12px */
 		font-weight: 700;
 		z-index: 5;
 		background: var(--color-closed-badge);
@@ -305,14 +292,14 @@
 
 	.time-badge-top {
 		position: absolute;
-		top: 35px;
+		top: 38px; /* ✅ Angepasst */
 		left: 50%;
 		transform: translateX(-50%);
-		padding: 8px 16px;
+		padding: 6px 12px; /* ✅ Kompakter */
 		background: var(--color-time-badge);
 		border: 2px solid var(--color-accent);
-		border-radius: 12px;
-		font-size: 14px;
+		border-radius: 10px;
+		font-size: 12px; /* ✅ Reduziert von 14px */
 		font-weight: 700;
 		color: white;
 		z-index: 6;
@@ -338,51 +325,20 @@
 	}
 
 	.lock-icon {
-		font-size: 40px;
+		font-size: 32px; /* ✅ Reduziert von 40px */
 		opacity: 0.5;
 		filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
 	}
 
-	.context-menu {
-		position: fixed;
-		background: var(--card-bg);
-		border-radius: 10px;
-		padding: 6px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-		z-index: 2000;
-		min-width: 140px;
-	}
-
-	.context-item {
-		display: block;
-		width: 100%;
-		padding: 8px 12px;
-		background: transparent;
-		border: none;
-		color: white;
-		text-align: left;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-		border-radius: 6px;
-		transition: all 0.2s;
-	}
-
-	.context-item:hover {
-		background: rgba(255, 255, 255, 0.1);
-	}
-
-	.context-item.danger {
-		color: #ef4444;
-	}
-
-	.context-item.danger:hover {
-		background: rgba(239, 68, 68, 0.2);
-	}
-
 	@media (max-width: 768px) {
 		.room-card {
-			min-height: 120px;
+			min-height: 110px;
+		}
+
+		.icon-button {
+			min-width: 32px;
+			min-height: 32px;
+			padding: 4px 8px;
 		}
 	}
 </style>

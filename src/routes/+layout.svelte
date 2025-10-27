@@ -195,25 +195,6 @@
 		transform: translateZ(0);
 	}
 
-	/* Verbesserte Text-Rendering für große Displays */
-	@media (min-width: 1920px) {
-		:global(body) {
-			font-size: 18px;
-			letter-spacing: 0.3px;
-		}
-
-		:global(h1, h2, h3, h4, h5, h6) {
-			letter-spacing: 0.5px;
-		}
-	}
-
-	/* 4K und höher */
-	@media (min-width: 2560px) {
-		:global(body) {
-			font-size: 20px;
-		}
-	}
-
 	/* Reduziere Motion für Nutzer mit Präferenzen */
 	@media (prefers-reduced-motion: reduce) {
 		:global(*) {
