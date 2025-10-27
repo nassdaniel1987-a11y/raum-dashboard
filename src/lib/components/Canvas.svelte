@@ -14,56 +14,115 @@
 	let scrollContainer: HTMLElement;
 	let autoScrollEnabled = $state(true);
 	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
+	let userInteractionTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-	// Verbessertes Auto-Scroll mit sanfteren Bewegungen
-	onMount(() => {
-		if (scrollContainer && autoScrollEnabled) {
-			let scrollDirection = 1;
-			let scrollSpeed = 0.5; // Langsamere Geschwindigkeit für flüssigeres Scrollen
-			let pauseCounter = 0;
-			const pauseDuration = 60; // Frames Pause an den Enden (ca. 3 Sekunden bei 20fps)
+	// ✅ NEU: Scroll-Geschwindigkeit aus localStorage laden oder Default
+	let scrollSpeed = $state(parseFloat(localStorage.getItem('scrollSpeed') || '0.5'));
+	let pauseDuration = $state(parseInt(localStorage.getItem('pauseDuration') || '60'));
 
-			scrollInterval = setInterval(() => {
-				if (!scrollContainer) return;
+	function startAutoScroll() {
+		if (!scrollContainer) return;
 
-				const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-				const currentScroll = scrollContainer.scrollTop;
-
-				// Am oberen oder unteren Ende: Pause einlegen
-				if (currentScroll >= maxScroll - 5) {
-					if (pauseCounter < pauseDuration) {
-						pauseCounter++;
-						return;
-					}
-					scrollDirection = -1;
-					pauseCounter = 0;
-				} else if (currentScroll <= 5) {
-					if (pauseCounter < pauseDuration) {
-						pauseCounter++;
-						return;
-					}
-					scrollDirection = 1;
-					pauseCounter = 0;
-				}
-
-				// Sanftes Scrollen mit requestAnimationFrame für bessere Performance
-				scrollContainer.scrollBy({
-					top: scrollDirection * scrollSpeed,
-					behavior: 'auto' // 'smooth' kann auf großen Displays zu Ruckeln führen
-				});
-			}, 50); // 20fps für flüssige Bewegung
+		// ✅ NEU: Prüfe ob Scrollen überhaupt nötig ist
+		const needsScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+		if (!needsScroll) {
+			console.log('📺 Kein Auto-Scroll nötig - alles sichtbar');
+			return;
 		}
+
+		if (!autoScrollEnabled) return;
+
+		let scrollDirection = 1;
+		let pauseCounter = 0;
+
+		scrollInterval = setInterval(() => {
+			if (!scrollContainer) return;
+
+			const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+			const currentScroll = scrollContainer.scrollTop;
+
+			// Am oberen oder unteren Ende: Pause einlegen
+			if (currentScroll >= maxScroll - 5) {
+				if (pauseCounter < pauseDuration) {
+					pauseCounter++;
+					return;
+				}
+				scrollDirection = -1;
+				pauseCounter = 0;
+			} else if (currentScroll <= 5) {
+				if (pauseCounter < pauseDuration) {
+					pauseCounter++;
+					return;
+				}
+				scrollDirection = 1;
+				pauseCounter = 0;
+			}
+
+			scrollContainer.scrollBy({
+				top: scrollDirection * scrollSpeed,
+				behavior: 'auto'
+			});
+		}, 50);
+	}
+
+	function stopAutoScroll() {
+		if (scrollInterval) {
+			clearInterval(scrollInterval);
+			scrollInterval = undefined;
+		}
+	}
+
+	// ✅ NEU: Pause bei User-Interaktion
+	function handleUserInteraction() {
+		console.log('👆 User-Interaktion erkannt - Pause Auto-Scroll');
+		stopAutoScroll();
+
+		// Clear existing timeout
+		if (userInteractionTimeout) {
+			clearTimeout(userInteractionTimeout);
+		}
+
+		// Nach 5 Sekunden wieder starten
+		userInteractionTimeout = setTimeout(() => {
+			console.log('▶️ Auto-Scroll wird wieder gestartet');
+			startAutoScroll();
+		}, 5000);
+	}
+
+	onMount(() => {
+		// Initial start nach kurzer Verzögerung
+		setTimeout(() => {
+			startAutoScroll();
+		}, 1000);
 	});
 
 	onDestroy(() => {
-		if (scrollInterval) {
-			clearInterval(scrollInterval);
+		stopAutoScroll();
+		if (userInteractionTimeout) {
+			clearTimeout(userInteractionTimeout);
 		}
 	});
 
-	function handleUserScroll() {
-		// Optional: Auto-Scroll pausieren wenn User manuell scrollt
-		// (Kann aktiviert werden falls gewünscht)
+	// ✅ NEU: Exportiere Funktionen für Settings
+	export function setScrollSpeed(speed: number, pause: number) {
+		scrollSpeed = speed;
+		pauseDuration = pause;
+		localStorage.setItem('scrollSpeed', speed.toString());
+		localStorage.setItem('pauseDuration', pause.toString());
+		
+		// Restart mit neuen Settings
+		stopAutoScroll();
+		startAutoScroll();
+	}
+
+	export function toggleAutoScroll() {
+		autoScrollEnabled = !autoScrollEnabled;
+		if (autoScrollEnabled) {
+			startAutoScroll();
+		} else {
+			stopAutoScroll();
+		}
+		return autoScrollEnabled;
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -107,7 +166,9 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
-	onwheel={handleUserScroll}
+	onwheel={handleUserInteraction}
+	ontouchstart={handleUserInteraction}
+	ontouchmove={handleUserInteraction}
 	transition:fade
 >
 	<div class="canvas">
@@ -151,6 +212,13 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- ✅ NEU: Auto-Scroll Status Indikator -->
+	{#if autoScrollEnabled}
+		<div class="scroll-indicator" title="Auto-Scroll aktiv">
+			<span class="scroll-icon">↕️</span>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -327,6 +395,35 @@
 		margin: 0;
 		opacity: 0.8;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+	}
+
+	/* ✅ NEU: Scroll Indikator */
+	.scroll-indicator {
+		position: fixed;
+		bottom: 100px;
+		left: 20px;
+		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(10px);
+		padding: 8px 12px;
+		border-radius: 8px;
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		z-index: 500;
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	.scroll-icon {
+		font-size: 20px;
+		display: block;
+	}
+
+	@keyframes pulse {
+		0%, 100% {
+			opacity: 0.6;
+		}
+		50% {
+			opacity: 1;
+		}
 	}
 
 	/* Verbesserter Scrollbar für große Displays */

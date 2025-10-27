@@ -5,9 +5,10 @@
 	import { cubicOut } from 'svelte/easing';
 
 	// Svelte 5 Props Syntax
-	let { onOpenScheduler, onOpenSettings } = $props<{
+	let { onOpenScheduler, onOpenSettings, canvasRef } = $props<{
 		onOpenScheduler: () => void;
 		onOpenSettings: () => void;
+		canvasRef?: any; // Referenz zur Canvas-Komponente
 	}>();
 
 	// Svelte 5 State Syntax
@@ -15,6 +16,17 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 	let menuOpen = $state(false);
+	let showScrollSettings = $state(false);
+
+	// ✅ NEU: Scroll-Einstellungen
+	let scrollPreset = $state(localStorage.getItem('scrollPreset') || 'normal');
+	let autoScrollActive = $state(true);
+
+	const scrollPresets = {
+		langsam: { speed: 0.3, pause: 100, label: '🐌 Langsam' },
+		normal: { speed: 0.5, pause: 60, label: '▶️ Normal' },
+		schnell: { speed: 0.8, pause: 40, label: '⚡ Schnell' }
+	};
 
 	async function handleCreateRoom() {
 		if (!newRoomName.trim()) {
@@ -51,6 +63,24 @@
 	function toggleMenu() {
 		menuOpen = !menuOpen;
 	}
+
+	// ✅ NEU: Scroll-Preset ändern
+	function setScrollPreset(preset: keyof typeof scrollPresets) {
+		scrollPreset = preset;
+		localStorage.setItem('scrollPreset', preset);
+		
+		const settings = scrollPresets[preset];
+		if (canvasRef?.setScrollSpeed) {
+			canvasRef.setScrollSpeed(settings.speed, settings.pause);
+		}
+	}
+
+	// ✅ NEU: Auto-Scroll an/aus
+	function toggleAutoScroll() {
+		if (canvasRef?.toggleAutoScroll) {
+			autoScrollActive = canvasRef.toggleAutoScroll();
+		}
+	}
 </script>
 
 <!-- Floating Action Button -->
@@ -86,6 +116,45 @@
 					<span class="label">Ansicht-Modus</span>
 				{/if}
 			</button>
+
+			<!-- ✅ NEU: Scroll-Einstellungen -->
+			<button
+				class="menu-item"
+				onclick={() => showScrollSettings = !showScrollSettings}
+			>
+				<span class="icon">↕️</span>
+				<span class="label">Scroll-Einstellungen</span>
+			</button>
+
+			{#if showScrollSettings}
+				<div class="scroll-settings" transition:slide={{ duration: 200 }}>
+					<div class="setting-group">
+						<label class="setting-label">Geschwindigkeit:</label>
+						<div class="preset-buttons">
+							{#each Object.entries(scrollPresets) as [key, preset]}
+								<button
+									class="preset-btn"
+									class:active={scrollPreset === key}
+									onclick={() => setScrollPreset(key as keyof typeof scrollPresets)}
+								>
+									{preset.label}
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="setting-group">
+						<button
+							class="toggle-btn"
+							class:active={autoScrollActive}
+							onclick={toggleAutoScroll}
+						>
+							<span class="icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
+							<span class="label">{autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}</span>
+						</button>
+					</div>
+				</div>
+			{/if}
 
 			{#if $isEditMode}
 				<div class="edit-section" transition:slide={{ duration: 200 }}>
@@ -195,7 +264,7 @@
 		position: fixed;
 		bottom: 120px;
 		right: 30px;
-		width: 320px;
+		width: 340px;
 		max-height: 70vh;
 		background: rgba(0, 0, 0, 0.95);
 		backdrop-filter: blur(20px);
@@ -260,6 +329,86 @@
 	}
 
 	.swap-item.active {
+		background: rgba(245, 158, 11, 0.25);
+		border-color: rgba(245, 158, 11, 0.5);
+	}
+
+	/* ✅ NEU: Scroll Settings */
+	.scroll-settings {
+		background: rgba(0, 0, 0, 0.4);
+		border-radius: 12px;
+		padding: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.setting-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.setting-label {
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.preset-buttons {
+		display: flex;
+		gap: 8px;
+	}
+
+	.preset-btn {
+		flex: 1;
+		padding: 10px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 8px;
+		color: var(--color-text-primary);
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+	.preset-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.preset-btn.active {
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
+		box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+	}
+
+	.toggle-btn {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 10px;
+		color: var(--color-text-primary);
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		width: 100%;
+	}
+
+	.toggle-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.toggle-btn.active {
 		background: rgba(245, 158, 11, 0.25);
 		border-color: rgba(245, 158, 11, 0.5);
 	}
@@ -377,7 +526,7 @@
 			right: 20px;
 			bottom: 100px;
 			width: calc(100vw - 40px);
-			max-width: 320px;
+			max-width: 340px;
 		}
 	}
 </style>

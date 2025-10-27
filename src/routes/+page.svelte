@@ -13,6 +13,7 @@
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
 	let showSettings = $state(false);
+	let canvasRef: any = $state(null); // ✅ NEU: Referenz zur Canvas-Komponente
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -41,8 +42,12 @@
 
 <div class="dashboard">
 	<Header />
-	<Canvas {handleEditRoom} />
-	<FloatingMenu onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
+	<Canvas {handleEditRoom} bind:this={canvasRef} />
+	<FloatingMenu 
+		onOpenScheduler={openScheduler} 
+		onOpenSettings={openSettings}
+		{canvasRef}
+	/>
 	<ToastContainer />
 	<ConfirmDialog />
 
