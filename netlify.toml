@@ -1,6 +1,40 @@
 [build]
   command = "npm run build"
-  publish = ".svelte-kit/netlify"
+  publish = "build"  # ✅ GEÄNDERT: SvelteKit baut nach 'build', nicht '.svelte-kit/netlify'
 
 [build.environment]
   NODE_VERSION = "20"
+
+# ✅ NEU: Functions Config für Netlify
+[functions]
+  directory = ".netlify/functions"
+  node_bundler = "esbuild"
+
+# ✅ NEU: Redirects für SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ✅ NEU: Headers für bessere Performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
+    
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
