@@ -189,20 +189,15 @@
 	}
 
 	.floor-section {
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(10px);
+		/* ✅ GEÄNDERT: Kein dunkler Hintergrund mehr - nur transparenter Container */
+		background: transparent;
 		border-radius: 16px;
-		padding: 20px;
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		transition: border-color 0.3s ease;
-		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+		padding: 0 0 20px 0; /* Nur unten Padding für die Kacheln */
+		border: none; /* Kein Border mehr */
+		transition: all 0.3s ease;
 		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
-	}
-
-	.floor-section:hover {
-		border-color: rgba(255, 255, 255, 0.25);
 	}
 
 	.floor-title {
@@ -210,13 +205,21 @@
 		font-size: 22px;
 		font-weight: 700;
 		margin: 0 0 16px 0;
+		/* ✅ NEU: Dunkler Hintergrund nur für den Titel */
+		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(10px);
+		padding: 12px 20px;
+		border-radius: 12px;
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9), 
 					 0 0 20px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		/* Bessere Lesbarkeit auf großen Displays */
 		letter-spacing: 0.3px;
+		/* Inline-block damit es sich an Content anpasst */
+		width: fit-content;
 	}
 
 	.floor-hint {
