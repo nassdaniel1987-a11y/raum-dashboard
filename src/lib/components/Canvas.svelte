@@ -16,9 +16,9 @@
 	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
 	let userInteractionTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-	// ✅ NEU: Scroll-Geschwindigkeit aus localStorage laden oder Default
-	let scrollSpeed = $state(parseFloat(localStorage.getItem('scrollSpeed') || '0.5'));
-	let pauseDuration = $state(parseInt(localStorage.getItem('pauseDuration') || '60'));
+	// ✅ KORRIGIERT: Hier nur Standardwerte setzen. localStorage wird in onMount geladen.
+	let scrollSpeed = $state(0.5);
+	let pauseDuration = $state(60);
 
 	function startAutoScroll() {
 		if (!scrollContainer) return;
@@ -90,6 +90,10 @@
 	}
 
 	onMount(() => {
+		// ✅ KORRIGIERT: localStorage-Werte sicher auf dem Client (im Browser) laden
+		scrollSpeed = parseFloat(localStorage.getItem('scrollSpeed') || '0.5');
+		pauseDuration = parseInt(localStorage.getItem('pauseDuration') || '60');
+
 		// Initial start nach kurzer Verzögerung
 		setTimeout(() => {
 			startAutoScroll();
@@ -109,7 +113,7 @@
 		pauseDuration = pause;
 		localStorage.setItem('scrollSpeed', speed.toString());
 		localStorage.setItem('pauseDuration', pause.toString());
-		
+
 		// Restart mit neuen Settings
 		stopAutoScroll();
 		startAutoScroll();
@@ -127,14 +131,21 @@
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
 	let roomsByFloor = $derived({
-		extern: $visibleRooms.filter(r => r.floor === 'extern').sort((a, b) => a.position_x - b.position_x),
-		dach: $visibleRooms.filter(r => r.floor === 'dach').sort((a, b) => a.position_x - b.position_x),
-		og2: $visibleRooms.filter(r => r.floor === 'og2').sort((a, b) => a.position_x - b.position_x),
-		og1: $visibleRooms.filter(r => r.floor === 'og1').sort((a, b) => a.position_x - b.position_x),
-		eg: $visibleRooms.filter(r => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
-		ug: $visibleRooms.filter(r => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
+		extern: $visibleRooms
+			.filter((r) => r.floor === 'extern')
+			.sort((a, b) => a.position_x - b.position_x),
+		dach: $visibleRooms
+			.filter((r) => r.floor === 'dach')
+			.sort((a, b) => a.position_x - b.position_x),
+		og2: $visibleRooms
+			.filter((r) => r.floor === 'og2')
+			.sort((a, b) => a.position_x - b.position_x),
+		og1: $visibleRooms
+			.filter((r) => r.floor === 'og1')
+			.sort((a, b) => a.position_x - b.position_x),
+		eg: $visibleRooms.filter((r) => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
+		ug: $visibleRooms.filter((r) => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	});
-
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
 		dach: '🏠 Dachgeschoss',
@@ -143,20 +154,12 @@
 		eg: '🚪 Erdgeschoss',
 		ug: '⬇️ Untergeschoss'
 	};
-
-	const floorOrder: (keyof typeof floorLabels)[] = [
-		'dach',
-		'og2',
-		'og1',
-		'eg',
-		'ug',
-		'extern'
-	];
+	const floorOrder: (keyof typeof floorLabels)[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
 
 	function handleSelectForSwap(roomId: string) {
-		swapSelection.update(ids => {
+		swapSelection.update((ids) => {
 			if (ids.includes(roomId)) {
-				return ids.filter(id => id !== roomId);
+				return ids.filter((id) => id !== roomId);
 			}
 			return [...ids, roomId].slice(-2);
 		});
@@ -213,7 +216,6 @@
 		{/if}
 	</div>
 
-	<!-- ✅ NEU: Auto-Scroll Status Indikator -->
 	{#if autoScrollEnabled}
 		<div class="scroll-indicator" title="Auto-Scroll aktiv">
 			<span class="scroll-icon">↕️</span>
@@ -261,7 +263,8 @@
 		background: transparent;
 		border-radius: 16px;
 		padding: 0 0 20px 0; /* Nur unten Padding für die Kacheln */
-		border: none; /* Kein Border mehr */
+		border: none;
+		/* Kein Border mehr */
 		transition: all 0.3s ease;
 		/* GPU-Beschleunigung */
 		transform: translateZ(0);
@@ -280,8 +283,9 @@
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9), 
-					 0 0 20px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			2px 2px 8px rgba(0, 0, 0, 0.9),
+			0 0 20px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -308,8 +312,9 @@
 	}
 
 	.room-wrapper {
-		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-					opacity 0.3s ease;
+		transition:
+			transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 0.3s ease;
 		border-radius: 16px;
 		height: auto;
 		display: flex;
@@ -418,7 +423,8 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.6;
 		}
 		50% {

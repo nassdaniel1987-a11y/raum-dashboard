@@ -3,6 +3,7 @@
 	import { fade, slide, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { cubicOut } from 'svelte/easing';
+	import { onMount } from 'svelte'; // ✅ NEU: onMount importieren
 
 	// Svelte 5 Props Syntax
 	let { onOpenScheduler, onOpenSettings, canvasRef } = $props<{
@@ -18,8 +19,9 @@
 	let menuOpen = $state(false);
 	let showScrollSettings = $state(false);
 
-	// ✅ NEU: Scroll-Einstellungen
-	let scrollPreset = $state(localStorage.getItem('scrollPreset') || 'normal');
+	// ✅ KORRIGIERT: Scroll-Einstellungen
+	// Setze 'normal' als Standardwert
+	let scrollPreset = $state('normal');
 	let autoScrollActive = $state(true);
 
 	const scrollPresets = {
@@ -27,6 +29,11 @@
 		normal: { speed: 0.5, pause: 60, label: '▶️ Normal' },
 		schnell: { speed: 0.8, pause: 40, label: '⚡ Schnell' }
 	};
+
+	// ✅ NEU: Lade den localStorage-Wert sicher im Browser
+	onMount(() => {
+		scrollPreset = localStorage.getItem('scrollPreset') || 'normal';
+	});
 
 	async function handleCreateRoom() {
 		if (!newRoomName.trim()) {
@@ -49,7 +56,6 @@
 		const rooms = get(visibleRooms);
 		const room1 = rooms.find(r => r.id === selected[0]);
 		const room2 = rooms.find(r => r.id === selected[1]);
-
 		if (room1 && room2) {
 			if (room1.floor !== room2.floor) {
 				alert('Räume müssen im selben Stockwerk sein!');
@@ -68,7 +74,6 @@
 	function setScrollPreset(preset: keyof typeof scrollPresets) {
 		scrollPreset = preset;
 		localStorage.setItem('scrollPreset', preset);
-		
 		const settings = scrollPresets[preset];
 		if (canvasRef?.setScrollSpeed) {
 			canvasRef.setScrollSpeed(settings.speed, settings.pause);
@@ -83,7 +88,6 @@
 	}
 </script>
 
-<!-- Floating Action Button -->
 <button 
 	class="fab"
 	class:active={menuOpen}
@@ -98,11 +102,9 @@
 	{/if}
 </button>
 
-<!-- Expandierendes Menü -->
 {#if menuOpen}
 	<div class="menu-panel" transition:slide={{ duration: 300, axis: 'y' }}>
 		<div class="menu-content">
-			<!-- Mode Toggle -->
 			<button
 				class="menu-item mode-toggle"
 				class:active={$isEditMode}
@@ -117,7 +119,6 @@
 				{/if}
 			</button>
 
-			<!-- ✅ NEU: Scroll-Einstellungen -->
 			<button
 				class="menu-item"
 				onclick={() => showScrollSettings = !showScrollSettings}
