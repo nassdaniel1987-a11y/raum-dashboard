@@ -1,24 +1,23 @@
 <script lang="ts">
+	import { confirmDialog } from '$lib/stores/toastStore';
 	import { scale, fade } from 'svelte/transition';
 
-	// Svelte 5 Props Syntax
-	let { 
-		title = 'Bestätigung',
-		message,
-		confirmText = 'Bestätigen',
-		cancelText = 'Abbrechen',
-		type = 'warning',
-		onConfirm,
-		onCancel
-	} = $props<{
-		title?: string;
-		message: string;
-		confirmText?: string;
-		cancelText?: string;
-		type?: 'warning' | 'danger' | 'info';
-		onConfirm: () => void;
-		onCancel: () => void;
-	}>();
+	// Derived state from store
+	let dialog = $derived($confirmDialog);
+
+	function handleCancel() {
+		if (dialog?.onCancel) {
+			dialog.onCancel();
+		}
+		confirmDialog.close();
+	}
+
+	function handleConfirm() {
+		if (dialog?.onConfirm) {
+			dialog.onConfirm();
+		}
+		confirmDialog.close();
+	}
 
 	const typeStyles = {
 		warning: {
@@ -39,41 +38,43 @@
 	};
 </script>
 
-<div
-	class="confirm-backdrop"
-	onclick={onCancel}
-	transition:fade={{ duration: 200 }}
-	role="dialog"
-	aria-modal="true"
->
+{#if dialog}
 	<div
-		class="confirm-dialog"
-		onclick={(e) => e.stopPropagation()}
-		transition:scale={{ duration: 300, start: 0.9 }}
-		role="document"
+		class="confirm-backdrop"
+		onclick={handleCancel}
+		transition:fade={{ duration: 200 }}
+		role="dialog"
+		aria-modal="true"
 	>
-		<div class="confirm-icon">{typeStyles[type].icon}</div>
-		<h2 class="confirm-title">{title}</h2>
-		<p class="confirm-message">{message}</p>
-		
-		<div class="confirm-buttons">
-			<button class="btn-cancel" onclick={onCancel}>
-				{cancelText}
-			</button>
-			<button
-				class="btn-confirm"
-				style="
-					background: {typeStyles[type].confirmBg};
-				"
-				onmouseenter={(e) => e.currentTarget.style.background = typeStyles[type].confirmHover}
-				onmouseleave={(e) => e.currentTarget.style.background = typeStyles[type].confirmBg}
-				onclick={onConfirm}
-			>
-				{confirmText}
-			</button>
+		<div
+			class="confirm-dialog"
+			onclick={(e) => e.stopPropagation()}
+			transition:scale={{ duration: 300, start: 0.9 }}
+			role="document"
+		>
+			<div class="confirm-icon">{typeStyles[dialog.type || 'warning'].icon}</div>
+			<h2 class="confirm-title">{dialog.title || 'Bestätigung'}</h2>
+			<p class="confirm-message">{dialog.message}</p>
+			
+			<div class="confirm-buttons">
+				<button class="btn-cancel" onclick={handleCancel}>
+					{dialog.cancelText || 'Abbrechen'}
+				</button>
+				<button
+					class="btn-confirm"
+					style="
+						background: {typeStyles[dialog.type || 'warning'].confirmBg};
+					"
+					onmouseenter={(e) => e.currentTarget.style.background = typeStyles[dialog.type || 'warning'].confirmHover}
+					onmouseleave={(e) => e.currentTarget.style.background = typeStyles[dialog.type || 'warning'].confirmBg}
+					onclick={handleConfirm}
+				>
+					{dialog.confirmText || 'Bestätigen'}
+				</button>
+			</div>
 		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	.confirm-backdrop {
