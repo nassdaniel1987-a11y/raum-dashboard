@@ -15,10 +15,13 @@
 	let autoScrollEnabled = $state(true);
 	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
 
-	// Auto-Scroll
+	// Verbessertes Auto-Scroll mit sanfteren Bewegungen
 	onMount(() => {
 		if (scrollContainer && autoScrollEnabled) {
 			let scrollDirection = 1;
+			let scrollSpeed = 0.5; // Langsamere Geschwindigkeit für flüssigeres Scrollen
+			let pauseCounter = 0;
+			const pauseDuration = 60; // Frames Pause an den Enden (ca. 3 Sekunden bei 20fps)
 
 			scrollInterval = setInterval(() => {
 				if (!scrollContainer) return;
@@ -26,17 +29,29 @@
 				const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
 				const currentScroll = scrollContainer.scrollTop;
 
-				if (currentScroll >= maxScroll - 10) {
+				// Am oberen oder unteren Ende: Pause einlegen
+				if (currentScroll >= maxScroll - 5) {
+					if (pauseCounter < pauseDuration) {
+						pauseCounter++;
+						return;
+					}
 					scrollDirection = -1;
-				} else if (currentScroll <= 10) {
+					pauseCounter = 0;
+				} else if (currentScroll <= 5) {
+					if (pauseCounter < pauseDuration) {
+						pauseCounter++;
+						return;
+					}
 					scrollDirection = 1;
+					pauseCounter = 0;
 				}
 
+				// Sanftes Scrollen mit requestAnimationFrame für bessere Performance
 				scrollContainer.scrollBy({
-					top: scrollDirection * 1,
-					behavior: 'auto'
+					top: scrollDirection * scrollSpeed,
+					behavior: 'auto' // 'smooth' kann auf großen Displays zu Ruckeln führen
 				});
-			}, 50);
+			}, 50); // 20fps für flüssige Bewegung
 		}
 	});
 
@@ -47,7 +62,8 @@
 	});
 
 	function handleUserScroll() {
-		// Hier kannst du Logik hinzufügen, wenn der User manuell scrollt
+		// Optional: Auto-Scroll pausieren wenn User manuell scrollt
+		// (Kann aktiviert werden falls gewünscht)
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -99,7 +115,7 @@
 			<div class="empty-state">
 				<div class="empty-icon">📭</div>
 				<h2>Keine Räume vorhanden</h2>
-				<p>Erstelle deinen ersten Raum über die Admin-Toolbar unten!</p>
+				<p>Erstelle deinen ersten Raum über das Menü unten rechts!</p>
 			</div>
 		{:else}
 			<div class="floors-container">
@@ -140,56 +156,71 @@
 <style>
 	.canvas-container {
 		position: fixed;
-		top: 50px;
+		top: 80px;
 		left: 0;
 		right: 0;
-		bottom: 50px;
+		bottom: 0;
 		overflow-y: auto;
 		overflow-x: hidden;
-		/* Kein Background - damit Body-Hintergrundbild sichtbar ist */
 		background: transparent;
+		/* KRITISCH für glattes Scrollen auf großen Displays */
+		scroll-behavior: smooth;
+		-webkit-overflow-scrolling: touch;
+		/* GPU-Beschleunigung für bessere Performance */
+		transform: translateZ(0);
+		will-change: scroll-position;
 	}
 
 	.canvas {
-		max-width: 1280px;
+		max-width: 1600px;
 		margin: 0 auto;
-		padding: 20px;
+		padding: 30px;
 		min-height: 100%;
+		/* Bessere Performance durch GPU-Layer */
+		transform: translateZ(0);
 	}
 
 	.floors-container {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
+		gap: 40px;
+		/* Verhindert Layout-Shifts während des Scrollens */
+		contain: layout;
 	}
 
 	.floor-section {
 		background: rgba(0, 0, 0, 0.6);
 		backdrop-filter: blur(10px);
-		border-radius: 16px;
-		padding: 20px;
+		border-radius: 20px;
+		padding: 30px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		transition: border-color 0.3s ease;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
+		will-change: transform;
 	}
 
 	.floor-section:hover {
-		border-color: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.25);
 	}
 
 	.floor-title {
 		color: var(--color-text-primary);
-		font-size: 24px;
+		font-size: 32px;
 		font-weight: 700;
-		margin: 0 0 16px 0;
-		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.8);
+		margin: 0 0 24px 0;
+		text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9), 
+					 0 0 30px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 12px;
+		/* Bessere Lesbarkeit auf großen Displays */
+		letter-spacing: 0.5px;
 	}
 
 	.floor-hint {
-		font-size: 14px;
+		font-size: 16px;
 		font-weight: 400;
 		opacity: 0.7;
 		font-style: italic;
@@ -197,40 +228,109 @@
 
 	.rooms-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-		gap: 16px;
-		/* WICHTIG: Erlaubt variable Kartenhöhen - jede Karte kann so hoch sein wie sie braucht */
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 24px;
 		grid-auto-rows: auto;
-		align-items: start; /* Karten am oberen Rand ausrichten */
+		align-items: start;
+		/* Performance-Optimierung */
+		contain: layout;
 	}
 
 	.room-wrapper {
-		transition: transform 0.2s, opacity 0.2s;
-		border-radius: 15px;
-		transition: all 0.3s;
-		/* Erlaubt der Karte, ihre eigene Höhe zu bestimmen */
+		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+					opacity 0.3s ease;
+		border-radius: 16px;
 		height: auto;
 		display: flex;
 		flex-direction: column;
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
+		will-change: transform;
 	}
 
 	.room-wrapper.selected {
-		transform: scale(1.03);
+		transform: scale(1.05) translateZ(0);
+		filter: brightness(1.1);
 	}
 
-	@media (min-width: 1024px) {
+	/* Große Displays (82 Zoll TV) */
+	@media (min-width: 1920px) {
+		.canvas {
+			max-width: 1800px;
+			padding: 50px;
+		}
+
+		.floors-container {
+			gap: 50px;
+		}
+
+		.floor-section {
+			padding: 40px;
+		}
+
+		.floor-title {
+			font-size: 48px;
+			margin-bottom: 32px;
+		}
+
+		.rooms-grid {
+			grid-template-columns: repeat(4, 1fr);
+			gap: 32px;
+		}
+	}
+
+	/* Extra große Displays */
+	@media (min-width: 2560px) {
+		.floor-title {
+			font-size: 56px;
+		}
+
+		.rooms-grid {
+			grid-template-columns: repeat(5, 1fr);
+			gap: 40px;
+		}
+	}
+
+	/* Desktop */
+	@media (min-width: 1024px) and (max-width: 1919px) {
 		.rooms-grid {
 			grid-template-columns: repeat(4, 1fr);
 		}
 	}
 
-	@media (max-width: 768px) {
+	/* Tablet */
+	@media (max-width: 1023px) {
+		.canvas {
+			padding: 20px;
+		}
+
 		.rooms-grid {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(3, 1fr);
+			gap: 20px;
 		}
 
 		.floor-title {
-			font-size: 20px;
+			font-size: 28px;
+		}
+	}
+
+	/* Mobile */
+	@media (max-width: 768px) {
+		.canvas {
+			padding: 15px;
+		}
+
+		.rooms-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 16px;
+		}
+
+		.floor-title {
+			font-size: 24px;
+		}
+
+		.floor-section {
+			padding: 20px;
 		}
 	}
 
@@ -245,39 +345,48 @@
 	}
 
 	.empty-icon {
-		font-size: 100px;
-		margin-bottom: 16px;
-		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+		font-size: 120px;
+		margin-bottom: 24px;
+		filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
 	}
 
 	.empty-state h2 {
-		font-size: 28px;
+		font-size: 36px;
 		font-weight: 700;
-		margin: 0 0 12px 0;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+		margin: 0 0 16px 0;
+		text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
 	}
 
 	.empty-state p {
-		font-size: 18px;
+		font-size: 22px;
 		margin: 0;
 		opacity: 0.8;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
 	}
 
+	/* Verbesserter Scrollbar für große Displays */
 	.canvas-container::-webkit-scrollbar {
-		width: 10px;
+		width: 14px;
 	}
 
 	.canvas-container::-webkit-scrollbar-track {
-		background: rgba(0, 0, 0, 0.2);
+		background: rgba(0, 0, 0, 0.3);
+		border-radius: 7px;
 	}
 
 	.canvas-container::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 5px;
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 7px;
+		border: 2px solid rgba(0, 0, 0, 0.3);
 	}
 
 	.canvas-container::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.4);
+	}
+
+	/* Firefox Scrollbar */
+	.canvas-container {
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
 	}
 </style>

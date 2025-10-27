@@ -1,11 +1,12 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
-	import Toolbar from '$lib/components/Toolbar.svelte';  // ← GEÄNDERT!
+	import FloatingMenu from '$lib/components/FloatingMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -41,8 +42,9 @@
 <div class="dashboard">
 	<Header />
 	<Canvas {handleEditRoom} />
-	<Toolbar onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
+	<FloatingMenu onOpenScheduler={openScheduler} onOpenSettings={openSettings} />
 	<ToastContainer />
+	<ConfirmDialog />
 
 	{#if editingRoom}
 		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
@@ -62,5 +64,9 @@
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
+		/* Verhindert Layout-Shifts */
+		contain: layout style paint;
 	}
 </style>
