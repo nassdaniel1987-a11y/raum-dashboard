@@ -43,9 +43,9 @@
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
 	
-	// ✅ Kleinere Default-Schriftgrößen für iPad
-	let titleFontSize = $derived(room.config?.title_font_size || 18);
-	let textFontSize = $derived(room.config?.text_font_size || 14);
+	// ✅ NOCH KLEINERE Schriftgrößen für kompaktere Kacheln
+	let titleFontSize = $derived(room.config?.title_font_size || 16); // Reduziert von 18
+	let textFontSize = $derived(room.config?.text_font_size || 12);  // Reduziert von 14
 </script>
 
 <div
@@ -64,7 +64,7 @@
 		<img src={room.image_url} alt={room.name} class="card-bg-image" />
 	{/if}
 
-	<!-- ✅ NEU: Button-Container rechts oben im Edit-Modus -->
+	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
 	{#if $isEditMode}
 		<div class="button-container">
 			<button
@@ -84,7 +84,6 @@
 				✏️
 			</button>
 
-			<!-- ✅ NEU: Lösch-Button direkt sichtbar -->
 			<button 
 				class="icon-button delete-button" 
 				title="Löschen" 
@@ -106,7 +105,7 @@
 
 	{#if displayTime && !room.isOpen}
 		<div class="time-badge-top">
-			🕐 Öffnet um {displayTime}
+			🕐 {displayTime}
 		</div>
 	{/if}
 
@@ -131,26 +130,29 @@
 <style>
 	.room-card {
 		position: relative;
-		border-radius: 12px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		border-radius: 10px; /* ✅ Reduziert von 12px */
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* ✅ Reduziert */
 		transition: all 0.3s ease;
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 120px; /* ✅ Reduziert von 140px */
+		min-height: 100px; /* ✅ Reduziert von 120px */
 		display: flex;
 		flex-direction: column;
 		border: 3px solid transparent;
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
+		will-change: transform;
 	}
 
 	.room-card.selected {
 		border-color: #f59e0b;
-		box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
+		box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); /* ✅ Reduziert */
 	}
 
 	.room-card:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+		transform: translateY(-2px) translateZ(0);
+		box-shadow: 0 5px 14px rgba(0, 0, 0, 0.4); /* ✅ Reduziert */
 	}
 
 	.card-bg-image {
@@ -164,22 +166,22 @@
 		z-index: 0;
 	}
 
-	/* ✅ Button Container - optimiert für Touch */
+	/* ✅ Button Container - kompakter */
 	.button-container {
 		position: absolute;
-		top: 8px;
-		right: 8px;
+		top: 6px; /* ✅ Reduziert von 8px */
+		right: 6px;
 		z-index: 10;
 		display: flex;
-		gap: 6px;
+		gap: 4px; /* ✅ Reduziert von 6px */
 	}
 
 	.icon-button {
-		padding: 6px 10px; /* ✅ Größere Touch-Targets */
+		padding: 5px 8px; /* ✅ Reduziert von 6px 10px */
 		background: rgba(0, 0, 0, 0.8);
 		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
-		font-size: 16px;
+		border-radius: 6px; /* ✅ Reduziert von 8px */
+		font-size: 14px; /* ✅ Reduziert von 16px */
 		cursor: pointer;
 		transition: all 0.2s;
 		color: white;
@@ -188,8 +190,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-width: 36px; /* ✅ Mindestens 44x44px für Touch */
-		min-height: 36px;
+		min-width: 32px; /* ✅ Reduziert von 36px */
+		min-height: 32px;
+		/* Touch-optimiert */
+		touch-action: manipulation;
 	}
 
 	.icon-button:hover {
@@ -224,7 +228,6 @@
 		border-color: rgba(34, 197, 94, 0.8);
 	}
 
-	/* ✅ NEU: Lösch-Button Styling */
 	.delete-button {
 		background: rgba(239, 68, 68, 0.8);
 		border-color: rgba(239, 68, 68, 0.5);
@@ -237,7 +240,7 @@
 	.card-content {
 		position: relative;
 		z-index: 1;
-		padding: 10px; /* ✅ Reduziert von 12px */
+		padding: 8px; /* ✅ Reduziert von 10px */
 		height: 100%;
 		display: flex;
 		flex-direction: column;
@@ -251,13 +254,19 @@
 	}
 
 	.room-title {
-		margin: 0 0 6px 0; /* ✅ Reduziert von 8px */
+		margin: 0 0 4px 0; /* ✅ Reduziert von 6px */
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.2;
 		width: 100%;
-		padding-top: 2px; /* ✅ Reduziert von 4px */
+		padding-top: 2px;
 		flex-shrink: 0;
+		/* Verhindert Overflow */
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
 	}
 
 	.room-activity {
@@ -265,20 +274,25 @@
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
-		padding: 6px 4px; /* ✅ Reduziert von 8px */
+		padding: 4px 3px; /* ✅ Reduziert von 6px 4px */
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		overflow-wrap: break-word;
-		line-height: 1.3; /* ✅ Reduziert von 1.4 */
+		line-height: 1.2; /* ✅ Reduziert von 1.3 */
+		/* Verhindert Overflow */
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
 	}
 
 	.status-badge {
 		position: absolute;
-		top: 8px;
-		left: 8px;
-		padding: 4px 8px; /* ✅ Kompakter */
-		border-radius: 6px;
-		font-size: 11px; /* ✅ Reduziert von 12px */
+		top: 6px; /* ✅ Reduziert von 8px */
+		left: 6px;
+		padding: 3px 6px; /* ✅ Reduziert von 4px 8px */
+		border-radius: 5px; /* ✅ Reduziert von 6px */
+		font-size: 10px; /* ✅ Reduziert von 11px */
 		font-weight: 700;
 		z-index: 5;
 		background: var(--color-closed-badge);
@@ -292,18 +306,18 @@
 
 	.time-badge-top {
 		position: absolute;
-		top: 38px; /* ✅ Angepasst */
+		top: 32px; /* ✅ Angepasst */
 		left: 50%;
 		transform: translateX(-50%);
-		padding: 6px 12px; /* ✅ Kompakter */
+		padding: 4px 10px; /* ✅ Reduziert von 6px 12px */
 		background: var(--color-time-badge);
 		border: 2px solid var(--color-accent);
-		border-radius: 10px;
-		font-size: 12px; /* ✅ Reduziert von 14px */
+		border-radius: 8px; /* ✅ Reduziert von 10px */
+		font-size: 10px; /* ✅ Reduziert von 12px */
 		font-weight: 700;
 		color: white;
 		z-index: 6;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); /* ✅ Reduziert */
 		backdrop-filter: blur(10px);
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 		white-space: nowrap;
@@ -321,24 +335,39 @@
 		justify-content: center;
 		z-index: 2;
 		pointer-events: none;
-		border-radius: 12px;
+		border-radius: 10px;
 	}
 
 	.lock-icon {
-		font-size: 32px; /* ✅ Reduziert von 40px */
+		font-size: 28px; /* ✅ Reduziert von 32px */
 		opacity: 0.5;
 		filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
 	}
 
+	/* ✅ Große Displays: Noch kleinere Kacheln */
+	@media (min-width: 1600px) {
+		.room-card {
+			min-height: 90px;
+		}
+		
+		.icon-button {
+			min-width: 30px;
+			min-height: 30px;
+			padding: 4px 7px;
+			font-size: 13px;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.room-card {
-			min-height: 110px;
+			min-height: 100px;
 		}
 
 		.icon-button {
-			min-width: 32px;
-			min-height: 32px;
-			padding: 4px 8px;
+			min-width: 30px;
+			min-height: 30px;
+			padding: 4px 7px;
+			font-size: 13px;
 		}
 	}
 </style>

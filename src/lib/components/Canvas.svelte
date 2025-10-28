@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { visibleRooms, isEditMode, swapSelection } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
-	import { fade } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
@@ -12,92 +12,135 @@
 	}>();
 
 	let scrollContainer: HTMLElement;
-	let autoScrollEnabled = $state(true);
+	let autoScrollEnabled = $state(false); // ✅ Standardmäßig AUS für manuellen Start
 	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
 	let userInteractionTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
+	let isManuallyPaused = $state(false);
 
-	// ✅ KORRIGIERT: Hier nur Standardwerte setzen. localStorage wird in onMount geladen.
 	let scrollSpeed = $state(0.5);
 	let pauseDuration = $state(60);
+
+	// ✅ Optimiertes Scrollen mit requestAnimationFrame für butterweiche Performance
+	let animationFrameId: number | undefined = undefined;
+	let scrollDirection = 1;
+	let pauseCounter = 0;
+	let lastScrollTime = 0;
+
+	function smoothScroll(timestamp: number) {
+		if (!scrollContainer || !autoScrollEnabled) return;
+
+		// Throttle auf 60 FPS (16.67ms) für flüssiges Scrollen
+		if (timestamp - lastScrollTime < 16.67) {
+			animationFrameId = requestAnimationFrame(smoothScroll);
+			return;
+		}
+		lastScrollTime = timestamp;
+
+		const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+		const currentScroll = scrollContainer.scrollTop;
+
+		// Prüfe ob Scrollen nötig ist
+		if (maxScroll <= 0) {
+			stopAutoScroll();
+			return;
+		}
+
+		// Am oberen oder unteren Ende: Pause einlegen
+		if (currentScroll >= maxScroll - 5) {
+			if (pauseCounter < pauseDuration) {
+				pauseCounter++;
+				animationFrameId = requestAnimationFrame(smoothScroll);
+				return;
+			}
+			scrollDirection = -1;
+			pauseCounter = 0;
+		} else if (currentScroll <= 5) {
+			if (pauseCounter < pauseDuration) {
+				pauseCounter++;
+				animationFrameId = requestAnimationFrame(smoothScroll);
+				return;
+			}
+			scrollDirection = 1;
+			pauseCounter = 0;
+		}
+
+		// Smooth scroll mit GPU-Beschleunigung
+		scrollContainer.scrollTop += scrollDirection * scrollSpeed;
+		
+		animationFrameId = requestAnimationFrame(smoothScroll);
+	}
 
 	function startAutoScroll() {
 		if (!scrollContainer) return;
 
-		// ✅ NEU: Prüfe ob Scrollen überhaupt nötig ist
 		const needsScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
 		if (!needsScroll) {
 			console.log('📺 Kein Auto-Scroll nötig - alles sichtbar');
+			autoScrollEnabled = false;
 			return;
 		}
 
-		if (!autoScrollEnabled) return;
-
-		let scrollDirection = 1;
-		let pauseCounter = 0;
-
-		scrollInterval = setInterval(() => {
-			if (!scrollContainer) return;
-
-			const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-			const currentScroll = scrollContainer.scrollTop;
-
-			// Am oberen oder unteren Ende: Pause einlegen
-			if (currentScroll >= maxScroll - 5) {
-				if (pauseCounter < pauseDuration) {
-					pauseCounter++;
-					return;
-				}
-				scrollDirection = -1;
-				pauseCounter = 0;
-			} else if (currentScroll <= 5) {
-				if (pauseCounter < pauseDuration) {
-					pauseCounter++;
-					return;
-				}
-				scrollDirection = 1;
-				pauseCounter = 0;
-			}
-
-			scrollContainer.scrollBy({
-				top: scrollDirection * scrollSpeed,
-				behavior: 'auto'
-			});
-		}, 50);
+		if (autoScrollEnabled && !isManuallyPaused) {
+			console.log('▶️ Auto-Scroll gestartet');
+			pauseCounter = 0;
+			lastScrollTime = 0;
+			animationFrameId = requestAnimationFrame(smoothScroll);
+		}
 	}
 
 	function stopAutoScroll() {
+		if (animationFrameId) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = undefined;
+		}
 		if (scrollInterval) {
 			clearInterval(scrollInterval);
 			scrollInterval = undefined;
 		}
+		console.log('⏸️ Auto-Scroll gestoppt');
 	}
 
-	// ✅ NEU: Pause bei User-Interaktion
+	// ✅ Verbesserte Touch & Scroll Detection für iPad
 	function handleUserInteraction() {
+		if (!autoScrollEnabled || isManuallyPaused) return;
+
 		console.log('👆 User-Interaktion erkannt - Pause Auto-Scroll');
 		stopAutoScroll();
 
-		// Clear existing timeout
 		if (userInteractionTimeout) {
 			clearTimeout(userInteractionTimeout);
 		}
 
 		// Nach 5 Sekunden wieder starten
 		userInteractionTimeout = setTimeout(() => {
-			console.log('▶️ Auto-Scroll wird wieder gestartet');
-			startAutoScroll();
+			if (autoScrollEnabled && !isManuallyPaused) {
+				console.log('▶️ Auto-Scroll wird wieder gestartet');
+				startAutoScroll();
+			}
 		}, 5000);
 	}
 
 	onMount(() => {
-		// ✅ KORRIGIERT: localStorage-Werte sicher auf dem Client (im Browser) laden
 		scrollSpeed = parseFloat(localStorage.getItem('scrollSpeed') || '0.5');
 		pauseDuration = parseInt(localStorage.getItem('pauseDuration') || '60');
+		
+		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
+		if (savedAutoScroll !== null) {
+			autoScrollEnabled = savedAutoScroll === 'true';
+		}
 
-		// Initial start nach kurzer Verzögerung
-		setTimeout(() => {
-			startAutoScroll();
-		}, 1000);
+		// Event Listener für iPad
+		if (scrollContainer) {
+			scrollContainer.addEventListener('touchstart', handleUserInteraction, { passive: true });
+			scrollContainer.addEventListener('touchmove', handleUserInteraction, { passive: true });
+			scrollContainer.addEventListener('wheel', handleUserInteraction, { passive: true });
+			scrollContainer.addEventListener('scroll', handleUserInteraction, { passive: true });
+		}
+
+		// Auto-Start nur wenn enabled
+		if (autoScrollEnabled) {
+			setTimeout(startAutoScroll, 1000);
+		}
 	});
 
 	onDestroy(() => {
@@ -105,28 +148,46 @@
 		if (userInteractionTimeout) {
 			clearTimeout(userInteractionTimeout);
 		}
+		if (scrollContainer) {
+			scrollContainer.removeEventListener('touchstart', handleUserInteraction);
+			scrollContainer.removeEventListener('touchmove', handleUserInteraction);
+			scrollContainer.removeEventListener('wheel', handleUserInteraction);
+			scrollContainer.removeEventListener('scroll', handleUserInteraction);
+		}
 	});
 
-	// ✅ NEU: Exportiere Funktionen für Settings
 	export function setScrollSpeed(speed: number, pause: number) {
 		scrollSpeed = speed;
 		pauseDuration = pause;
 		localStorage.setItem('scrollSpeed', speed.toString());
 		localStorage.setItem('pauseDuration', pause.toString());
 
-		// Restart mit neuen Settings
 		stopAutoScroll();
-		startAutoScroll();
+		if (autoScrollEnabled) {
+			startAutoScroll();
+		}
 	}
 
 	export function toggleAutoScroll() {
 		autoScrollEnabled = !autoScrollEnabled;
+		isManuallyPaused = !autoScrollEnabled;
+		
+		localStorage.setItem('autoScrollEnabled', autoScrollEnabled.toString());
+		
 		if (autoScrollEnabled) {
 			startAutoScroll();
 		} else {
 			stopAutoScroll();
 		}
 		return autoScrollEnabled;
+	}
+
+	// ✅ NEU: Manueller Start-Button Funktion
+	function manualStartScroll() {
+		autoScrollEnabled = true;
+		isManuallyPaused = false;
+		localStorage.setItem('autoScrollEnabled', 'true');
+		startAutoScroll();
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -146,6 +207,7 @@
 		eg: $visibleRooms.filter((r) => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter((r) => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	});
+
 	const floorLabels = {
 		extern: '🏃 Außenbereich',
 		dach: '🏠 Dachgeschoss',
@@ -169,9 +231,6 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
-	onwheel={handleUserInteraction}
-	ontouchstart={handleUserInteraction}
-	ontouchmove={handleUserInteraction}
 	transition:fade
 >
 	<div class="canvas">
@@ -216,6 +275,19 @@
 		{/if}
 	</div>
 
+	<!-- ✅ NEU: Auto-Scroll Start Button (nur sichtbar wenn nicht aktiv) -->
+	{#if !autoScrollEnabled && $visibleRooms.length > 0}
+		<button 
+			class="scroll-start-button" 
+			onclick={manualStartScroll}
+			transition:slide={{ axis: 'y', duration: 300 }}
+		>
+			<span class="start-icon">▶️</span>
+			<span class="start-text">Auto-Scroll starten</span>
+		</button>
+	{/if}
+
+	<!-- ✅ Auto-Scroll Indikator (wenn aktiv) -->
 	{#if autoScrollEnabled}
 		<div class="scroll-indicator" title="Auto-Scroll aktiv">
 			<span class="scroll-icon">↕️</span>
@@ -226,60 +298,55 @@
 <style>
 	.canvas-container {
 		position: fixed;
-		top: 80px;
+		top: 50px; /* ✅ Header-Höhe */
 		left: 0;
 		right: 0;
-		bottom: 0;
+		bottom: 0; /* ✅ Bis ganz unten - kein Toolbar mehr im Weg */
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
-		/* KRITISCH für glattes Scrollen auf großen Displays */
+		/* GPU-Beschleunigung für butterweiche Performance */
 		scroll-behavior: smooth;
 		-webkit-overflow-scrolling: touch;
-		/* GPU-Beschleunigung für bessere Performance */
 		transform: translateZ(0);
 		will-change: scroll-position;
+		/* Verhindert Bounce-Effekt auf iOS */
+		overscroll-behavior: contain;
 	}
 
 	.canvas {
 		max-width: 1400px;
 		margin: 0 auto;
-		padding: 20px;
+		padding: 16px; /* ✅ Reduziert von 20px */
 		min-height: 100%;
-		/* Bessere Performance durch GPU-Layer */
 		transform: translateZ(0);
 	}
 
 	.floors-container {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
-		/* Verhindert Layout-Shifts während des Scrollens */
+		gap: 16px; /* ✅ Reduziert von 24px */
 		contain: layout;
 	}
 
 	.floor-section {
-		/* ✅ GEÄNDERT: Kein dunkler Hintergrund mehr - nur transparenter Container */
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 20px 0; /* Nur unten Padding für die Kacheln */
+		padding: 0 0 12px 0; /* ✅ Reduziert */
 		border: none;
-		/* Kein Border mehr */
 		transition: all 0.3s ease;
-		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
 	}
 
 	.floor-title {
 		color: var(--color-text-primary);
-		font-size: 22px;
+		font-size: 20px; /* ✅ Reduziert von 22px */
 		font-weight: 700;
-		margin: 0 0 16px 0;
-		/* ✅ NEU: Dunkler Hintergrund nur für den Titel */
+		margin: 0 0 12px 0; /* ✅ Reduziert von 16px */
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
-		padding: 12px 20px;
+		padding: 10px 16px; /* ✅ Reduziert von 12px 20px */
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -290,12 +357,11 @@
 		align-items: center;
 		gap: 10px;
 		letter-spacing: 0.3px;
-		/* Inline-block damit es sich an Content anpasst */
 		width: fit-content;
 	}
 
 	.floor-hint {
-		font-size: 12px;
+		font-size: 11px; /* ✅ Reduziert von 12px */
 		font-weight: 400;
 		opacity: 0.7;
 		font-style: italic;
@@ -303,11 +369,11 @@
 
 	.rooms-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-		gap: 16px;
+		/* ✅ Mehr Spalten = kleinere Kacheln */
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* ✅ Reduziert von 220px */
+		gap: 10px; /* ✅ Reduziert von 16px */
 		grid-auto-rows: auto;
 		align-items: start;
-		/* Performance-Optimierung */
 		contain: layout;
 	}
 
@@ -315,11 +381,10 @@
 		transition:
 			transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
 			opacity 0.3s ease;
-		border-radius: 16px;
+		border-radius: 12px;
 		height: auto;
 		display: flex;
 		flex-direction: column;
-		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
 	}
@@ -329,46 +394,58 @@
 		filter: brightness(1.1);
 	}
 
-	/* Desktop */
+	/* ✅ Desktop: Noch mehr Spalten */
 	@media (min-width: 1024px) {
 		.rooms-grid {
-			grid-template-columns: repeat(4, 1fr);
+			grid-template-columns: repeat(5, 1fr); /* ✅ 5 statt 4 */
+		}
+	}
+
+	/* ✅ Große Displays (wie 82-Zoll TV) */
+	@media (min-width: 1600px) {
+		.rooms-grid {
+			grid-template-columns: repeat(6, 1fr); /* ✅ 6 Spalten */
+			gap: 12px;
+		}
+		
+		.canvas {
+			max-width: 1800px;
 		}
 	}
 
 	/* Tablet */
 	@media (max-width: 1023px) {
 		.canvas {
-			padding: 20px;
+			padding: 16px;
 		}
 
 		.rooms-grid {
 			grid-template-columns: repeat(3, 1fr);
-			gap: 20px;
+			gap: 12px;
 		}
 
 		.floor-title {
-			font-size: 28px;
+			font-size: 18px;
 		}
 	}
 
 	/* Mobile */
 	@media (max-width: 768px) {
 		.canvas {
-			padding: 15px;
+			padding: 12px;
 		}
 
 		.rooms-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 16px;
+			gap: 10px;
 		}
 
 		.floor-title {
-			font-size: 24px;
+			font-size: 16px;
 		}
 
 		.floor-section {
-			padding: 20px;
+			padding: 0 0 10px 0;
 		}
 	}
 
@@ -402,29 +479,86 @@
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 	}
 
-	/* ✅ NEU: Scroll Indikator */
+	/* ✅ NEU: Start Button für Auto-Scroll */
+	.scroll-start-button {
+		position: fixed;
+		bottom: 20px; /* ✅ Unten positioniert, da kein Toolbar mehr */
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 500;
+		
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 14px 28px;
+		
+		background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-radius: 14px;
+		box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
+		
+		color: white;
+		font-size: 16px;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.3s;
+		
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	.scroll-start-button:hover {
+		transform: translateX(-50%) translateY(-3px);
+		box-shadow: 0 12px 40px rgba(34, 197, 94, 0.8);
+	}
+
+	.scroll-start-button:active {
+		transform: translateX(-50%) translateY(-1px);
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
+		}
+		50% {
+			box-shadow: 0 8px 40px rgba(34, 197, 94, 0.9);
+		}
+	}
+
+	.start-icon {
+		font-size: 22px;
+		animation: bounce-icon 1.5s ease-in-out infinite;
+	}
+
+	@keyframes bounce-icon {
+		0%, 100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-3px);
+		}
+	}
+
+	.start-text {
+		letter-spacing: 0.5px;
+	}
+
+	/* ✅ Scroll Indikator */
 	.scroll-indicator {
 		position: fixed;
-		bottom: 100px;
+		bottom: 20px;
 		left: 20px;
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
 		padding: 8px 12px;
 		border-radius: 8px;
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(34, 197, 94, 0.5);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 		z-index: 500;
-		animation: pulse 2s ease-in-out infinite;
+		animation: pulse-indicator 2s ease-in-out infinite;
 	}
 
-	.scroll-icon {
-		font-size: 20px;
-		display: block;
-	}
-
-	@keyframes pulse {
-		0%,
-		100% {
+	@keyframes pulse-indicator {
+		0%, 100% {
 			opacity: 0.6;
 		}
 		50% {
@@ -432,7 +566,12 @@
 		}
 	}
 
-	/* Verbesserter Scrollbar für große Displays */
+	.scroll-icon {
+		font-size: 20px;
+		display: block;
+	}
+
+	/* ✅ Verbesserte Scrollbar für große Displays */
 	.canvas-container::-webkit-scrollbar {
 		width: 14px;
 	}
@@ -446,6 +585,8 @@
 		background: rgba(255, 255, 255, 0.3);
 		border-radius: 7px;
 		border: 2px solid rgba(0, 0, 0, 0.3);
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
 	}
 
 	.canvas-container::-webkit-scrollbar-thumb:hover {
@@ -456,5 +597,15 @@
 	.canvas-container {
 		scrollbar-width: thin;
 		scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+	}
+
+	/* ✅ iPad-spezifische Optimierungen */
+	@media (hover: none) and (pointer: coarse) {
+		.scroll-start-button {
+			padding: 18px 32px;
+			font-size: 18px;
+			/* Größerer Touch-Target für iPad */
+			min-height: 60px;
+		}
 	}
 </style>

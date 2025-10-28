@@ -3,13 +3,13 @@
 	import { fade, slide, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { cubicOut } from 'svelte/easing';
-	import { onMount } from 'svelte'; // ✅ NEU: onMount importieren
+	import { onMount } from 'svelte';
 
 	// Svelte 5 Props Syntax
 	let { onOpenScheduler, onOpenSettings, canvasRef } = $props<{
 		onOpenScheduler: () => void;
 		onOpenSettings: () => void;
-		canvasRef?: any; // Referenz zur Canvas-Komponente
+		canvasRef?: any;
 	}>();
 
 	// Svelte 5 State Syntax
@@ -19,10 +19,8 @@
 	let menuOpen = $state(false);
 	let showScrollSettings = $state(false);
 
-	// ✅ KORRIGIERT: Scroll-Einstellungen
-	// Setze 'normal' als Standardwert
 	let scrollPreset = $state('normal');
-	let autoScrollActive = $state(true);
+	let autoScrollActive = $state(false);
 
 	const scrollPresets = {
 		langsam: { speed: 0.3, pause: 100, label: '🐌 Langsam' },
@@ -30,9 +28,12 @@
 		schnell: { speed: 0.8, pause: 40, label: '⚡ Schnell' }
 	};
 
-	// ✅ NEU: Lade den localStorage-Wert sicher im Browser
 	onMount(() => {
 		scrollPreset = localStorage.getItem('scrollPreset') || 'normal';
+		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
+		if (savedAutoScroll !== null) {
+			autoScrollActive = savedAutoScroll === 'true';
+		}
 	});
 
 	async function handleCreateRoom() {
@@ -70,7 +71,6 @@
 		menuOpen = !menuOpen;
 	}
 
-	// ✅ NEU: Scroll-Preset ändern
 	function setScrollPreset(preset: keyof typeof scrollPresets) {
 		scrollPreset = preset;
 		localStorage.setItem('scrollPreset', preset);
@@ -80,7 +80,6 @@
 		}
 	}
 
-	// ✅ NEU: Auto-Scroll an/aus
 	function toggleAutoScroll() {
 		if (canvasRef?.toggleAutoScroll) {
 			autoScrollActive = canvasRef.toggleAutoScroll();
@@ -223,78 +222,89 @@
 {/if}
 
 <style>
-	/* Floating Action Button */
+	/* ✅ KRITISCH: FAB mit sicherer Positionierung - IMMER sichtbar */
 	.fab {
 		position: fixed;
-		bottom: 30px;
-		right: 30px;
-		width: 70px;
-		height: 70px;
+		/* ✅ Abstand vom unteren Rand - auch im Vollbild */
+		bottom: 20px;
+		right: 20px;
+		width: 64px;
+		height: 64px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		border: none;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5),
 					0 0 40px rgba(59, 130, 246, 0.4);
 		cursor: pointer;
-		z-index: 1000;
+		z-index: 9999; /* ✅ Höchste z-index Priorität */
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		/* GPU-Beschleunigung */
+		transform: translateZ(0);
+		will-change: transform;
+		/* Touch-optimiert */
+		touch-action: manipulation;
 	}
 
 	.fab:hover {
-		transform: scale(1.1) rotate(90deg);
+		transform: scale(1.1) rotate(90deg) translateZ(0);
 		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6),
 					0 0 60px rgba(59, 130, 246, 0.6);
 	}
 
+	.fab:active {
+		transform: scale(1.05) translateZ(0);
+	}
+
 	.fab.active {
-		transform: rotate(180deg);
+		transform: rotate(180deg) translateZ(0);
 		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
 	}
 
 	.fab-icon {
-		font-size: 28px;
+		font-size: 26px;
 		color: white;
 		font-weight: bold;
 	}
 
-	/* Menü Panel */
+	/* Menu Panel */
 	.menu-panel {
 		position: fixed;
-		bottom: 120px;
-		right: 30px;
-		width: 340px;
-		max-height: 70vh;
+		/* ✅ Über dem FAB, aber nicht zu hoch */
+		bottom: 100px;
+		right: 20px;
+		width: 320px;
+		max-height: calc(100vh - 140px); /* ✅ Lässt Platz für FAB */
 		background: rgba(0, 0, 0, 0.95);
 		backdrop-filter: blur(20px);
 		border-radius: 20px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
-		z-index: 999;
+		z-index: 9998;
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
 
 	.menu-content {
-		padding: 20px;
+		padding: 16px;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 10px;
 	}
 
 	/* Menu Items */
 	.menu-item {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 20px;
+		gap: 10px;
+		padding: 12px 16px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 12px;
+		border-radius: 10px;
 		color: var(--color-text-primary);
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s;
@@ -314,13 +324,14 @@
 	}
 
 	.menu-item .icon {
-		font-size: 24px;
-		min-width: 30px;
+		font-size: 20px;
+		min-width: 28px;
 		text-align: center;
 	}
 
 	.menu-item .label {
 		flex: 1;
+		font-size: 13px;
 	}
 
 	.mode-toggle.active {
@@ -334,26 +345,26 @@
 		border-color: rgba(245, 158, 11, 0.5);
 	}
 
-	/* ✅ NEU: Scroll Settings */
+	/* Scroll Settings */
 	.scroll-settings {
 		background: rgba(0, 0, 0, 0.4);
 		border-radius: 12px;
-		padding: 16px;
+		padding: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.1);
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 12px;
 	}
 
 	.setting-group {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.setting-label {
 		color: var(--color-text-secondary);
-		font-size: 13px;
+		font-size: 11px;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
@@ -361,17 +372,17 @@
 
 	.preset-buttons {
 		display: flex;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.preset-btn {
 		flex: 1;
-		padding: 10px;
+		padding: 8px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 8px;
+		border-radius: 6px;
 		color: var(--color-text-primary);
-		font-size: 13px;
+		font-size: 11px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -392,13 +403,13 @@
 	.toggle-btn {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 12px 16px;
+		gap: 10px;
+		padding: 10px 14px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 10px;
+		border-radius: 8px;
 		color: var(--color-text-primary);
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -418,18 +429,18 @@
 	.edit-section {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 10px;
 		border-top: 2px solid rgba(255, 255, 255, 0.1);
-		padding-top: 12px;
-		margin-top: 8px;
+		padding-top: 10px;
+		margin-top: 6px;
 	}
 
 	/* Create Form */
 	.create-form {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
-		padding: 16px;
+		gap: 10px;
+		padding: 12px;
 		background: rgba(0, 0, 0, 0.4);
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
@@ -437,12 +448,12 @@
 
 	.create-form input,
 	.create-form select {
-		padding: 12px 16px;
+		padding: 10px 14px;
 		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 10px;
+		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);
 		color: var(--color-text-primary);
-		font-size: 15px;
+		font-size: 14px;
 		width: 100%;
 	}
 
@@ -463,10 +474,10 @@
 	.create-btn,
 	.cancel-btn {
 		flex: 1;
-		padding: 12px;
-		border-radius: 10px;
+		padding: 10px;
+		border-radius: 8px;
 		font-weight: 600;
-		font-size: 15px;
+		font-size: 14px;
 		cursor: pointer;
 		transition: all 0.3s;
 		border: none;
@@ -494,7 +505,7 @@
 
 	/* Scrollbar */
 	.menu-panel::-webkit-scrollbar {
-		width: 8px;
+		width: 6px;
 	}
 
 	.menu-panel::-webkit-scrollbar-track {
@@ -503,31 +514,47 @@
 
 	.menu-panel::-webkit-scrollbar-thumb {
 		background: rgba(255, 255, 255, 0.3);
-		border-radius: 4px;
+		border-radius: 3px;
 	}
 
 	.menu-panel::-webkit-scrollbar-thumb:hover {
 		background: rgba(255, 255, 255, 0.4);
 	}
 
-	/* Responsive */
+	/* ✅ Mobile & Tablet Optimierungen */
 	@media (max-width: 768px) {
 		.fab {
-			width: 60px;
-			height: 60px;
-			bottom: 20px;
-			right: 20px;
+			width: 56px;
+			height: 56px;
+			bottom: 16px;
+			right: 16px;
 		}
 
 		.fab-icon {
-			font-size: 24px;
+			font-size: 22px;
 		}
 
 		.menu-panel {
-			right: 20px;
-			bottom: 100px;
-			width: calc(100vw - 40px);
-			max-width: 340px;
+			right: 16px;
+			bottom: 80px;
+			width: calc(100vw - 32px);
+			max-width: 320px;
+		}
+	}
+
+	/* ✅ iPad Touch-Optimierung */
+	@media (hover: none) and (pointer: coarse) {
+		.fab {
+			width: 68px;
+			height: 68px;
+			/* Größerer Touch-Target */
+		}
+
+		.menu-item,
+		.preset-btn,
+		.toggle-btn {
+			min-height: 44px;
+			/* iOS empfohlene Touch-Größe */
 		}
 	}
 </style>
