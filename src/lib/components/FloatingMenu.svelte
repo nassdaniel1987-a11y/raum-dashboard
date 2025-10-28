@@ -22,10 +22,12 @@
 	let scrollPreset = $state('normal');
 	let autoScrollActive = $state(false);
 
+	// ✅ Verbesserte Scroll-Presets (Pixel/Schritt, Pause in Sekunden)
 	const scrollPresets = {
-		langsam: { speed: 0.3, pause: 100, label: '🐌 Langsam' },
-		normal: { speed: 0.5, pause: 60, label: '▶️ Normal' },
-		schnell: { speed: 0.8, pause: 40, label: '⚡ Schnell' }
+		langsam: { speed: 0.8, pause: 5, label: '🐌 Langsam', desc: '0.8 px/Schritt, 5s Pause' },
+		normal: { speed: 1.5, pause: 3, label: '▶️ Normal', desc: '1.5 px/Schritt, 3s Pause' },
+		schnell: { speed: 2.5, pause: 2, label: '⚡ Schnell', desc: '2.5 px/Schritt, 2s Pause' },
+		turbo: { speed: 4, pause: 1, label: '🚀 Turbo', desc: '4 px/Schritt, 1s Pause' }
 	};
 
 	onMount(() => {
@@ -75,6 +77,9 @@
 		scrollPreset = preset;
 		localStorage.setItem('scrollPreset', preset);
 		const settings = scrollPresets[preset];
+		
+		console.log(`⚙️ Scroll-Preset "${preset}": ${settings.desc}`);
+		
 		if (canvasRef?.setScrollSpeed) {
 			canvasRef.setScrollSpeed(settings.speed, settings.pause);
 		}
@@ -129,15 +134,17 @@
 			{#if showScrollSettings}
 				<div class="scroll-settings" transition:slide={{ duration: 200 }}>
 					<div class="setting-group">
-						<label class="setting-label">Geschwindigkeit:</label>
+						<label class="setting-label">Geschwindigkeit & Pause:</label>
 						<div class="preset-buttons">
 							{#each Object.entries(scrollPresets) as [key, preset]}
 								<button
 									class="preset-btn"
 									class:active={scrollPreset === key}
 									onclick={() => setScrollPreset(key as keyof typeof scrollPresets)}
+									title={preset.desc}
 								>
-									{preset.label}
+									<span class="preset-emoji">{preset.label.split(' ')[0]}</span>
+									<span class="preset-name">{preset.label.split(' ')[1]}</span>
 								</button>
 							{/each}
 						</div>
@@ -152,6 +159,11 @@
 							<span class="icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
 							<span class="label">{autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}</span>
 						</button>
+					</div>
+
+					<div class="scroll-info">
+						<span class="info-icon">ℹ️</span>
+						<span class="info-text">Aktuell: {scrollPresets[scrollPreset as keyof typeof scrollPresets].desc}</span>
 					</div>
 				</div>
 			{/if}
@@ -222,10 +234,8 @@
 {/if}
 
 <style>
-	/* ✅ KRITISCH: FAB mit sicherer Positionierung - IMMER sichtbar */
 	.fab {
 		position: fixed;
-		/* ✅ Abstand vom unteren Rand - auch im Vollbild */
 		bottom: 20px;
 		right: 20px;
 		width: 64px;
@@ -236,15 +246,13 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5),
 					0 0 40px rgba(59, 130, 246, 0.4);
 		cursor: pointer;
-		z-index: 9999; /* ✅ Höchste z-index Priorität */
+		z-index: 9999;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
-		/* Touch-optimiert */
 		touch-action: manipulation;
 	}
 
@@ -269,14 +277,12 @@
 		font-weight: bold;
 	}
 
-	/* Menu Panel */
 	.menu-panel {
 		position: fixed;
-		/* ✅ Über dem FAB, aber nicht zu hoch */
 		bottom: 100px;
 		right: 20px;
 		width: 320px;
-		max-height: calc(100vh - 140px); /* ✅ Lässt Platz für FAB */
+		max-height: calc(100vh - 140px);
 		background: rgba(0, 0, 0, 0.95);
 		backdrop-filter: blur(20px);
 		border-radius: 20px;
@@ -294,7 +300,6 @@
 		gap: 10px;
 	}
 
-	/* Menu Items */
 	.menu-item {
 		display: flex;
 		align-items: center;
@@ -345,7 +350,6 @@
 		border-color: rgba(245, 158, 11, 0.5);
 	}
 
-	/* Scroll Settings */
 	.scroll-settings {
 		background: rgba(0, 0, 0, 0.4);
 		border-radius: 12px;
@@ -359,7 +363,7 @@
 	.setting-group {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 8px;
 	}
 
 	.setting-label {
@@ -371,43 +375,55 @@
 	}
 
 	.preset-buttons {
-		display: flex;
-		gap: 6px;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
 	}
 
 	.preset-btn {
-		flex: 1;
-		padding: 8px;
+		padding: 12px 8px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 6px;
+		border-radius: 8px;
 		color: var(--color-text-primary);
-		font-size: 11px;
+		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s;
-		white-space: nowrap;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.preset-btn:hover {
 		background: rgba(255, 255, 255, 0.15);
 		border-color: rgba(255, 255, 255, 0.3);
+		transform: translateY(-2px);
 	}
 
 	.preset-btn.active {
 		background: rgba(59, 130, 246, 0.3);
 		border-color: rgba(59, 130, 246, 0.6);
-		box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+		box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+	}
+
+	.preset-emoji {
+		font-size: 20px;
+	}
+
+	.preset-name {
+		font-size: 11px;
 	}
 
 	.toggle-btn {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		padding: 10px 14px;
+		padding: 12px 16px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 8px;
+		border-radius: 10px;
 		color: var(--color-text-primary);
 		font-size: 13px;
 		font-weight: 600;
@@ -421,11 +437,30 @@
 	}
 
 	.toggle-btn.active {
-		background: rgba(245, 158, 11, 0.25);
-		border-color: rgba(245, 158, 11, 0.5);
+		background: rgba(34, 197, 94, 0.3);
+		border-color: rgba(34, 197, 94, 0.6);
+		box-shadow: 0 0 16px rgba(34, 197, 94, 0.4);
 	}
 
-	/* Edit Section */
+	.scroll-info {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		background: rgba(59, 130, 246, 0.1);
+		border-radius: 8px;
+		border: 1px solid rgba(59, 130, 246, 0.3);
+	}
+
+	.info-icon {
+		font-size: 16px;
+	}
+
+	.info-text {
+		font-size: 11px;
+		color: var(--color-text-secondary);
+	}
+
 	.edit-section {
 		display: flex;
 		flex-direction: column;
@@ -435,7 +470,6 @@
 		margin-top: 6px;
 	}
 
-	/* Create Form */
 	.create-form {
 		display: flex;
 		flex-direction: column;
@@ -503,7 +537,6 @@
 		background: rgba(239, 68, 68, 0.4);
 	}
 
-	/* Scrollbar */
 	.menu-panel::-webkit-scrollbar {
 		width: 6px;
 	}
@@ -521,7 +554,6 @@
 		background: rgba(255, 255, 255, 0.4);
 	}
 
-	/* ✅ Mobile & Tablet Optimierungen */
 	@media (max-width: 768px) {
 		.fab {
 			width: 56px;
@@ -542,19 +574,16 @@
 		}
 	}
 
-	/* ✅ iPad Touch-Optimierung */
 	@media (hover: none) and (pointer: coarse) {
 		.fab {
 			width: 68px;
 			height: 68px;
-			/* Größerer Touch-Target */
 		}
 
 		.menu-item,
 		.preset-btn,
 		.toggle-btn {
 			min-height: 44px;
-			/* iOS empfohlene Touch-Größe */
 		}
 	}
 </style>

@@ -12,66 +12,76 @@
 	}>();
 
 	let scrollContainer: HTMLElement;
-	let autoScrollEnabled = $state(false); // ✅ Standardmäßig AUS für manuellen Start
-	let scrollInterval: ReturnType<typeof setInterval> | undefined = undefined;
-	let userInteractionTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
-	let isManuallyPaused = $state(false);
+	
+	// ✅ Vereinfachte State-Variablen
+	let autoScrollEnabled = $state(false);
+	let isScrolling = $state(false);
+	let isPausedByUser = $state(false);
+	
+	// ✅ Einstellungen
+	let scrollSpeed = $state(1.5); // Pixel pro Schritt
+	let pauseDurationSeconds = $state(3); // Pause in Sekunden
+	
+	// ✅ Scroll-Engine Variablen
+	let scrollIntervalId: ReturnType<typeof setInterval> | undefined;
+	let scrollDirection = $state<'down' | 'up' | 'paused'>('down');
+	let pauseTimeoutId: ReturnType<typeof setTimeout> | undefined;
+	let userInteractionTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
-	let scrollSpeed = $state(0.5);
-	let pauseDuration = $state(60);
-
-	// ✅ Optimiertes Scrollen mit requestAnimationFrame für butterweiche Performance
-	let animationFrameId: number | undefined = undefined;
-	let scrollDirection = 1;
-	let pauseCounter = 0;
-	let lastScrollTime = 0;
-
-	function smoothScroll(timestamp: number) {
-		if (!scrollContainer || !autoScrollEnabled) return;
-
-		// Throttle auf 60 FPS (16.67ms) für flüssiges Scrollen
-		if (timestamp - lastScrollTime < 16.67) {
-			animationFrameId = requestAnimationFrame(smoothScroll);
-			return;
-		}
-		lastScrollTime = timestamp;
+	// ✅ KERN-FUNKTION: Ein Scroll-Schritt
+	function scrollStep() {
+		if (!scrollContainer || !isScrolling || isPausedByUser) return;
 
 		const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
 		const currentScroll = scrollContainer.scrollTop;
 
-		// Prüfe ob Scrollen nötig ist
+		// Kein Scroll nötig?
 		if (maxScroll <= 0) {
-			stopAutoScroll();
+			console.log('📺 Kein Scroll nötig - alles sichtbar');
+			stopScrolling();
 			return;
 		}
 
-		// Am oberen oder unteren Ende: Pause einlegen
-		if (currentScroll >= maxScroll - 5) {
-			if (pauseCounter < pauseDuration) {
-				pauseCounter++;
-				animationFrameId = requestAnimationFrame(smoothScroll);
-				return;
-			}
-			scrollDirection = -1;
-			pauseCounter = 0;
-		} else if (currentScroll <= 5) {
-			if (pauseCounter < pauseDuration) {
-				pauseCounter++;
-				animationFrameId = requestAnimationFrame(smoothScroll);
-				return;
-			}
-			scrollDirection = 1;
-			pauseCounter = 0;
+		// ✅ Am Ende angekommen? Pause einlegen
+		if (scrollDirection === 'down' && currentScroll >= maxScroll - 2) {
+			pauseAtEdge('up');
+			return;
 		}
 
-		// Smooth scroll mit GPU-Beschleunigung
-		scrollContainer.scrollTop += scrollDirection * scrollSpeed;
-		
-		animationFrameId = requestAnimationFrame(smoothScroll);
+		if (scrollDirection === 'up' && currentScroll <= 2) {
+			pauseAtEdge('down');
+			return;
+		}
+
+		// ✅ Scrollen (wenn nicht pausiert)
+		if (scrollDirection === 'down') {
+			scrollContainer.scrollTop += scrollSpeed;
+		} else if (scrollDirection === 'up') {
+			scrollContainer.scrollTop -= scrollSpeed;
+		}
 	}
 
-	function startAutoScroll() {
-		if (!scrollContainer) return;
+	// ✅ Pause am Rand mit Richtungswechsel
+	function pauseAtEdge(nextDirection: 'up' | 'down') {
+		if (scrollDirection === 'paused') return;
+		
+		scrollDirection = 'paused';
+		const edge = nextDirection === 'up' ? 'unten' : 'oben';
+		console.log(`⏸️ Pause am ${edge}en Ende für ${pauseDurationSeconds}s`);
+
+		// Nach Pause: Richtung wechseln
+		pauseTimeoutId = setTimeout(() => {
+			scrollDirection = nextDirection;
+			console.log(`▶️ Weiter nach ${nextDirection === 'up' ? 'oben' : 'unten'}`);
+		}, pauseDurationSeconds * 1000);
+	}
+
+	// ✅ Start Auto-Scroll
+	function startScrolling() {
+		if (!scrollContainer) {
+			console.warn('❌ Kein scrollContainer vorhanden');
+			return;
+		}
 
 		const needsScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
 		if (!needsScroll) {
@@ -80,114 +90,138 @@
 			return;
 		}
 
-		if (autoScrollEnabled && !isManuallyPaused) {
-			console.log('▶️ Auto-Scroll gestartet');
-			pauseCounter = 0;
-			lastScrollTime = 0;
-			animationFrameId = requestAnimationFrame(smoothScroll);
+		if (isScrolling) {
+			console.log('⚠️ Auto-Scroll läuft bereits');
+			return;
 		}
+
+		isScrolling = true;
+		scrollDirection = 'down';
+		console.log('▶️ Auto-Scroll gestartet (Speed: ' + scrollSpeed + ', Pause: ' + pauseDurationSeconds + 's)');
+
+		// 60 FPS = ~16ms Intervall
+		scrollIntervalId = setInterval(scrollStep, 16);
 	}
 
-	function stopAutoScroll() {
-		if (animationFrameId) {
-			cancelAnimationFrame(animationFrameId);
-			animationFrameId = undefined;
+	// ✅ Stop Auto-Scroll
+	function stopScrolling() {
+		if (scrollIntervalId) {
+			clearInterval(scrollIntervalId);
+			scrollIntervalId = undefined;
 		}
-		if (scrollInterval) {
-			clearInterval(scrollInterval);
-			scrollInterval = undefined;
+		if (pauseTimeoutId) {
+			clearTimeout(pauseTimeoutId);
+			pauseTimeoutId = undefined;
 		}
-		console.log('⏸️ Auto-Scroll gestoppt');
+		isScrolling = false;
+		scrollDirection = 'down'; // Reset
+		console.log('⏹️ Auto-Scroll gestoppt');
 	}
 
-	// ✅ Verbesserte Touch & Scroll Detection für iPad
+	// ✅ User-Interaktion: Temporär pausieren
 	function handleUserInteraction() {
-		if (!autoScrollEnabled || isManuallyPaused) return;
+		if (!autoScrollEnabled || !isScrolling) return;
 
-		console.log('👆 User-Interaktion erkannt - Pause Auto-Scroll');
-		stopAutoScroll();
+		console.log('👆 User-Interaktion - Temporäre Pause');
+		
+		// Stoppe Scroll temporär
+		stopScrolling();
+		isPausedByUser = true;
 
-		if (userInteractionTimeout) {
-			clearTimeout(userInteractionTimeout);
+		// Clear vorherigen Timeout
+		if (userInteractionTimeoutId) {
+			clearTimeout(userInteractionTimeoutId);
 		}
 
-		// Nach 5 Sekunden wieder starten
-		userInteractionTimeout = setTimeout(() => {
-			if (autoScrollEnabled && !isManuallyPaused) {
-				console.log('▶️ Auto-Scroll wird wieder gestartet');
-				startAutoScroll();
+		// Nach 5 Sekunden Inaktivität wieder starten
+		userInteractionTimeoutId = setTimeout(() => {
+			if (autoScrollEnabled) {
+				console.log('▶️ Auto-Scroll wieder gestartet nach Inaktivität');
+				isPausedByUser = false;
+				startScrolling();
 			}
 		}, 5000);
 	}
 
+	// ✅ Mount: Einstellungen laden
 	onMount(() => {
-		scrollSpeed = parseFloat(localStorage.getItem('scrollSpeed') || '0.5');
-		pauseDuration = parseInt(localStorage.getItem('pauseDuration') || '60');
-		
-		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
-		if (savedAutoScroll !== null) {
-			autoScrollEnabled = savedAutoScroll === 'true';
-		}
+		// Lade gespeicherte Einstellungen
+		const savedSpeed = localStorage.getItem('scrollSpeed');
+		const savedPause = localStorage.getItem('pauseDuration');
+		const savedEnabled = localStorage.getItem('autoScrollEnabled');
 
-		// Event Listener für iPad
-		if (scrollContainer) {
-			scrollContainer.addEventListener('touchstart', handleUserInteraction, { passive: true });
-			scrollContainer.addEventListener('touchmove', handleUserInteraction, { passive: true });
-			scrollContainer.addEventListener('wheel', handleUserInteraction, { passive: true });
-			scrollContainer.addEventListener('scroll', handleUserInteraction, { passive: true });
-		}
+		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
+		if (savedPause) pauseDurationSeconds = parseInt(savedPause);
+		if (savedEnabled) autoScrollEnabled = savedEnabled === 'true';
 
-		// Auto-Start nur wenn enabled
+		// Event Listener für User-Interaktion
+		const events = ['touchstart', 'touchmove', 'wheel', 'mousedown'];
+		events.forEach(event => {
+			scrollContainer?.addEventListener(event, handleUserInteraction, { passive: true });
+		});
+
+		// Auto-Start wenn enabled
 		if (autoScrollEnabled) {
-			setTimeout(startAutoScroll, 1000);
+			setTimeout(() => {
+				startScrolling();
+			}, 1500); // 1.5s Verzögerung
 		}
+
+		return () => {
+			// Cleanup Event Listeners
+			events.forEach(event => {
+				scrollContainer?.removeEventListener(event, handleUserInteraction);
+			});
+		};
 	});
 
+	// ✅ Cleanup beim Unmount
 	onDestroy(() => {
-		stopAutoScroll();
-		if (userInteractionTimeout) {
-			clearTimeout(userInteractionTimeout);
-		}
-		if (scrollContainer) {
-			scrollContainer.removeEventListener('touchstart', handleUserInteraction);
-			scrollContainer.removeEventListener('touchmove', handleUserInteraction);
-			scrollContainer.removeEventListener('wheel', handleUserInteraction);
-			scrollContainer.removeEventListener('scroll', handleUserInteraction);
+		stopScrolling();
+		if (userInteractionTimeoutId) {
+			clearTimeout(userInteractionTimeoutId);
 		}
 	});
 
-	export function setScrollSpeed(speed: number, pause: number) {
+	// ✅ Export-Funktion: Einstellungen ändern (für FloatingMenu)
+	export function setScrollSpeed(speed: number, pauseSec: number) {
 		scrollSpeed = speed;
-		pauseDuration = pause;
+		pauseDurationSeconds = pauseSec;
+		
 		localStorage.setItem('scrollSpeed', speed.toString());
-		localStorage.setItem('pauseDuration', pause.toString());
+		localStorage.setItem('pauseDuration', pauseSec.toString());
 
-		stopAutoScroll();
-		if (autoScrollEnabled) {
-			startAutoScroll();
+		console.log(`⚙️ Neue Einstellungen: Speed=${speed}px, Pause=${pauseSec}s`);
+
+		// Neustart wenn aktiv
+		if (isScrolling) {
+			stopScrolling();
+			setTimeout(startScrolling, 100);
 		}
 	}
 
-	export function toggleAutoScroll() {
+	// ✅ Export-Funktion: Toggle Auto-Scroll (für FloatingMenu)
+	export function toggleAutoScroll(): boolean {
 		autoScrollEnabled = !autoScrollEnabled;
-		isManuallyPaused = !autoScrollEnabled;
-		
 		localStorage.setItem('autoScrollEnabled', autoScrollEnabled.toString());
-		
+
 		if (autoScrollEnabled) {
-			startAutoScroll();
+			isPausedByUser = false;
+			startScrolling();
 		} else {
-			stopAutoScroll();
+			stopScrolling();
 		}
+
+		console.log(`🔄 Auto-Scroll ${autoScrollEnabled ? 'AKTIVIERT ✅' : 'DEAKTIVIERT ❌'}`);
 		return autoScrollEnabled;
 	}
 
-	// ✅ NEU: Manueller Start-Button Funktion
+	// ✅ Manueller Start-Button
 	function manualStartScroll() {
 		autoScrollEnabled = true;
-		isManuallyPaused = false;
+		isPausedByUser = false;
 		localStorage.setItem('autoScrollEnabled', 'true');
-		startAutoScroll();
+		startScrolling();
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -275,7 +309,7 @@
 		{/if}
 	</div>
 
-	<!-- ✅ NEU: Auto-Scroll Start Button (nur sichtbar wenn nicht aktiv) -->
+	<!-- ✅ Start Button (nur sichtbar wenn nicht aktiv) -->
 	{#if !autoScrollEnabled && $visibleRooms.length > 0}
 		<button 
 			class="scroll-start-button" 
@@ -287,37 +321,44 @@
 		</button>
 	{/if}
 
-	<!-- ✅ Auto-Scroll Indikator (wenn aktiv) -->
-	{#if autoScrollEnabled}
+	<!-- ✅ Scroll Indikator (wenn aktiv und scrollend) -->
+	{#if isScrolling && !isPausedByUser}
 		<div class="scroll-indicator" title="Auto-Scroll aktiv">
-			<span class="scroll-icon">↕️</span>
+			<span class="scroll-icon">{scrollDirection === 'paused' ? '⏸️' : scrollDirection === 'down' ? '⬇️' : '⬆️'}</span>
+		</div>
+	{/if}
+
+	<!-- ✅ User-Pause Indikator -->
+	{#if isPausedByUser}
+		<div class="pause-indicator" title="Pausiert durch User-Interaktion">
+			<span class="pause-icon">👆</span>
+			<span class="pause-text">Pause</span>
 		</div>
 	{/if}
 </div>
 
 <style>
+	/* ✅ Container mit smooth scroll */
 	.canvas-container {
 		position: fixed;
-		top: 50px; /* ✅ Header-Höhe */
+		top: 50px;
 		left: 0;
 		right: 0;
-		bottom: 0; /* ✅ Bis ganz unten - kein Toolbar mehr im Weg */
+		bottom: 0;
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
-		/* GPU-Beschleunigung für butterweiche Performance */
 		scroll-behavior: smooth;
 		-webkit-overflow-scrolling: touch;
 		transform: translateZ(0);
 		will-change: scroll-position;
-		/* Verhindert Bounce-Effekt auf iOS */
 		overscroll-behavior: contain;
 	}
 
 	.canvas {
 		max-width: 1400px;
 		margin: 0 auto;
-		padding: 16px; /* ✅ Reduziert von 20px */
+		padding: 16px;
 		min-height: 100%;
 		transform: translateZ(0);
 	}
@@ -325,14 +366,14 @@
 	.floors-container {
 		display: flex;
 		flex-direction: column;
-		gap: 16px; /* ✅ Reduziert von 24px */
+		gap: 16px;
 		contain: layout;
 	}
 
 	.floor-section {
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 12px 0; /* ✅ Reduziert */
+		padding: 0 0 12px 0;
 		border: none;
 		transition: all 0.3s ease;
 		transform: translateZ(0);
@@ -341,12 +382,12 @@
 
 	.floor-title {
 		color: var(--color-text-primary);
-		font-size: 20px; /* ✅ Reduziert von 22px */
+		font-size: 20px;
 		font-weight: 700;
-		margin: 0 0 12px 0; /* ✅ Reduziert von 16px */
+		margin: 0 0 12px 0;
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
-		padding: 10px 16px; /* ✅ Reduziert von 12px 20px */
+		padding: 10px 16px;
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -361,7 +402,7 @@
 	}
 
 	.floor-hint {
-		font-size: 11px; /* ✅ Reduziert von 12px */
+		font-size: 11px;
 		font-weight: 400;
 		opacity: 0.7;
 		font-style: italic;
@@ -369,9 +410,8 @@
 
 	.rooms-grid {
 		display: grid;
-		/* ✅ Mehr Spalten = kleinere Kacheln */
-		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* ✅ Reduziert von 220px */
-		gap: 10px; /* ✅ Reduziert von 16px */
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: 10px;
 		grid-auto-rows: auto;
 		align-items: start;
 		contain: layout;
@@ -394,17 +434,15 @@
 		filter: brightness(1.1);
 	}
 
-	/* ✅ Desktop: Noch mehr Spalten */
 	@media (min-width: 1024px) {
 		.rooms-grid {
-			grid-template-columns: repeat(5, 1fr); /* ✅ 5 statt 4 */
+			grid-template-columns: repeat(5, 1fr);
 		}
 	}
 
-	/* ✅ Große Displays (wie 82-Zoll TV) */
 	@media (min-width: 1600px) {
 		.rooms-grid {
-			grid-template-columns: repeat(6, 1fr); /* ✅ 6 Spalten */
+			grid-template-columns: repeat(6, 1fr);
 			gap: 12px;
 		}
 		
@@ -413,7 +451,6 @@
 		}
 	}
 
-	/* Tablet */
 	@media (max-width: 1023px) {
 		.canvas {
 			padding: 16px;
@@ -429,7 +466,6 @@
 		}
 	}
 
-	/* Mobile */
 	@media (max-width: 768px) {
 		.canvas {
 			padding: 12px;
@@ -479,10 +515,10 @@
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 	}
 
-	/* ✅ NEU: Start Button für Auto-Scroll */
+	/* ✅ Start Button */
 	.scroll-start-button {
 		position: fixed;
-		bottom: 20px; /* ✅ Unten positioniert, da kein Toolbar mehr */
+		bottom: 20px;
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 500;
@@ -547,31 +583,70 @@
 		position: fixed;
 		bottom: 20px;
 		left: 20px;
-		background: rgba(0, 0, 0, 0.7);
+		background: rgba(0, 0, 0, 0.8);
 		backdrop-filter: blur(10px);
-		padding: 8px 12px;
-		border-radius: 8px;
-		border: 2px solid rgba(34, 197, 94, 0.5);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		padding: 10px 14px;
+		border-radius: 10px;
+		border: 2px solid rgba(34, 197, 94, 0.6);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 		z-index: 500;
 		animation: pulse-indicator 2s ease-in-out infinite;
 	}
 
 	@keyframes pulse-indicator {
 		0%, 100% {
-			opacity: 0.6;
+			opacity: 0.7;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.05);
+		}
+	}
+
+	.scroll-icon {
+		font-size: 24px;
+		display: block;
+	}
+
+	/* ✅ Pause Indikator */
+	.pause-indicator {
+		position: fixed;
+		bottom: 20px;
+		left: 20px;
+		background: rgba(245, 158, 11, 0.9);
+		backdrop-filter: blur(10px);
+		padding: 10px 16px;
+		border-radius: 10px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+		z-index: 500;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: white;
+		font-weight: 700;
+		animation: pulse-pause 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse-pause {
+		0%, 100% {
+			opacity: 0.8;
 		}
 		50% {
 			opacity: 1;
 		}
 	}
 
-	.scroll-icon {
+	.pause-icon {
 		font-size: 20px;
-		display: block;
 	}
 
-	/* ✅ Verbesserte Scrollbar für große Displays */
+	.pause-text {
+		font-size: 14px;
+	}
+
+	/* ✅ Scrollbar Styling */
 	.canvas-container::-webkit-scrollbar {
 		width: 14px;
 	}
@@ -585,7 +660,6 @@
 		background: rgba(255, 255, 255, 0.3);
 		border-radius: 7px;
 		border: 2px solid rgba(0, 0, 0, 0.3);
-		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 	}
 
@@ -593,19 +667,23 @@
 		background: rgba(255, 255, 255, 0.4);
 	}
 
-	/* Firefox Scrollbar */
 	.canvas-container {
 		scrollbar-width: thin;
 		scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
 	}
 
-	/* ✅ iPad-spezifische Optimierungen */
-	@media (hover: none) and (pointer: coarse) {
+	/* ✅ Mobile Optimierungen */
+	@media (max-width: 768px) {
 		.scroll-start-button {
 			padding: 18px 32px;
 			font-size: 18px;
-			/* Größerer Touch-Target für iPad */
 			min-height: 60px;
+		}
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.scroll-start-button {
+			min-height: 64px;
 		}
 	}
 </style>
