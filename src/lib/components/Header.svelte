@@ -5,6 +5,12 @@
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
+	// SVELTE 5 PROPS - Auto-Scroll Controls
+	let { autoScrollActive = false, onToggleAutoScroll } = $props<{
+		autoScrollActive?: boolean;
+		onToggleAutoScroll?: () => void;
+	}>();
+
 	// SVELTE 5 DERIVED SYNTAX
 	let formattedTime = $derived($currentTime.toLocaleTimeString('de-DE', {
 		hour: '2-digit',
@@ -100,6 +106,25 @@
 	</div>
 
 	<div class="header-right">
+		<!-- ✅ NEU: Auto-Scroll Toggle Button -->
+		{#if onToggleAutoScroll}
+			<button 
+				class="autoscroll-btn" 
+				class:active={autoScrollActive}
+				onclick={onToggleAutoScroll}
+				title={autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}
+				aria-label={autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}
+			>
+				{#if autoScrollActive}
+					<span class="icon">⏸️</span>
+					<span class="label">Auto-Scroll</span>
+				{:else}
+					<span class="icon">▶️</span>
+					<span class="label">Auto-Scroll</span>
+				{/if}
+			</button>
+		{/if}
+
 		<button 
 			class="fullscreen-btn" 
 			onclick={toggleFullscreen}
@@ -199,6 +224,58 @@
 		margin: 0 8px;
 	}
 
+	/* ✅ NEU: Auto-Scroll Button Styles */
+	.autoscroll-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		color: var(--color-text-primary);
+		font-size: 14px;
+		font-weight: 600;
+		padding: 8px 14px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	}
+
+	.autoscroll-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	}
+
+	.autoscroll-btn:active {
+		transform: translateY(0);
+	}
+
+	.autoscroll-btn.active {
+		background: rgba(34, 197, 94, 0.3);
+		border-color: rgba(34, 197, 94, 0.6);
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+		}
+		50% {
+			box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+		}
+	}
+
+	.autoscroll-btn .icon {
+		font-size: 16px;
+	}
+
+	.autoscroll-btn .label {
+		font-size: 13px;
+	}
+
 	.fullscreen-btn {
 		background: rgba(255, 255, 255, 0.2);
 		border: none;
@@ -264,10 +341,32 @@
 			font-size: 18px;
 		}
 
+		.autoscroll-btn .label {
+			display: none;
+		}
+
+		.autoscroll-btn {
+			min-width: 40px;
+			padding: 8px;
+			justify-content: center;
+		}
+
 		.fullscreen-btn {
 			width: 36px;
 			height: 36px;
 			font-size: 18px;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.header-right {
+			gap: 8px;
+		}
+
+		.autoscroll-btn,
+		.fullscreen-btn {
+			min-width: 36px;
+			height: 36px;
 		}
 	}
 </style>

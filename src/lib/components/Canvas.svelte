@@ -200,7 +200,7 @@
 		}
 	}
 
-	// ✅ Export-Funktion: Toggle Auto-Scroll (für FloatingMenu)
+	// ✅ Export-Funktion: Toggle Auto-Scroll (für Header)
 	export function toggleAutoScroll(): boolean {
 		autoScrollEnabled = !autoScrollEnabled;
 		localStorage.setItem('autoScrollEnabled', autoScrollEnabled.toString());
@@ -216,12 +216,9 @@
 		return autoScrollEnabled;
 	}
 
-	// ✅ Manueller Start-Button
-	function manualStartScroll() {
-		autoScrollEnabled = true;
-		isPausedByUser = false;
-		localStorage.setItem('autoScrollEnabled', 'true');
-		startScrolling();
+	// ✅ Export für Status-Abfrage (für Header)
+	export function getAutoScrollStatus(): boolean {
+		return autoScrollEnabled;
 	}
 
 	// Gruppiere Räume nach Stockwerk UND sortiere nach position_x
@@ -308,37 +305,10 @@
 			</div>
 		{/if}
 	</div>
-
-	<!-- ✅ Start Button (nur sichtbar wenn nicht aktiv) -->
-	{#if !autoScrollEnabled && $visibleRooms.length > 0}
-		<button 
-			class="scroll-start-button" 
-			onclick={manualStartScroll}
-			transition:slide={{ axis: 'y', duration: 300 }}
-		>
-			<span class="start-icon">▶️</span>
-			<span class="start-text">Auto-Scroll starten</span>
-		</button>
-	{/if}
-
-	<!-- ✅ Scroll Indikator (wenn aktiv und scrollend) -->
-	{#if isScrolling && !isPausedByUser}
-		<div class="scroll-indicator" title="Auto-Scroll aktiv">
-			<span class="scroll-icon">{scrollDirection === 'paused' ? '⏸️' : scrollDirection === 'down' ? '⬇️' : '⬆️'}</span>
-		</div>
-	{/if}
-
-	<!-- ✅ User-Pause Indikator -->
-	{#if isPausedByUser}
-		<div class="pause-indicator" title="Pausiert durch User-Interaktion">
-			<span class="pause-icon">👆</span>
-			<span class="pause-text">Pause</span>
-		</div>
-	{/if}
 </div>
 
 <style>
-	/* ✅ Container mit smooth scroll */
+	/* ✅ Container mit smooth scroll UND genug Padding unten */
 	.canvas-container {
 		position: fixed;
 		top: 50px;
@@ -359,6 +329,7 @@
 		max-width: 1400px;
 		margin: 0 auto;
 		padding: 16px;
+		padding-bottom: 80px; /* ✅ FIX: Mehr Padding unten, damit nichts abgeschnitten wird */
 		min-height: 100%;
 		transform: translateZ(0);
 	}
@@ -448,12 +419,14 @@
 		
 		.canvas {
 			max-width: 1800px;
+			padding-bottom: 100px; /* ✅ Noch mehr Platz auf großen Screens */
 		}
 	}
 
 	@media (max-width: 1023px) {
 		.canvas {
 			padding: 16px;
+			padding-bottom: 60px;
 		}
 
 		.rooms-grid {
@@ -469,6 +442,7 @@
 	@media (max-width: 768px) {
 		.canvas {
 			padding: 12px;
+			padding-bottom: 50px;
 		}
 
 		.rooms-grid {
@@ -515,137 +489,6 @@
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 	}
 
-	/* ✅ Start Button */
-	.scroll-start-button {
-		position: fixed;
-		bottom: 20px;
-		left: 50%;
-		transform: translateX(-50%);
-		z-index: 500;
-		
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 14px 28px;
-		
-		background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-		border: 3px solid rgba(255, 255, 255, 0.3);
-		border-radius: 14px;
-		box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
-		
-		color: white;
-		font-size: 16px;
-		font-weight: 700;
-		cursor: pointer;
-		transition: all 0.3s;
-		
-		animation: pulse-glow 2s ease-in-out infinite;
-	}
-
-	.scroll-start-button:hover {
-		transform: translateX(-50%) translateY(-3px);
-		box-shadow: 0 12px 40px rgba(34, 197, 94, 0.8);
-	}
-
-	.scroll-start-button:active {
-		transform: translateX(-50%) translateY(-1px);
-	}
-
-	@keyframes pulse-glow {
-		0%, 100% {
-			box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
-		}
-		50% {
-			box-shadow: 0 8px 40px rgba(34, 197, 94, 0.9);
-		}
-	}
-
-	.start-icon {
-		font-size: 22px;
-		animation: bounce-icon 1.5s ease-in-out infinite;
-	}
-
-	@keyframes bounce-icon {
-		0%, 100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-3px);
-		}
-	}
-
-	.start-text {
-		letter-spacing: 0.5px;
-	}
-
-	/* ✅ Scroll Indikator */
-	.scroll-indicator {
-		position: fixed;
-		bottom: 20px;
-		left: 20px;
-		background: rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(10px);
-		padding: 10px 14px;
-		border-radius: 10px;
-		border: 2px solid rgba(34, 197, 94, 0.6);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-		z-index: 500;
-		animation: pulse-indicator 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse-indicator {
-		0%, 100% {
-			opacity: 0.7;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 1;
-			transform: scale(1.05);
-		}
-	}
-
-	.scroll-icon {
-		font-size: 24px;
-		display: block;
-	}
-
-	/* ✅ Pause Indikator */
-	.pause-indicator {
-		position: fixed;
-		bottom: 20px;
-		left: 20px;
-		background: rgba(245, 158, 11, 0.9);
-		backdrop-filter: blur(10px);
-		padding: 10px 16px;
-		border-radius: 10px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-		z-index: 500;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		color: white;
-		font-weight: 700;
-		animation: pulse-pause 1.5s ease-in-out infinite;
-	}
-
-	@keyframes pulse-pause {
-		0%, 100% {
-			opacity: 0.8;
-		}
-		50% {
-			opacity: 1;
-		}
-	}
-
-	.pause-icon {
-		font-size: 20px;
-	}
-
-	.pause-text {
-		font-size: 14px;
-	}
-
 	/* ✅ Scrollbar Styling */
 	.canvas-container::-webkit-scrollbar {
 		width: 14px;
@@ -670,20 +513,5 @@
 	.canvas-container {
 		scrollbar-width: thin;
 		scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-	}
-
-	/* ✅ Mobile Optimierungen */
-	@media (max-width: 768px) {
-		.scroll-start-button {
-			padding: 18px 32px;
-			font-size: 18px;
-			min-height: 60px;
-		}
-	}
-
-	@media (hover: none) and (pointer: coarse) {
-		.scroll-start-button {
-			min-height: 64px;
-		}
 	}
 </style>

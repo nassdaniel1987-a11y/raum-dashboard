@@ -13,7 +13,8 @@
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
 	let showSettings = $state(false);
-	let canvasRef: any = $state(null); // ✅ NEU: Referenz zur Canvas-Komponente
+	let canvasRef: any = $state(null); // Referenz zur Canvas-Komponente
+	let autoScrollActive = $state(false); // ✅ NEU: State für Auto-Scroll Status
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -38,10 +39,28 @@
 	function closeSettings() {
 		showSettings = false;
 	}
+
+	// ✅ NEU: Auto-Scroll Toggle Handler
+	function handleToggleAutoScroll() {
+		if (canvasRef?.toggleAutoScroll) {
+			const newStatus = canvasRef.toggleAutoScroll();
+			autoScrollActive = newStatus;
+		}
+	}
+
+	// ✅ NEU: Initial Status abfragen
+	$effect(() => {
+		if (canvasRef?.getAutoScrollStatus) {
+			autoScrollActive = canvasRef.getAutoScrollStatus();
+		}
+	});
 </script>
 
 <div class="dashboard">
-	<Header />
+	<Header 
+		autoScrollActive={autoScrollActive} 
+		onToggleAutoScroll={handleToggleAutoScroll}
+	/>
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
 	<FloatingMenu 
 		onOpenScheduler={openScheduler} 
