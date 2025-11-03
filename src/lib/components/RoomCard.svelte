@@ -104,18 +104,17 @@
 		{/if}
 	</div>
 
-	<!-- ✅ Geschlossen Badge DIAGONAL (nur wenn KEINE Zeit) -->
+	<!-- ✅ GESCHLOSSEN Banner (nur wenn KEINE Zeit) -->
 	{#if !room.isOpen && !displayTime}
-		<div class="closed-badge-diagonal" in:scale={{ duration: 300 }}>
+		<div class="closed-banner" in:scale={{ duration: 300 }}>
 			GESCHLOSSEN
 		</div>
 	{/if}
 
-	<!-- ✅ Öffnet um Badge GROSS (statt geschlossen badge) -->
+	<!-- ✅ ÖFFNET UM Banner (mit Zeit) -->
 	{#if displayTime && !room.isOpen}
-		<div class="opens-at-badge" in:scale={{ duration: 300 }}>
-			<div class="opens-label">Öffnet um</div>
-			<div class="opens-time">{displayTime}</div>
+		<div class="opens-banner" in:scale={{ duration: 300 }}>
+			Öffnet um {displayTime}
 		</div>
 	{/if}
 
@@ -249,7 +248,7 @@
 
 	.card-content {
 		position: relative;
-		z-index: 4;
+		z-index: 1;
 		padding: 8px; /* ✅ Reduziert von 10px */
 		height: 100%;
 		display: flex;
@@ -277,11 +276,6 @@
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
-		/* Extra starker Text-Schatten für bessere Lesbarkeit */
-		text-shadow:
-			2px 2px 4px rgba(0, 0, 0, 0.9),
-			-1px -1px 2px rgba(0, 0, 0, 0.8),
-			1px 1px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	.room-activity {
@@ -319,60 +313,45 @@
 		background: var(--color-open-badge);
 	}
 
-	/* ✅ GESCHLOSSEN Badge - DIAGONAL (unten, damit Titel sichtbar bleibt) */
-	.closed-badge-diagonal {
+	/* ✅ GESCHLOSSEN Banner - Horizontales Banner am unteren Rand */
+	.closed-banner {
 		position: absolute;
-		bottom: 25%;
-		left: 50%;
-		transform: translate(-50%, 0) rotate(-15deg);
-		padding: 8px 40px;
-		background: rgba(239, 68, 68, 0.85);
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 8px 12px;
+		background: linear-gradient(to top, rgba(220, 38, 38, 0.95) 0%, rgba(239, 68, 68, 0.95) 100%);
 		color: white;
-		font-size: 14px;
-		font-weight: 900;
+		font-size: 13px;
+		font-weight: 800;
 		text-transform: uppercase;
-		letter-spacing: 2px;
-		z-index: 3;
-		box-shadow: 0 4px 20px rgba(239, 68, 68, 0.7);
-		border: 3px solid rgba(255, 255, 255, 0.9);
-		border-radius: 8px;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(2px);
-		pointer-events: none;
-	}
-
-	/* ✅ ÖFFNET UM Badge - Groß und prominent */
-	.opens-at-badge {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
-		padding: 12px 20px;
-		border-radius: 12px;
-		border: 3px solid rgba(255, 255, 255, 0.8);
-		box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6);
-		z-index: 10;
+		letter-spacing: 1.5px;
 		text-align: center;
-		backdrop-filter: blur(4px);
+		z-index: 5;
+		border-top: 2px solid rgba(255, 255, 255, 0.3);
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+		backdrop-filter: blur(3px);
 		pointer-events: none;
 	}
 
-	.opens-label {
-		font-size: 11px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		margin-bottom: 4px;
-	}
-
-	.opens-time {
-		font-size: 22px;
-		font-weight: 900;
+	/* ✅ ÖFFNET UM Banner - Horizontales Banner am unteren Rand */
+	.opens-banner {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 8px 12px;
+		background: linear-gradient(to top, rgba(37, 99, 235, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%);
 		color: white;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
-		letter-spacing: 1px;
+		font-size: 13px;
+		font-weight: 700;
+		text-align: center;
+		z-index: 5;
+		border-top: 2px solid rgba(255, 255, 255, 0.3);
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+		backdrop-filter: blur(3px);
+		pointer-events: none;
+		letter-spacing: 0.5px;
 	}
 
 	.lock-overlay {
