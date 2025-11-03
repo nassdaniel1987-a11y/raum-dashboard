@@ -2,6 +2,7 @@
 	import { supabase } from '$lib/supabase/client';
 	import { toasts } from '$lib/stores/toastStore';
 	import ColorPicker from './ColorPicker.svelte';
+	import TextColorPicker from './TextColorPicker.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { currentWeekday, currentTime } from '$lib/stores/appState';
@@ -180,7 +181,7 @@
 			<div class="form-row">
 				<div class="form-group full-width">
 					<label for="room-text-color-{room.id}">Textfarbe</label>
-					<ColorPicker
+					<TextColorPicker
 						value={textColor}
 						onChange={(color) => textColor = color}
 					/>
