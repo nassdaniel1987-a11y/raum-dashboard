@@ -25,6 +25,7 @@
 	let scrollIntervalId: ReturnType<typeof setInterval> | undefined;
 	let scrollDirection = $state<'down' | 'up' | 'paused'>('down');
 	let pauseTimeoutId: ReturnType<typeof setTimeout> | undefined;
+	let scrollAccumulator = 0; // Sammelt Sub-Pixel-Werte
 
 	// ✅ KERN-FUNKTION: Ein Scroll-Schritt
 	function scrollStep() {
@@ -51,19 +52,27 @@
 			return;
 		}
 
-		// ✅ Scrollen (direktes scrollTop für zuverlässiges Scrolling)
+		// ✅ Scrollen mit Akkumulator für Sub-Pixel-Werte
 		if (scrollDirection === 'down') {
-			scrollContainer.scrollTop += scrollSpeed;
+			scrollAccumulator += scrollSpeed;
 		} else if (scrollDirection === 'up') {
-			scrollContainer.scrollTop -= scrollSpeed;
+			scrollAccumulator -= scrollSpeed;
+		}
+
+		// Nur scrollen wenn mindestens 1 ganzer Pixel erreicht wurde
+		if (Math.abs(scrollAccumulator) >= 1) {
+			const pixelsToScroll = Math.floor(Math.abs(scrollAccumulator)) * Math.sign(scrollAccumulator);
+			scrollContainer.scrollTop += pixelsToScroll;
+			scrollAccumulator -= pixelsToScroll; // Rest behalten
 		}
 	}
 
 	// ✅ Pause am Rand mit Richtungswechsel
 	function pauseAtEdge(nextDirection: 'up' | 'down') {
 		if (scrollDirection === 'paused') return;
-		
+
 		scrollDirection = 'paused';
+		scrollAccumulator = 0; // Reset beim Richtungswechsel
 		const edge = nextDirection === 'up' ? 'unten' : 'oben';
 		console.log(`⏸️ Pause am ${edge}en Ende für ${pauseDurationSeconds}s`);
 
@@ -95,6 +104,7 @@
 
 		isScrolling = true;
 		scrollDirection = 'down';
+		scrollAccumulator = 0; // Reset für sauberen Start
 		console.log('▶️ Auto-Scroll gestartet (Speed: ' + scrollSpeed + ', Pause: ' + pauseDurationSeconds + 's)');
 
 		// 60 FPS = ~16ms Intervall
@@ -113,6 +123,7 @@
 		}
 		isScrolling = false;
 		scrollDirection = 'down'; // Reset
+		scrollAccumulator = 0; // Reset Akkumulator
 		console.log('⏹️ Auto-Scroll gestoppt');
 	}
 
