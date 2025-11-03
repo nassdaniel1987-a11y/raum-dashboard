@@ -53,11 +53,11 @@
 			return;
 		}
 
-		// ✅ Scrollen (wenn nicht pausiert)
+		// ✅ Scrollen mit scrollBy() für bessere iOS-Kompatibilität
 		if (scrollDirection === 'down') {
-			scrollContainer.scrollTop += scrollSpeed;
+			scrollContainer.scrollBy({ top: scrollSpeed, behavior: 'auto' });
 		} else if (scrollDirection === 'up') {
-			scrollContainer.scrollTop -= scrollSpeed;
+			scrollContainer.scrollBy({ top: -scrollSpeed, behavior: 'auto' });
 		}
 	}
 
@@ -319,7 +319,7 @@
 		overflow-x: hidden;
 		background: transparent;
 		scroll-behavior: smooth;
-		-webkit-overflow-scrolling: touch;
+		-webkit-overflow-scrolling: auto;
 		transform: translateZ(0);
 		will-change: scroll-position;
 		overscroll-behavior: contain;
