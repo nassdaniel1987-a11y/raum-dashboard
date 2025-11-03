@@ -104,9 +104,17 @@
 		{/if}
 	</div>
 
+	<!-- ✅ NEU: Geschlossen Badge in rot -->
+	{#if !room.isOpen}
+		<div class="closed-badge" in:scale={{ duration: 300 }}>
+			Geschlossen
+		</div>
+	{/if}
+
+	<!-- ✅ NEU: Öffnet um Badge -->
 	{#if displayTime && !room.isOpen}
 		<div class="time-badge-top">
-			🕐 {displayTime}
+			Öffnet um {displayTime}
 		</div>
 	{/if}
 
@@ -303,6 +311,23 @@
 
 	.status-badge.open {
 		background: var(--color-open-badge);
+	}
+
+	/* ✅ NEU: Geschlossen Badge in rot */
+	.closed-badge {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		padding: 4px 10px;
+		border-radius: 6px;
+		font-size: 10px;
+		font-weight: 700;
+		z-index: 5;
+		background: rgba(239, 68, 68, 0.95);
+		color: white;
+		box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.time-badge-top {
