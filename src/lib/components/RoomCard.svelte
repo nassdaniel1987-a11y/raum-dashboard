@@ -42,10 +42,11 @@
 		filter: ${room.isOpen ? 'brightness(1) saturate(1)' : 'grayscale(40%) brightness(0.8)'};
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
-	
+
 	// ✅ NOCH KLEINERE Schriftgrößen für kompaktere Kacheln
 	let titleFontSize = $derived(room.config?.title_font_size || 16); // Reduziert von 18
 	let textFontSize = $derived(room.config?.text_font_size || 12);  // Reduziert von 14
+	let textColor = $derived(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
 </script>
 
 <div
@@ -113,10 +114,10 @@
 		class="card-content"
 		onclick={handleClick}
 	>
-		<h3 class="room-title" style="font-size: {titleFontSize}px;">{room.name}</h3>
+		<h3 class="room-title" style="font-size: {titleFontSize}px; color: {textColor};">{room.name}</h3>
 
 		{#if room.config?.activity}
-			<p class="room-activity" style="font-size: {textFontSize}px;">{room.config.activity}</p>
+			<p class="room-activity" style="font-size: {textFontSize}px; color: {textColor};">{room.config.activity}</p>
 		{/if}
 	</div>
 

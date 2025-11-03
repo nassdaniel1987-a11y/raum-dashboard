@@ -17,6 +17,7 @@
 	let name = $state(room.name);
 	let floor = $state(room.floor || 'eg');
 	let backgroundColor = $state(room.background_color);
+	let textColor = $state(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
 	let activity = $state(room.config?.activity || '');
 	let openTime = $state(room.config?.open_time || '');
 	let closeTime = $state(room.config?.close_time || '');
@@ -53,7 +54,8 @@
 				open_time: openTime || null,
 				close_time: closeTime || null,
 				title_font_size: titleFontSize,
-				text_font_size: textFontSize
+				text_font_size: textFontSize,
+				text_color: textColor // ✅ NEU: Textfarbe speichern
 			};
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
@@ -177,8 +179,20 @@
 
 			<div class="form-row">
 				<div class="form-group full-width">
+					<label for="room-text-color-{room.id}">Textfarbe</label>
+					<ColorPicker
+						value={textColor}
+						onChange={(color) => textColor = color}
+					/>
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group full-width">
 					<label for="color-preview-{room.id}">Vorschau</label>
-					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}" role="img" aria-label="Farbvorschau"></div>
+					<div id="color-preview-{room.id}" class="color-preview" style="background: {backgroundColor}; color: {textColor};" role="img" aria-label="Farbvorschau">
+						<div class="preview-text">Beispieltext</div>
+					</div>
 				</div>
 			</div>
 
@@ -384,9 +398,18 @@
 
 	.color-preview {
 		width: 100%;
-		height: 50px;
+		height: 80px;
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.preview-text {
+		font-size: 18px;
+		font-weight: 600;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 	}
 
 	.hint {
