@@ -22,12 +22,12 @@
 	let scrollPreset = $state('normal');
 	let autoScrollActive = $state(false);
 
-	// ✅ Verbesserte Scroll-Presets (Pixel/Schritt, Pause in Sekunden)
+	// ✅ Optimierte Scroll-Presets für 82-Zoll TV (sehr langsam & geschmeidig)
 	const scrollPresets = {
-		langsam: { speed: 0.8, pause: 5, label: '🐌 Langsam', desc: '0.8 px/Schritt, 5s Pause' },
-		normal: { speed: 1.5, pause: 3, label: '▶️ Normal', desc: '1.5 px/Schritt, 3s Pause' },
-		schnell: { speed: 2.5, pause: 2, label: '⚡ Schnell', desc: '2.5 px/Schritt, 2s Pause' },
-		turbo: { speed: 4, pause: 1, label: '🚀 Turbo', desc: '4 px/Schritt, 1s Pause' }
+		langsam: { speed: 0.3, pause: 6, label: '🐌 Langsam', desc: '0.3 px/Schritt, 6s Pause' },
+		normal: { speed: 0.6, pause: 4, label: '▶️ Normal', desc: '0.6 px/Schritt, 4s Pause' },
+		schnell: { speed: 1.0, pause: 3, label: '⚡ Schnell', desc: '1.0 px/Schritt, 3s Pause' },
+		turbo: { speed: 1.5, pause: 2, label: '🚀 Turbo', desc: '1.5 px/Schritt, 2s Pause' }
 	};
 
 	onMount(() => {
