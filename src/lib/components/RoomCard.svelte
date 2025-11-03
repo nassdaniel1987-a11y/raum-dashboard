@@ -249,7 +249,7 @@
 
 	.card-content {
 		position: relative;
-		z-index: 1;
+		z-index: 4;
 		padding: 8px; /* ✅ Reduziert von 10px */
 		height: 100%;
 		display: flex;
@@ -277,6 +277,11 @@
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
+		/* Extra starker Text-Schatten für bessere Lesbarkeit */
+		text-shadow:
+			2px 2px 4px rgba(0, 0, 0, 0.9),
+			-1px -1px 2px rgba(0, 0, 0, 0.8),
+			1px 1px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	.room-activity {
@@ -314,25 +319,25 @@
 		background: var(--color-open-badge);
 	}
 
-	/* ✅ GESCHLOSSEN Badge - DIAGONAL über die ganze Kachel */
+	/* ✅ GESCHLOSSEN Badge - DIAGONAL (unten, damit Titel sichtbar bleibt) */
 	.closed-badge-diagonal {
 		position: absolute;
-		top: 50%;
+		bottom: 25%;
 		left: 50%;
-		transform: translate(-50%, -50%) rotate(-15deg);
-		padding: 12px 60px;
-		background: rgba(239, 68, 68, 0.95);
+		transform: translate(-50%, 0) rotate(-15deg);
+		padding: 8px 40px;
+		background: rgba(239, 68, 68, 0.85);
 		color: white;
-		font-size: 18px;
+		font-size: 14px;
 		font-weight: 900;
 		text-transform: uppercase;
 		letter-spacing: 2px;
-		z-index: 10;
+		z-index: 3;
 		box-shadow: 0 4px 20px rgba(239, 68, 68, 0.7);
 		border: 3px solid rgba(255, 255, 255, 0.9);
 		border-radius: 8px;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(4px);
+		backdrop-filter: blur(2px);
 		pointer-events: none;
 	}
 
