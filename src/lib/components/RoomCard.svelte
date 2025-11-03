@@ -129,11 +129,6 @@
 		{/if}
 	</div>
 
-	{#if !room.isOpen}
-		<div class="lock-overlay" transition:fade={{ duration: 300 }}>
-			<div class="lock-icon">🔒</div>
-		</div>
-	{/if}
 </div>
 
 <style>
@@ -354,26 +349,6 @@
 		letter-spacing: 0.5px;
 	}
 
-	.lock-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.4);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 2;
-		pointer-events: none;
-		border-radius: 10px;
-	}
-
-	.lock-icon {
-		font-size: 28px; /* ✅ Reduziert von 32px */
-		opacity: 0.5;
-		filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
-	}
 
 	/* ✅ Große Displays: Noch kleinere Kacheln */
 	@media (min-width: 1600px) {
