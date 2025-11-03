@@ -42,17 +42,34 @@
 
 	// ✅ NEU: Auto-Scroll Toggle Handler
 	function handleToggleAutoScroll() {
-		if (canvasRef?.toggleAutoScroll) {
-			const newStatus = canvasRef.toggleAutoScroll();
-			autoScrollActive = newStatus;
+		console.log('🔘 Header Button geklickt');
+		if (!canvasRef) {
+			console.warn('❌ canvasRef ist null');
+			return;
 		}
+		if (typeof canvasRef.toggleAutoScroll !== 'function') {
+			console.warn('❌ toggleAutoScroll ist keine Funktion:', typeof canvasRef.toggleAutoScroll);
+			return;
+		}
+		const newStatus = canvasRef.toggleAutoScroll();
+		autoScrollActive = newStatus;
+		console.log('✅ Status aktualisiert auf:', newStatus);
 	}
 
-	// ✅ NEU: Initial Status abfragen
+	// ✅ Status kontinuierlich synchronisieren
 	$effect(() => {
-		if (canvasRef?.getAutoScrollStatus) {
-			autoScrollActive = canvasRef.getAutoScrollStatus();
-		}
+		// Regelmäßig Status synchronisieren
+		const interval = setInterval(() => {
+			if (canvasRef?.getAutoScrollStatus) {
+				const currentStatus = canvasRef.getAutoScrollStatus();
+				if (currentStatus !== autoScrollActive) {
+					autoScrollActive = currentStatus;
+					console.log('🔄 Status synchronisiert:', currentStatus);
+				}
+			}
+		}, 500); // Alle 500ms checken
+
+		return () => clearInterval(interval);
 	});
 </script>
 
