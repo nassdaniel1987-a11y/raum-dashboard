@@ -19,20 +19,20 @@
 	let menuOpen = $state(false);
 	let showScrollSettings = $state(false);
 
-	let scrollPreset = $state('normal');
 	let autoScrollActive = $state(false);
 
-	// ✅ Optimierte Scroll-Presets für 82-Zoll TV (sehr langsam & geschmeidig)
-	const scrollPresets = {
-		langsam: { speed: 0.3, pause: 6, label: '🐌 Langsam', desc: '0.3 px/Schritt, 6s Pause' },
-		normal: { speed: 0.6, pause: 4, label: '▶️ Normal', desc: '0.6 px/Schritt, 4s Pause' },
-		schnell: { speed: 1.0, pause: 3, label: '⚡ Schnell', desc: '1.0 px/Schritt, 3s Pause' },
-		turbo: { speed: 1.5, pause: 2, label: '🚀 Turbo', desc: '1.5 px/Schritt, 2s Pause' }
-	};
+	// ✅ Slider-Werte für flexible Einstellung
+	let scrollSpeed = $state(0.6); // 0.1 - 3.0 px/Schritt
+	let pauseDuration = $state(4); // 1 - 10 Sekunden
 
 	onMount(() => {
-		scrollPreset = localStorage.getItem('scrollPreset') || 'normal';
+		// Lade gespeicherte Werte
+		const savedSpeed = localStorage.getItem('scrollSpeed');
+		const savedPause = localStorage.getItem('pauseDuration');
 		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
+
+		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
+		if (savedPause) pauseDuration = parseInt(savedPause);
 		if (savedAutoScroll !== null) {
 			autoScrollActive = savedAutoScroll === 'true';
 		}
@@ -73,15 +73,16 @@
 		menuOpen = !menuOpen;
 	}
 
-	function setScrollPreset(preset: keyof typeof scrollPresets) {
-		scrollPreset = preset;
-		localStorage.setItem('scrollPreset', preset);
-		const settings = scrollPresets[preset];
-		
-		console.log(`⚙️ Scroll-Preset "${preset}": ${settings.desc}`);
-		
+	function updateScrollSettings() {
+		// Speichere in localStorage
+		localStorage.setItem('scrollSpeed', scrollSpeed.toString());
+		localStorage.setItem('pauseDuration', pauseDuration.toString());
+
+		console.log(`⚙️ Scroll-Einstellungen: ${scrollSpeed.toFixed(1)} px/Schritt, ${pauseDuration}s Pause`);
+
+		// Update Canvas wenn vorhanden
 		if (canvasRef?.setScrollSpeed) {
-			canvasRef.setScrollSpeed(settings.speed, settings.pause);
+			canvasRef.setScrollSpeed(scrollSpeed, pauseDuration);
 		}
 	}
 
@@ -134,19 +135,40 @@
 			{#if showScrollSettings}
 				<div class="scroll-settings" transition:slide={{ duration: 200 }}>
 					<div class="setting-group">
-						<label class="setting-label">Geschwindigkeit & Pause:</label>
-						<div class="preset-buttons">
-							{#each Object.entries(scrollPresets) as [key, preset]}
-								<button
-									class="preset-btn"
-									class:active={scrollPreset === key}
-									onclick={() => setScrollPreset(key as keyof typeof scrollPresets)}
-									title={preset.desc}
-								>
-									<span class="preset-emoji">{preset.label.split(' ')[0]}</span>
-									<span class="preset-name">{preset.label.split(' ')[1]}</span>
-								</button>
-							{/each}
+						<label class="setting-label">
+							Geschwindigkeit: {scrollSpeed.toFixed(1)} px/Schritt
+						</label>
+						<input
+							type="range"
+							min="0.1"
+							max="3.0"
+							step="0.1"
+							bind:value={scrollSpeed}
+							oninput={updateScrollSettings}
+							class="slider"
+						/>
+						<div class="slider-labels">
+							<span>🐌 Langsam</span>
+							<span>🚀 Schnell</span>
+						</div>
+					</div>
+
+					<div class="setting-group">
+						<label class="setting-label">
+							Pause am Ende: {pauseDuration}s
+						</label>
+						<input
+							type="range"
+							min="1"
+							max="10"
+							step="1"
+							bind:value={pauseDuration}
+							oninput={updateScrollSettings}
+							class="slider"
+						/>
+						<div class="slider-labels">
+							<span>⚡ Kurz</span>
+							<span>⏱️ Lang</span>
 						</div>
 					</div>
 
@@ -163,7 +185,7 @@
 
 					<div class="scroll-info">
 						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Aktuell: {scrollPresets[scrollPreset as keyof typeof scrollPresets].desc}</span>
+						<span class="info-text">Einstellungen werden automatisch gespeichert</span>
 					</div>
 				</div>
 			{/if}
@@ -367,53 +389,67 @@
 	}
 
 	.setting-label {
-		color: var(--color-text-secondary);
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	.preset-buttons {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 8px;
-	}
-
-	.preset-btn {
-		padding: 12px 8px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 8px;
 		color: var(--color-text-primary);
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 600;
-		cursor: pointer;
+		letter-spacing: 0.3px;
+		margin-bottom: 4px;
+	}
+
+	.slider {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 100%;
+		height: 6px;
+		border-radius: 3px;
+		background: rgba(255, 255, 255, 0.2);
+		outline: none;
 		transition: all 0.2s;
+	}
+
+	.slider:hover {
+		background: rgba(255, 255, 255, 0.3);
+	}
+
+	.slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+		cursor: pointer;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		transition: all 0.2s;
+	}
+
+	.slider::-webkit-slider-thumb:hover {
+		transform: scale(1.2);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+	}
+
+	.slider::-moz-range-thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+		cursor: pointer;
+		border: none;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		transition: all 0.2s;
+	}
+
+	.slider::-moz-range-thumb:hover {
+		transform: scale(1.2);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+	}
+
+	.slider-labels {
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.preset-btn:hover {
-		background: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-2px);
-	}
-
-	.preset-btn.active {
-		background: rgba(59, 130, 246, 0.3);
-		border-color: rgba(59, 130, 246, 0.6);
-		box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
-	}
-
-	.preset-emoji {
-		font-size: 20px;
-	}
-
-	.preset-name {
-		font-size: 11px;
+		justify-content: space-between;
+		font-size: 10px;
+		color: var(--color-text-secondary);
+		margin-top: 4px;
 	}
 
 	.toggle-btn {
