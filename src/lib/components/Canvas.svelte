@@ -163,7 +163,6 @@
 		localStorage.setItem('autoScrollEnabled', autoScrollEnabled.toString());
 
 		if (autoScrollEnabled) {
-			isPausedByUser = false;
 			startScrolling();
 		} else {
 			stopScrolling();
