@@ -51,11 +51,11 @@
 			return;
 		}
 
-		// ✅ Scrollen mit scrollBy() für bessere iOS-Kompatibilität
+		// ✅ Scrollen (direktes scrollTop für zuverlässiges Scrolling)
 		if (scrollDirection === 'down') {
-			scrollContainer.scrollBy({ top: scrollSpeed, behavior: 'auto' });
+			scrollContainer.scrollTop += scrollSpeed;
 		} else if (scrollDirection === 'up') {
-			scrollContainer.scrollBy({ top: -scrollSpeed, behavior: 'auto' });
+			scrollContainer.scrollTop -= scrollSpeed;
 		}
 	}
 
@@ -265,7 +265,7 @@
 </div>
 
 <style>
-	/* ✅ Container mit smooth scroll UND genug Padding unten */
+	/* ✅ Container für autoscroll optimiert */
 	.canvas-container {
 		position: fixed;
 		top: 50px;
@@ -275,7 +275,7 @@
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
-		scroll-behavior: smooth;
+		scroll-behavior: auto;
 		-webkit-overflow-scrolling: auto;
 		transform: translateZ(0);
 		will-change: scroll-position;
