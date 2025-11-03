@@ -284,8 +284,8 @@
 	.canvas {
 		max-width: 1400px;
 		margin: 0 auto;
-		padding: 16px;
-		padding-bottom: 80px; /* ✅ FIX: Mehr Padding unten, damit nichts abgeschnitten wird */
+		padding: 12px;
+		padding-bottom: 60px;
 		min-height: 100%;
 		transform: translateZ(0);
 	}
@@ -293,14 +293,14 @@
 	.floors-container {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 8px;
 		contain: layout;
 	}
 
 	.floor-section {
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 12px 0;
+		padding: 0 0 6px 0;
 		border: none;
 		transition: all 0.3s ease;
 		transform: translateZ(0);
@@ -311,10 +311,10 @@
 		color: var(--color-text-primary);
 		font-size: 20px;
 		font-weight: 700;
-		margin: 0 0 12px 0;
+		margin: 0 0 8px 0;
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
-		padding: 10px 16px;
+		padding: 8px 14px;
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -338,7 +338,7 @@
 	.rooms-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-		gap: 10px;
+		gap: 8px;
 		grid-auto-rows: auto;
 		align-items: start;
 		contain: layout;
@@ -370,24 +370,24 @@
 	@media (min-width: 1600px) {
 		.rooms-grid {
 			grid-template-columns: repeat(6, 1fr);
-			gap: 12px;
+			gap: 10px;
 		}
-		
+
 		.canvas {
 			max-width: 1800px;
-			padding-bottom: 100px; /* ✅ Noch mehr Platz auf großen Screens */
+			padding-bottom: 80px;
 		}
 	}
 
 	@media (max-width: 1023px) {
 		.canvas {
-			padding: 16px;
-			padding-bottom: 60px;
+			padding: 12px;
+			padding-bottom: 50px;
 		}
 
 		.rooms-grid {
 			grid-template-columns: repeat(3, 1fr);
-			gap: 12px;
+			gap: 10px;
 		}
 
 		.floor-title {
@@ -397,13 +397,13 @@
 
 	@media (max-width: 768px) {
 		.canvas {
-			padding: 12px;
-			padding-bottom: 50px;
+			padding: 10px;
+			padding-bottom: 40px;
 		}
 
 		.rooms-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 10px;
+			gap: 8px;
 		}
 
 		.floor-title {
@@ -411,7 +411,7 @@
 		}
 
 		.floor-section {
-			padding: 0 0 10px 0;
+			padding: 0 0 6px 0;
 		}
 	}
 
