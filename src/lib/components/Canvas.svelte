@@ -12,25 +12,23 @@
 	}>();
 
 	let scrollContainer: HTMLElement;
-	
+
 	// ✅ Vereinfachte State-Variablen
 	let autoScrollEnabled = $state(false);
 	let isScrolling = $state(false);
-	let isPausedByUser = $state(false);
-	
+
 	// ✅ Einstellungen
 	let scrollSpeed = $state(1.5); // Pixel pro Schritt
 	let pauseDurationSeconds = $state(3); // Pause in Sekunden
-	
+
 	// ✅ Scroll-Engine Variablen
 	let scrollIntervalId: ReturnType<typeof setInterval> | undefined;
 	let scrollDirection = $state<'down' | 'up' | 'paused'>('down');
 	let pauseTimeoutId: ReturnType<typeof setTimeout> | undefined;
-	let userInteractionTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
 	// ✅ KERN-FUNKTION: Ein Scroll-Schritt
 	function scrollStep() {
-		if (!scrollContainer || !isScrolling || isPausedByUser) return;
+		if (!scrollContainer || !isScrolling) return;
 
 		const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
 		const currentScroll = scrollContainer.scrollTop;
@@ -118,31 +116,6 @@
 		console.log('⏹️ Auto-Scroll gestoppt');
 	}
 
-	// ✅ User-Interaktion: Temporär pausieren
-	function handleUserInteraction() {
-		if (!autoScrollEnabled || !isScrolling) return;
-
-		console.log('👆 User-Interaktion - Temporäre Pause');
-		
-		// Stoppe Scroll temporär
-		stopScrolling();
-		isPausedByUser = true;
-
-		// Clear vorherigen Timeout
-		if (userInteractionTimeoutId) {
-			clearTimeout(userInteractionTimeoutId);
-		}
-
-		// Nach 5 Sekunden Inaktivität wieder starten
-		userInteractionTimeoutId = setTimeout(() => {
-			if (autoScrollEnabled) {
-				console.log('▶️ Auto-Scroll wieder gestartet nach Inaktivität');
-				isPausedByUser = false;
-				startScrolling();
-			}
-		}, 5000);
-	}
-
 	// ✅ Mount: Einstellungen laden
 	onMount(() => {
 		// Lade gespeicherte Einstellungen
@@ -154,33 +127,17 @@
 		if (savedPause) pauseDurationSeconds = parseInt(savedPause);
 		if (savedEnabled) autoScrollEnabled = savedEnabled === 'true';
 
-		// Event Listener für User-Interaktion
-		const events = ['touchstart', 'touchmove', 'wheel', 'mousedown'];
-		events.forEach(event => {
-			scrollContainer?.addEventListener(event, handleUserInteraction, { passive: true });
-		});
-
 		// Auto-Start wenn enabled
 		if (autoScrollEnabled) {
 			setTimeout(() => {
 				startScrolling();
 			}, 1500); // 1.5s Verzögerung
 		}
-
-		return () => {
-			// Cleanup Event Listeners
-			events.forEach(event => {
-				scrollContainer?.removeEventListener(event, handleUserInteraction);
-			});
-		};
 	});
 
 	// ✅ Cleanup beim Unmount
 	onDestroy(() => {
 		stopScrolling();
-		if (userInteractionTimeoutId) {
-			clearTimeout(userInteractionTimeoutId);
-		}
 	});
 
 	// ✅ Export-Funktion: Einstellungen ändern (für FloatingMenu)
