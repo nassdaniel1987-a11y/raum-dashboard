@@ -21,6 +21,7 @@ export interface DailyConfig {
 	activity: string | null;
 	title_font_size: number;
 	text_font_size: number;
+	text_color: string; // ✅ NEU: Textfarbe für Titel und Aktivität
 	title_alignment: 'left' | 'center' | 'right';
 	text_alignment: 'left' | 'center' | 'right';
 	open_time: string | null; // HH:MM format
