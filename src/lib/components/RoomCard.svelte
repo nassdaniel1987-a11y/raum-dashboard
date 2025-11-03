@@ -104,17 +104,18 @@
 		{/if}
 	</div>
 
-	<!-- ✅ NEU: Geschlossen Badge in rot -->
-	{#if !room.isOpen}
-		<div class="closed-badge" in:scale={{ duration: 300 }}>
-			Geschlossen
+	<!-- ✅ Geschlossen Badge DIAGONAL (nur wenn KEINE Zeit) -->
+	{#if !room.isOpen && !displayTime}
+		<div class="closed-badge-diagonal" in:scale={{ duration: 300 }}>
+			GESCHLOSSEN
 		</div>
 	{/if}
 
-	<!-- ✅ NEU: Öffnet um Badge -->
+	<!-- ✅ Öffnet um Badge GROSS (statt geschlossen badge) -->
 	{#if displayTime && !room.isOpen}
-		<div class="time-badge-top">
-			Öffnet um {displayTime}
+		<div class="opens-at-badge" in:scale={{ duration: 300 }}>
+			<div class="opens-label">Öffnet um</div>
+			<div class="opens-time">{displayTime}</div>
 		</div>
 	{/if}
 
@@ -313,40 +314,60 @@
 		background: var(--color-open-badge);
 	}
 
-	/* ✅ NEU: Geschlossen Badge in rot */
-	.closed-badge {
+	/* ✅ GESCHLOSSEN Badge - DIAGONAL über die ganze Kachel */
+	.closed-badge-diagonal {
 		position: absolute;
-		top: 6px;
-		right: 6px;
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 10px;
-		font-weight: 700;
-		z-index: 5;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%) rotate(-15deg);
+		padding: 12px 60px;
 		background: rgba(239, 68, 68, 0.95);
 		color: white;
-		box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+		font-size: 18px;
+		font-weight: 900;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 2px;
+		z-index: 10;
+		box-shadow: 0 4px 20px rgba(239, 68, 68, 0.7);
+		border: 3px solid rgba(255, 255, 255, 0.9);
+		border-radius: 8px;
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+		backdrop-filter: blur(4px);
+		pointer-events: none;
 	}
 
-	.time-badge-top {
+	/* ✅ ÖFFNET UM Badge - Groß und prominent */
+	.opens-at-badge {
 		position: absolute;
-		top: 32px; /* ✅ Angepasst */
+		top: 50%;
 		left: 50%;
-		transform: translateX(-50%);
-		padding: 4px 10px; /* ✅ Reduziert von 6px 12px */
-		background: var(--color-time-badge);
-		border: 2px solid var(--color-accent);
-		border-radius: 8px; /* ✅ Reduziert von 10px */
-		font-size: 10px; /* ✅ Reduziert von 12px */
-		font-weight: 700;
+		transform: translate(-50%, -50%);
+		background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
+		padding: 12px 20px;
+		border-radius: 12px;
+		border: 3px solid rgba(255, 255, 255, 0.8);
+		box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6);
+		z-index: 10;
+		text-align: center;
+		backdrop-filter: blur(4px);
+		pointer-events: none;
+	}
+
+	.opens-label {
+		font-size: 11px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-bottom: 4px;
+	}
+
+	.opens-time {
+		font-size: 22px;
+		font-weight: 900;
 		color: white;
-		z-index: 6;
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); /* ✅ Reduziert */
-		backdrop-filter: blur(10px);
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-		white-space: nowrap;
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+		letter-spacing: 1px;
 	}
 
 	.lock-overlay {
