@@ -313,7 +313,7 @@
 		border-radius: 16px;
 		padding: 0 0 12px 0;
 		border: none;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+		border-bottom: 3px solid rgba(255, 255, 255, 0.3);
 		transition: all 0.3s ease;
 		transform: translateZ(0);
 		will-change: transform;
