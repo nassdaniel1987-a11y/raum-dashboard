@@ -226,11 +226,11 @@
 			<div class="form-row">
 				<div class="form-group">
 					<label for="room-title-font-{room.id}">Titel-Schriftgröße: {titleFontSize}px</label>
-					<input id="room-title-font-{room.id}" type="range" bind:value={titleFontSize} min="24" max="72" />
+					<input id="room-title-font-{room.id}" type="range" bind:value={titleFontSize} min="10" max="100" />
 				</div>
 				<div class="form-group">
 					<label for="room-text-font-{room.id}">Text-Schriftgröße: {textFontSize}px</label>
-					<input id="room-text-font-{room.id}" type="range" bind:value={textFontSize} min="16" max="48" />
+					<input id="room-text-font-{room.id}" type="range" bind:value={textFontSize} min="8" max="80" />
 				</div>
 			</div>
 
