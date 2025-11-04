@@ -349,7 +349,7 @@
 		bottom: 100px;
 		right: 20px;
 		width: 360px;
-		max-height: calc(100vh - 140px);
+		height: 500px; /* ✅ Feste Höhe - kein Springen mehr */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
 		border-radius: 16px;
@@ -418,7 +418,6 @@
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
-		min-height: 300px; /* ✅ Verhindert Springen zwischen Tabs */
 	}
 
 	.tab-panel {
@@ -877,6 +876,7 @@
 			bottom: 85px;
 			width: calc(100vw - 32px);
 			max-width: 380px;
+			height: 450px; /* ✅ Etwas kleiner auf Mobile */
 		}
 
 		.tab-btn {
