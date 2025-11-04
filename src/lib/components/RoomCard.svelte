@@ -95,15 +95,6 @@
 		</div>
 	{/if}
 
-	<!-- Status Badge -->
-	<div class="status-badge" class:open={room.isOpen}>
-		{#if room.isOpen}
-			<span in:scale={{ duration: 300 }}>✓</span>
-		{:else}
-			<span in:scale={{ duration: 300 }}>🔒</span>
-		{/if}
-	</div>
-
 	<!-- ✅ GESCHLOSSEN Banner (nur wenn KEINE Zeit) -->
 	{#if !room.isOpen && !displayTime}
 		<div class="closed-banner" in:scale={{ duration: 300 }}>
@@ -288,24 +279,6 @@
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
-	}
-
-	.status-badge {
-		position: absolute;
-		top: 6px; /* ✅ Reduziert von 8px */
-		left: 6px;
-		padding: 3px 6px; /* ✅ Reduziert von 4px 8px */
-		border-radius: 5px; /* ✅ Reduziert von 6px */
-		font-size: 10px; /* ✅ Reduziert von 11px */
-		font-weight: 700;
-		z-index: 5;
-		background: var(--color-closed-badge);
-		color: white;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-	}
-
-	.status-badge.open {
-		background: var(--color-open-badge);
 	}
 
 	/* ✅ GESCHLOSSEN Banner - Horizontales Banner am unteren Rand */
