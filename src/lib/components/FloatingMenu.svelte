@@ -17,7 +17,7 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 	let menuOpen = $state(false);
-	let showScrollSettings = $state(false);
+	let activeTab = $state<'view' | 'scroll' | 'edit'>('scroll'); // ✅ Start mit Scroll-Tab
 
 	let autoScrollActive = $state(false);
 
@@ -93,7 +93,7 @@
 	}
 </script>
 
-<button 
+<button
 	class="fab"
 	class:active={menuOpen}
 	onclick={toggleMenu}
@@ -109,145 +109,181 @@
 
 {#if menuOpen}
 	<div class="menu-panel" transition:slide={{ duration: 300, axis: 'y' }}>
-		<div class="menu-content">
+		<!-- ✅ Tab Navigation -->
+		<div class="tab-navigation">
 			<button
-				class="menu-item mode-toggle"
-				class:active={$isEditMode}
-				onclick={() => isEditMode.update(v => !v)}
+				class="tab-btn"
+				class:active={activeTab === 'view'}
+				onclick={() => activeTab = 'view'}
 			>
-				{#if $isEditMode}
-					<span class="icon">🔓</span>
-					<span class="label">Bearbeitungs-Modus aktiv</span>
-				{:else}
-					<span class="icon">🔒</span>
-					<span class="label">Ansicht-Modus</span>
-				{/if}
+				<span class="tab-icon">👁️</span>
+				<span class="tab-label">Ansicht</span>
 			</button>
-
 			<button
-				class="menu-item"
-				onclick={() => showScrollSettings = !showScrollSettings}
+				class="tab-btn"
+				class:active={activeTab === 'scroll'}
+				onclick={() => activeTab = 'scroll'}
 			>
-				<span class="icon">↕️</span>
-				<span class="label">Scroll-Einstellungen</span>
+				<span class="tab-icon">↕️</span>
+				<span class="tab-label">Scroll</span>
 			</button>
+			{#if $isEditMode}
+				<button
+					class="tab-btn"
+					class:active={activeTab === 'edit'}
+					onclick={() => activeTab = 'edit'}
+				>
+					<span class="tab-icon">✏️</span>
+					<span class="tab-label">Bearbeiten</span>
+				</button>
+			{/if}
+		</div>
 
-			{#if showScrollSettings}
-				<div class="scroll-settings" transition:slide={{ duration: 200 }}>
-					<div class="setting-group">
-						<label class="setting-label">
-							Geschwindigkeit: {scrollSpeed.toFixed(1)} px/Schritt
-						</label>
-						<input
-							type="range"
-							min="0.1"
-							max="3.0"
-							step="0.1"
-							bind:value={scrollSpeed}
-							oninput={updateScrollSettings}
-							class="slider"
-						/>
-						<div class="slider-labels">
-							<span>🐌 Langsam</span>
-							<span>🚀 Schnell</span>
+		<!-- ✅ Tab Content -->
+		<div class="tab-content">
+			<!-- TAB 1: Ansicht -->
+			{#if activeTab === 'view'}
+				<div class="tab-panel" transition:fade={{ duration: 200 }}>
+					<button
+						class="action-button mode-toggle"
+						class:active={$isEditMode}
+						onclick={() => isEditMode.update(v => !v)}
+					>
+						<span class="btn-icon">{$isEditMode ? '🔓' : '🔒'}</span>
+						<div class="btn-content">
+							<span class="btn-label">{$isEditMode ? 'Bearbeitungs-Modus' : 'Ansicht-Modus'}</span>
+							<span class="btn-hint">{$isEditMode ? 'Aktiv' : 'Inaktiv'}</span>
+						</div>
+					</button>
+				</div>
+			{/if}
+
+			<!-- TAB 2: Scroll -->
+			{#if activeTab === 'scroll'}
+				<div class="tab-panel" transition:fade={{ duration: 200 }}>
+					<button
+						class="action-button autoscroll-toggle"
+						class:active={autoScrollActive}
+						onclick={toggleAutoScroll}
+					>
+						<span class="btn-icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
+						<div class="btn-content">
+							<span class="btn-label">Auto-Scroll</span>
+							<span class="btn-hint">{autoScrollActive ? 'Läuft...' : 'Gestoppt'}</span>
+						</div>
+					</button>
+
+					<div class="scroll-controls">
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">🐌</span>
+								<span class="control-label">Geschwindigkeit</span>
+								<span class="control-value">{scrollSpeed.toFixed(1)} px</span>
+							</div>
+							<input
+								type="range"
+								min="0.1"
+								max="3.0"
+								step="0.1"
+								bind:value={scrollSpeed}
+								oninput={updateScrollSettings}
+								class="slider"
+							/>
+						</div>
+
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">⏱️</span>
+								<span class="control-label">Pause am Ende</span>
+								<span class="control-value">{pauseDuration}s</span>
+							</div>
+							<input
+								type="range"
+								min="1"
+								max="10"
+								step="1"
+								bind:value={pauseDuration}
+								oninput={updateScrollSettings}
+								class="slider"
+							/>
 						</div>
 					</div>
 
-					<div class="setting-group">
-						<label class="setting-label">
-							Pause am Ende: {pauseDuration}s
-						</label>
-						<input
-							type="range"
-							min="1"
-							max="10"
-							step="1"
-							bind:value={pauseDuration}
-							oninput={updateScrollSettings}
-							class="slider"
-						/>
-						<div class="slider-labels">
-							<span>⚡ Kurz</span>
-							<span>⏱️ Lang</span>
-						</div>
-					</div>
-
-					<div class="setting-group">
-						<button
-							class="toggle-btn"
-							class:active={autoScrollActive}
-							onclick={toggleAutoScroll}
-						>
-							<span class="icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
-							<span class="label">{autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}</span>
-						</button>
-					</div>
-
-					<div class="scroll-info">
+					<div class="info-box">
 						<span class="info-icon">ℹ️</span>
 						<span class="info-text">Einstellungen werden automatisch gespeichert</span>
 					</div>
 				</div>
 			{/if}
 
-			{#if $isEditMode}
-				<div class="edit-section" transition:slide={{ duration: 200 }}>
-					<button class="menu-item" onclick={() => showCreateForm = !showCreateForm}>
-						<span class="icon">➕</span>
-						<span class="label">Raum erstellen</span>
+			<!-- TAB 3: Bearbeiten (nur im Edit-Mode) -->
+			{#if activeTab === 'edit' && $isEditMode}
+				<div class="tab-panel" transition:fade={{ duration: 200 }}>
+					<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
+						<span class="btn-icon">➕</span>
+						<div class="btn-content">
+							<span class="btn-label">Raum erstellen</span>
+						</div>
 					</button>
 
-					<button class="menu-item" onclick={bulkOpenAllRooms}>
-						<span class="icon">✅</span>
-						<span class="label">Alle öffnen</span>
-					</button>
+					{#if showCreateForm}
+						<div class="create-form" transition:slide={{ duration: 200 }}>
+							<input
+								type="text"
+								bind:value={newRoomName}
+								placeholder="Raum-Name..."
+								onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
+							/>
+							<select bind:value={newRoomFloor}>
+								<option value="extern">🏃 Außenbereich</option>
+								<option value="dach">🏠 Dachgeschoss</option>
+								<option value="og2">2️⃣ 2. OG</option>
+								<option value="og1">1️⃣ 1. OG</option>
+								<option value="eg">🚪 Erdgeschoss</option>
+								<option value="ug">⬇️ Untergeschoss</option>
+							</select>
+							<div class="form-actions">
+								<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
+								<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
+							</div>
+						</div>
+					{/if}
 
-					<button class="menu-item" onclick={bulkCloseAllRooms}>
-						<span class="icon">🔒</span>
-						<span class="label">Alle schließen</span>
-					</button>
+					<div class="action-grid">
+						<button class="grid-button success" onclick={bulkOpenAllRooms}>
+							<span class="grid-icon">✅</span>
+							<span class="grid-label">Alle öffnen</span>
+						</button>
+
+						<button class="grid-button danger" onclick={bulkCloseAllRooms}>
+							<span class="grid-icon">🔒</span>
+							<span class="grid-label">Alle schließen</span>
+						</button>
+					</div>
 
 					<button
-						class="menu-item swap-item"
+						class="action-button swap-button"
 						class:active={$swapSelection.length > 0}
 						onclick={handleSwap}
 						disabled={$swapSelection.length !== 2}
 					>
-						<span class="icon">⮀</span>
-						<span class="label">Tauschen ({$swapSelection.length}/2)</span>
+						<span class="btn-icon">⮀</span>
+						<div class="btn-content">
+							<span class="btn-label">Räume tauschen</span>
+							<span class="btn-hint">{$swapSelection.length}/2 ausgewählt</span>
+						</div>
 					</button>
 
-					<button class="menu-item" onclick={onOpenScheduler}>
-						<span class="icon">📅</span>
-						<span class="label">Tagesplan</span>
-					</button>
+					<div class="action-grid">
+						<button class="grid-button info" onclick={onOpenScheduler}>
+							<span class="grid-icon">📅</span>
+							<span class="grid-label">Tagesplan</span>
+						</button>
 
-					<button class="menu-item" onclick={onOpenSettings}>
-						<span class="icon">⚙️</span>
-						<span class="label">Einstellungen</span>
-					</button>
-				</div>
-			{/if}
-
-			{#if showCreateForm && $isEditMode}
-				<div class="create-form" transition:slide={{ duration: 200 }}>
-					<input
-						type="text"
-						bind:value={newRoomName}
-						placeholder="Raum-Name..."
-						onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
-					/>
-					<select bind:value={newRoomFloor}>
-						<option value="extern">🏃 Außenbereich</option>
-						<option value="dach">🏠 Dachgeschoss</option>
-						<option value="og2">2️⃣ 2. OG</option>
-						<option value="og1">1️⃣ 1. OG</option>
-						<option value="eg">🚪 Erdgeschoss</option>
-						<option value="ug">⬇️ Untergeschoss</option>
-					</select>
-					<div class="form-actions">
-						<button class="create-btn" onclick={handleCreateRoom}>Erstellen</button>
-						<button class="cancel-btn" onclick={() => showCreateForm = false}>Abbrechen</button>
+						<button class="grid-button info" onclick={onOpenSettings}>
+							<span class="grid-icon">⚙️</span>
+							<span class="grid-label">Einstellungen</span>
+						</button>
 					</div>
 				</div>
 			{/if}
@@ -256,17 +292,21 @@
 {/if}
 
 <style>
+	/* ✅ FAB Button - Premium Design */
 	.fab {
 		position: fixed;
 		bottom: 20px;
 		right: 20px;
-		width: 64px;
-		height: 64px;
+		width: 68px;
+		height: 68px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		border: none;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5),
-					0 0 40px rgba(59, 130, 246, 0.4);
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.5),
+			0 2px 12px rgba(0, 0, 0, 0.3),
+			0 0 40px rgba(59, 130, 246, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 		cursor: pointer;
 		z-index: 9999;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -280,8 +320,11 @@
 
 	.fab:hover {
 		transform: scale(1.1) rotate(90deg) translateZ(0);
-		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6),
-					0 0 60px rgba(59, 130, 246, 0.6);
+		box-shadow:
+			0 12px 40px rgba(0, 0, 0, 0.6),
+			0 4px 16px rgba(0, 0, 0, 0.4),
+			0 0 60px rgba(59, 130, 246, 0.6),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 	}
 
 	.fab:active {
@@ -294,237 +337,439 @@
 	}
 
 	.fab-icon {
-		font-size: 26px;
+		font-size: 28px;
 		color: white;
 		font-weight: bold;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
+	/* ✅ Menu Panel - Premium Card Design */
 	.menu-panel {
 		position: fixed;
 		bottom: 100px;
 		right: 20px;
-		width: 320px;
+		width: 360px;
 		max-height: calc(100vh - 140px);
-		background: rgba(0, 0, 0, 0.95);
-		backdrop-filter: blur(20px);
-		border-radius: 20px;
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+		background: rgba(0, 0, 0, 0.96);
+		backdrop-filter: blur(24px);
+		border-radius: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		box-shadow:
+			0 12px 48px rgba(0, 0, 0, 0.8),
+			0 4px 16px rgba(0, 0, 0, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		z-index: 9998;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* ✅ Tab Navigation Bar */
+	.tab-navigation {
+		display: flex;
+		background: rgba(0, 0, 0, 0.6);
+		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+		padding: 8px;
+		gap: 6px;
+	}
+
+	.tab-btn {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		padding: 12px 8px;
+		background: transparent;
+		border: 2px solid transparent;
+		border-radius: 12px;
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		transition: all 0.3s;
+		min-height: 60px;
+		touch-action: manipulation;
+	}
+
+	.tab-btn:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.tab-btn.active {
+		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+		border-color: rgba(59, 130, 246, 0.5);
+		color: white;
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	}
+
+	.tab-icon {
+		font-size: 24px;
+	}
+
+	.tab-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	/* ✅ Tab Content Area */
+	.tab-content {
+		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
 
-	.menu-content {
+	.tab-panel {
 		padding: 16px;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-
-	.menu-item {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 12px 16px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 10px;
-		color: var(--color-text-primary);
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s;
-		text-align: left;
-		width: 100%;
-	}
-
-	.menu-item:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.15);
-		transform: translateX(-4px);
-		border-color: rgba(255, 255, 255, 0.3);
-	}
-
-	.menu-item:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
-	.menu-item .icon {
-		font-size: 20px;
-		min-width: 28px;
-		text-align: center;
-	}
-
-	.menu-item .label {
-		flex: 1;
-		font-size: 13px;
-	}
-
-	.mode-toggle.active {
-		background: rgba(34, 197, 94, 0.25);
-		border-color: rgba(34, 197, 94, 0.5);
-		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
-	}
-
-	.swap-item.active {
-		background: rgba(245, 158, 11, 0.25);
-		border-color: rgba(245, 158, 11, 0.5);
-	}
-
-	.scroll-settings {
-		background: rgba(0, 0, 0, 0.4);
-		border-radius: 12px;
-		padding: 12px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
 	}
 
-	.setting-group {
+	/* ✅ Action Buttons - Large Touch-Friendly */
+	.action-button {
 		display: flex;
-		flex-direction: column;
-		gap: 8px;
+		align-items: center;
+		gap: 14px;
+		padding: 16px 18px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 14px;
+		color: white;
+		cursor: pointer;
+		transition: all 0.3s;
+		text-align: left;
+		width: 100%;
+		min-height: 64px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		touch-action: manipulation;
 	}
 
-	.setting-label {
-		color: var(--color-text-primary);
-		font-size: 12px;
-		font-weight: 600;
+	.action-button:hover {
+		background: rgba(255, 255, 255, 0.15);
+		transform: translateY(-2px);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.25);
+	}
+
+	.action-button:active {
+		transform: translateY(0);
+	}
+
+	.action-button:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.btn-icon {
+		font-size: 28px;
+		min-width: 32px;
+		text-align: center;
+		flex-shrink: 0;
+	}
+
+	.btn-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.btn-label {
+		font-size: 15px;
+		font-weight: 700;
 		letter-spacing: 0.3px;
+	}
+
+	.btn-hint {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.6);
+		font-weight: 500;
+	}
+
+	/* ✅ Color-Coded Buttons */
+	.mode-toggle.active {
+		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
+		border-color: rgba(34, 197, 94, 0.6);
+		box-shadow:
+			0 0 24px rgba(34, 197, 94, 0.4),
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.autoscroll-toggle.active {
+		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
+		border-color: rgba(34, 197, 94, 0.6);
+		box-shadow:
+			0 0 24px rgba(34, 197, 94, 0.4),
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			box-shadow:
+				0 0 24px rgba(34, 197, 94, 0.4),
+				0 4px 12px rgba(0, 0, 0, 0.3),
+				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		}
+		50% {
+			box-shadow:
+				0 0 32px rgba(34, 197, 94, 0.6),
+				0 4px 12px rgba(0, 0, 0, 0.3),
+				inset 0 1px 0 rgba(255, 255, 255, 0.15);
+		}
+	}
+
+	.swap-button.active {
+		background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(251, 146, 60, 0.3));
+		border-color: rgba(245, 158, 11, 0.6);
+		box-shadow:
+			0 0 24px rgba(245, 158, 11, 0.4),
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	/* ✅ Scroll Controls */
+	.scroll-controls {
+		background: rgba(0, 0, 0, 0.3);
+		border-radius: 14px;
+		padding: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.control-group {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.control-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
 		margin-bottom: 4px;
 	}
 
+	.control-icon {
+		font-size: 20px;
+	}
+
+	.control-label {
+		flex: 1;
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.control-value {
+		font-size: 14px;
+		font-weight: 700;
+		color: var(--color-accent);
+		min-width: 50px;
+		text-align: right;
+	}
+
+	/* ✅ Premium Sliders */
 	.slider {
 		-webkit-appearance: none;
 		appearance: none;
 		width: 100%;
-		height: 6px;
-		border-radius: 3px;
+		height: 8px;
+		border-radius: 4px;
 		background: rgba(255, 255, 255, 0.2);
 		outline: none;
 		transition: all 0.2s;
+		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 	}
 
 	.slider:hover {
-		background: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.25);
 	}
 
 	.slider::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 18px;
-		height: 18px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		box-shadow:
+			0 2px 12px rgba(0, 0, 0, 0.4),
+			0 0 20px rgba(59, 130, 246, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 		transition: all 0.2s;
 	}
 
 	.slider::-webkit-slider-thumb:hover {
 		transform: scale(1.2);
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 30px rgba(59, 130, 246, 0.6),
+			inset 0 1px 0 rgba(255, 255, 255, 0.4);
 	}
 
 	.slider::-moz-range-thumb {
-		width: 18px;
-		height: 18px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
 		border: none;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		box-shadow:
+			0 2px 12px rgba(0, 0, 0, 0.4),
+			0 0 20px rgba(59, 130, 246, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 		transition: all 0.2s;
 	}
 
 	.slider::-moz-range-thumb:hover {
 		transform: scale(1.2);
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 30px rgba(59, 130, 246, 0.6),
+			inset 0 1px 0 rgba(255, 255, 255, 0.4);
 	}
 
-	.slider-labels {
-		display: flex;
-		justify-content: space-between;
-		font-size: 10px;
-		color: var(--color-text-secondary);
-		margin-top: 4px;
-	}
-
-	.toggle-btn {
+	/* ✅ Info Box */
+	.info-box {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		padding: 12px 16px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 10px;
-		color: var(--color-text-primary);
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-		width: 100%;
-	}
-
-	.toggle-btn:hover {
-		background: rgba(255, 255, 255, 0.15);
-	}
-
-	.toggle-btn.active {
-		background: rgba(34, 197, 94, 0.3);
-		border-color: rgba(34, 197, 94, 0.6);
-		box-shadow: 0 0 16px rgba(34, 197, 94, 0.4);
-	}
-
-	.scroll-info {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 12px;
-		background: rgba(59, 130, 246, 0.1);
-		border-radius: 8px;
-		border: 1px solid rgba(59, 130, 246, 0.3);
+		padding: 12px 14px;
+		background: rgba(59, 130, 246, 0.15);
+		border-radius: 12px;
+		border: 2px solid rgba(59, 130, 246, 0.3);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
 	.info-icon {
-		font-size: 16px;
+		font-size: 18px;
 	}
 
 	.info-text {
 		font-size: 11px;
-		color: var(--color-text-secondary);
+		color: rgba(255, 255, 255, 0.8);
+		font-weight: 500;
 	}
 
-	.edit-section {
+	/* ✅ Action Grid - 2 Column Layout */
+	.action-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 10px;
+	}
+
+	.grid-button {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		border-top: 2px solid rgba(255, 255, 255, 0.1);
-		padding-top: 10px;
-		margin-top: 6px;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 18px 12px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 14px;
+		color: white;
+		cursor: pointer;
+		transition: all 0.3s;
+		min-height: 80px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		touch-action: manipulation;
 	}
 
+	.grid-button:hover {
+		background: rgba(255, 255, 255, 0.15);
+		transform: translateY(-2px);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.grid-icon {
+		font-size: 28px;
+	}
+
+	.grid-label {
+		font-size: 13px;
+		font-weight: 600;
+		text-align: center;
+	}
+
+	/* ✅ Color-Coded Grid Buttons */
+	.grid-button.success {
+		border-color: rgba(34, 197, 94, 0.3);
+	}
+	.grid-button.success:hover {
+		background: rgba(34, 197, 94, 0.15);
+		border-color: rgba(34, 197, 94, 0.5);
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+	}
+
+	.grid-button.danger {
+		border-color: rgba(239, 68, 68, 0.3);
+	}
+	.grid-button.danger:hover {
+		background: rgba(239, 68, 68, 0.15);
+		border-color: rgba(239, 68, 68, 0.5);
+		box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+	}
+
+	.grid-button.info {
+		border-color: rgba(59, 130, 246, 0.3);
+	}
+	.grid-button.info:hover {
+		background: rgba(59, 130, 246, 0.15);
+		border-color: rgba(59, 130, 246, 0.5);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	}
+
+	/* ✅ Create Form */
 	.create-form {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		padding: 12px;
+		gap: 12px;
+		padding: 14px;
 		background: rgba(0, 0, 0, 0.4);
-		border-radius: 12px;
+		border-radius: 14px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
+		box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
 	.create-form input,
 	.create-form select {
-		padding: 10px 14px;
+		padding: 12px 16px;
 		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 8px;
+		border-radius: 10px;
 		background: rgba(255, 255, 255, 0.1);
 		color: var(--color-text-primary);
 		font-size: 14px;
+		font-weight: 500;
 		width: 100%;
+		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+		transition: all 0.3s;
+	}
+
+	.create-form input:focus,
+	.create-form select:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		background: rgba(255, 255, 255, 0.15);
+		box-shadow:
+			inset 0 1px 3px rgba(0, 0, 0, 0.2),
+			0 0 20px rgba(59, 130, 246, 0.3);
 	}
 
 	.create-form input::placeholder {
@@ -532,94 +777,133 @@
 	}
 
 	.create-form select option {
-		background: var(--color-primary);
-		color: var(--color-text-primary);
+		background: #1e3a8a;
+		color: white;
 	}
 
 	.form-actions {
 		display: flex;
-		gap: 8px;
+		gap: 10px;
 	}
 
-	.create-btn,
-	.cancel-btn {
+	.form-btn {
 		flex: 1;
-		padding: 10px;
-		border-radius: 8px;
-		font-weight: 600;
+		padding: 14px;
+		border-radius: 10px;
+		font-weight: 700;
 		font-size: 14px;
 		cursor: pointer;
 		transition: all 0.3s;
 		border: none;
+		min-height: 48px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	}
 
-	.create-btn {
+	.form-btn.create {
 		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
 		color: white;
 	}
 
-	.create-btn:hover {
+	.form-btn.create:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+		box-shadow:
+			0 6px 20px rgba(59, 130, 246, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
-	.cancel-btn {
+	.form-btn.cancel {
 		background: rgba(239, 68, 68, 0.2);
 		color: white;
 		border: 2px solid rgba(239, 68, 68, 0.5);
 	}
 
-	.cancel-btn:hover {
+	.form-btn.cancel:hover {
 		background: rgba(239, 68, 68, 0.4);
+		border-color: rgba(239, 68, 68, 0.7);
+		transform: translateY(-2px);
+		box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 	}
 
-	.menu-panel::-webkit-scrollbar {
-		width: 6px;
+	/* ✅ Scrollbar Styling */
+	.tab-content::-webkit-scrollbar {
+		width: 8px;
 	}
 
-	.menu-panel::-webkit-scrollbar-track {
+	.tab-content::-webkit-scrollbar-track {
 		background: rgba(0, 0, 0, 0.2);
+		border-radius: 4px;
 	}
 
-	.menu-panel::-webkit-scrollbar-thumb {
+	.tab-content::-webkit-scrollbar-thumb {
 		background: rgba(255, 255, 255, 0.3);
-		border-radius: 3px;
+		border-radius: 4px;
+		border: 2px solid rgba(0, 0, 0, 0.2);
 	}
 
-	.menu-panel::-webkit-scrollbar-thumb:hover {
+	.tab-content::-webkit-scrollbar-thumb:hover {
 		background: rgba(255, 255, 255, 0.4);
 	}
 
+	/* ✅ Responsive Styles */
 	@media (max-width: 768px) {
 		.fab {
-			width: 56px;
-			height: 56px;
+			width: 60px;
+			height: 60px;
 			bottom: 16px;
 			right: 16px;
 		}
 
 		.fab-icon {
-			font-size: 22px;
+			font-size: 24px;
 		}
 
 		.menu-panel {
 			right: 16px;
-			bottom: 80px;
+			bottom: 85px;
 			width: calc(100vw - 32px);
-			max-width: 320px;
+			max-width: 380px;
+		}
+
+		.tab-btn {
+			min-height: 56px;
+		}
+
+		.tab-icon {
+			font-size: 20px;
+		}
+
+		.tab-label {
+			font-size: 10px;
 		}
 	}
 
 	@media (hover: none) and (pointer: coarse) {
+		/* ✅ Touch-optimized sizes for iPad */
 		.fab {
 			width: 68px;
 			height: 68px;
 		}
 
-		.menu-item,
-		.preset-btn,
-		.toggle-btn {
-			min-height: 44px;
+		.tab-btn {
+			min-height: 60px;
+			padding: 14px 10px;
+		}
+
+		.action-button {
+			min-height: 68px;
+			padding: 18px 20px;
+		}
+
+		.grid-button {
+			min-height: 85px;
+			padding: 20px 14px;
+		}
+
+		.form-btn {
+			min-height: 52px;
+			padding: 16px;
 		}
 	}
 </style>
