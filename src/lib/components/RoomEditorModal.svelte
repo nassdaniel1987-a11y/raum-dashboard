@@ -178,7 +178,7 @@
 			</div>
 
 			<!-- ✅ SEKTION 2: Design & Farben -->
-			<div class="section-card">
+			<div class="section-card section-card-colors">
 				<div class="section-header">
 					<span class="section-icon">🎨</span>
 					<h3 class="section-title">Design & Farben</h3>
@@ -388,6 +388,12 @@
 			0 4px 16px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		overflow: visible; /* ✅ Verhindert Abschneiden von ColorPicker */
+		position: relative; /* ✅ Für z-index Stacking */
+	}
+
+	/* ✅ Höherer z-index für Color Picker Section */
+	.section-card-colors {
+		z-index: 10; /* ✅ Über anderen Sections, damit ColorPicker nicht überlagert wird */
 	}
 
 	.section-header {
