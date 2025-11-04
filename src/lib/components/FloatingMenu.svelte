@@ -418,6 +418,7 @@
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
+		min-height: 300px; /* ✅ Verhindert Springen zwischen Tabs */
 	}
 
 	.tab-panel {
@@ -425,6 +426,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
+		animation: fadeIn 0.2s ease-in-out;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	/* ✅ Action Buttons - Large Touch-Friendly */
