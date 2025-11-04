@@ -125,29 +125,58 @@
 <style>
 	.room-card {
 		position: relative;
-		border-radius: 10px; /* ✅ Reduziert von 12px */
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* ✅ Reduziert */
+		border-radius: 16px; /* ✅ Rundere, modernere Ecken */
+		box-shadow:
+			0 8px 24px rgba(0, 0, 0, 0.4), /* Tieferer äußerer Schatten */
+			0 2px 8px rgba(0, 0, 0, 0.2), /* Zusätzlicher mittlerer Schatten */
+			inset 0 1px 0 rgba(255, 255, 255, 0.1); /* Innerer Highlight für Tiefe */
 		transition: all 0.3s ease;
 		overflow: hidden;
 		backdrop-filter: blur(10px);
 		height: 100%;
-		min-height: 100px; /* ✅ Reduziert von 120px */
+		min-height: 100px;
 		display: flex;
 		flex-direction: column;
-		border: 3px solid transparent;
+		border: 2px solid rgba(255, 255, 255, 0.15); /* ✅ Subtiler weißer Border */
 		/* GPU-Beschleunigung */
 		transform: translateZ(0);
 		will-change: transform;
 	}
 
+	/* ✅ Gradient-Overlay für Premium-Tiefe */
+	.room-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(
+			135deg,
+			rgba(255, 255, 255, 0.08) 0%,
+			rgba(255, 255, 255, 0) 50%,
+			rgba(0, 0, 0, 0.1) 100%
+		);
+		pointer-events: none;
+		z-index: 1;
+	}
+
 	.room-card.selected {
 		border-color: #f59e0b;
-		box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); /* ✅ Reduziert */
+		box-shadow:
+			0 0 30px rgba(245, 158, 11, 0.8),
+			0 8px 24px rgba(0, 0, 0, 0.4),
+			0 2px 8px rgba(0, 0, 0, 0.2),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	}
 
 	.room-card:hover {
-		transform: translateY(-2px) translateZ(0);
-		box-shadow: 0 5px 14px rgba(0, 0, 0, 0.4); /* ✅ Reduziert */
+		transform: translateY(-4px) translateZ(0);
+		box-shadow:
+			0 12px 32px rgba(0, 0, 0, 0.5),
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.25);
 	}
 
 	.card-bg-image {
@@ -234,15 +263,17 @@
 
 	.card-content {
 		position: relative;
-		z-index: 1;
-		padding: 8px; /* ✅ Reduziert von 10px */
+		z-index: 2; /* ✅ Über dem Gradient-Overlay */
+		padding: 8px;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
 		color: white;
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			2px 2px 6px rgba(0, 0, 0, 0.9), /* ✅ Stärkerer Schatten für TV-Lesbarkeit */
+			0 0 8px rgba(0, 0, 0, 0.7);
 		text-align: center;
 		cursor: pointer;
 		flex-grow: 1;
@@ -281,14 +312,18 @@
 		-webkit-box-orient: vertical;
 	}
 
-	/* ✅ GESCHLOSSEN Banner - Horizontales Banner am unteren Rand */
+	/* ✅ GESCHLOSSEN Banner - Premium-Design mit Tiefe */
 	.closed-banner {
 		position: absolute;
 		bottom: 0;
 		left: 0;
 		right: 0;
-		padding: 8px 12px;
-		background: linear-gradient(to top, rgba(220, 38, 38, 0.95) 0%, rgba(239, 68, 68, 0.95) 100%);
+		padding: 10px 12px;
+		background: linear-gradient(
+			to top,
+			rgba(220, 38, 38, 0.98) 0%,
+			rgba(239, 68, 68, 0.95) 100%
+		);
 		color: white;
 		font-size: 13px;
 		font-weight: 800;
@@ -296,30 +331,44 @@
 		letter-spacing: 1.5px;
 		text-align: center;
 		z-index: 5;
-		border-top: 2px solid rgba(255, 255, 255, 0.3);
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(3px);
+		border-top: 2px solid rgba(255, 255, 255, 0.4);
+		text-shadow:
+			2px 2px 6px rgba(0, 0, 0, 0.9),
+			0 0 10px rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(5px);
 		pointer-events: none;
+		box-shadow:
+			0 -4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
-	/* ✅ ÖFFNET UM Banner - Horizontales Banner am unteren Rand */
+	/* ✅ ÖFFNET UM Banner - Premium-Design mit Tiefe */
 	.opens-banner {
 		position: absolute;
 		bottom: 0;
 		left: 0;
 		right: 0;
-		padding: 8px 12px;
-		background: linear-gradient(to top, rgba(37, 99, 235, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%);
+		padding: 10px 12px;
+		background: linear-gradient(
+			to top,
+			rgba(37, 99, 235, 0.98) 0%,
+			rgba(59, 130, 246, 0.95) 100%
+		);
 		color: white;
 		font-size: 13px;
 		font-weight: 700;
 		text-align: center;
 		z-index: 5;
-		border-top: 2px solid rgba(255, 255, 255, 0.3);
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(3px);
+		border-top: 2px solid rgba(255, 255, 255, 0.4);
+		text-shadow:
+			2px 2px 6px rgba(0, 0, 0, 0.9),
+			0 0 10px rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(5px);
 		pointer-events: none;
 		letter-spacing: 0.5px;
+		box-shadow:
+			0 -4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
 
