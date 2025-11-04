@@ -387,7 +387,7 @@
 		box-shadow:
 			0 4px 16px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		overflow: hidden;
+		overflow: visible; /* ✅ Verhindert Abschneiden von ColorPicker */
 	}
 
 	.section-header {
@@ -417,6 +417,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+		overflow: visible; /* ✅ Verhindert Abschneiden von ColorPicker */
+		position: relative;
+		z-index: 1;
 	}
 
 	/* ✅ Input Groups */
