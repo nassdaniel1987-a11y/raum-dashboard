@@ -311,11 +311,18 @@
 	.floor-section {
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 4px 0;
+		padding: 0 0 12px 0;
 		border: none;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 		transition: all 0.3s ease;
 		transform: translateZ(0);
 		will-change: transform;
+		margin-bottom: 8px;
+	}
+
+	.floor-section:last-child {
+		border-bottom: none;
+		margin-bottom: 0;
 	}
 
 	.floor-title {
@@ -347,11 +354,10 @@
 	}
 
 	.rooms-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: 6px;
-		grid-auto-rows: auto;
-		align-items: start;
 		contain: layout;
 	}
 
@@ -365,6 +371,9 @@
 		flex-direction: column;
 		transform: translateZ(0);
 		will-change: transform;
+		flex: 0 0 auto;
+		width: calc((100% - 30px) / 6);
+		min-width: 160px;
 	}
 
 	.room-wrapper.selected {
@@ -373,15 +382,18 @@
 	}
 
 	@media (min-width: 1024px) {
-		.rooms-grid {
-			grid-template-columns: repeat(5, 1fr);
+		.room-wrapper {
+			width: calc((100% - 24px) / 5);
 		}
 	}
 
 	@media (min-width: 1600px) {
 		.rooms-grid {
-			grid-template-columns: repeat(6, 1fr);
 			gap: 8px;
+		}
+
+		.room-wrapper {
+			width: calc((100% - 42px) / 6);
 		}
 
 		.canvas {
@@ -397,8 +409,11 @@
 		}
 
 		.rooms-grid {
-			grid-template-columns: repeat(3, 1fr);
 			gap: 8px;
+		}
+
+		.room-wrapper {
+			width: calc((100% - 16px) / 3);
 		}
 
 		.floor-title {
@@ -413,8 +428,11 @@
 		}
 
 		.rooms-grid {
-			grid-template-columns: repeat(2, 1fr);
 			gap: 6px;
+		}
+
+		.room-wrapper {
+			width: calc((100% - 6px) / 2);
 		}
 
 		.floor-title {
