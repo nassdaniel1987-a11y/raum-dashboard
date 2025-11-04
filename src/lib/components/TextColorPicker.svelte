@@ -119,7 +119,7 @@
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 12px;
 		padding: 16px;
-		z-index: 1000;
+		z-index: 10000; /* ✅ Erhöht für Modal-Sichtbarkeit */
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 	}
 
