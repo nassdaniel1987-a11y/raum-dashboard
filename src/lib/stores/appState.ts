@@ -14,6 +14,10 @@ export const swapSelection = writable<string[]>([]);
 export const currentWeekday = writable(new Date().getDay() || 7);
 export const currentTime = writable(new Date());
 
+// ===== VIEW WEEKDAY (User-gesteuert) =====
+// Der Tag, den der User gerade anschaut (standardmäßig der echte aktuelle Tag)
+export const viewWeekday = writable(new Date().getDay() || 7);
+
 // Update Zeit jede Sekunde
 if (typeof window !== 'undefined') {
 	setInterval(() => {
@@ -46,7 +50,7 @@ if (typeof window !== 'undefined') {
 
 // ===== DERIVED STORES =====
 export const visibleRooms = derived(
-	[rooms, roomStatuses, dailyConfigs, currentWeekday],
+	[rooms, roomStatuses, dailyConfigs, viewWeekday],
 	([$rooms, $statuses, $configs, $weekday]) => {
 		return $rooms.map((room) => {
 			const status = $statuses.get(room.id);
@@ -407,6 +411,70 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 			manual_override: false
 		});
 	}
+}
+
+// ========== TAG-VERWALTUNG ==========
+export async function copyDayConfigs(sourceDay: number, targetDay: number) {
+	const $dailyConfigs = get(dailyConfigs);
+	const $rooms = get(rooms);
+
+	const updates = [];
+
+	for (const room of $rooms) {
+		const sourceKey = `${room.id}-${sourceDay}`;
+		const sourceConfig = $dailyConfigs.get(sourceKey);
+
+		if (sourceConfig) {
+			updates.push({
+				room_id: room.id,
+				weekday: targetDay,
+				activity: sourceConfig.activity || null,
+				open_time: sourceConfig.open_time || null,
+				close_time: sourceConfig.close_time || null,
+				title_font_size: sourceConfig.title_font_size || 42,
+				text_font_size: sourceConfig.text_font_size || 28,
+				text_color: sourceConfig.text_color || '#FFFFFF'
+			});
+		}
+	}
+
+	if (updates.length > 0) {
+		const { error } = await supabase
+			.from('daily_configs')
+			.upsert(updates, { onConflict: 'room_id,weekday' });
+
+		if (error) {
+			console.error('Error copying day configs:', error);
+			throw error;
+		}
+
+		return updates.length;
+	}
+
+	return 0;
+}
+
+export async function deleteDayConfigs(day: number) {
+	const $rooms = get(rooms);
+
+	const updates = $rooms.map(room => ({
+		room_id: room.id,
+		weekday: day,
+		activity: null,
+		open_time: null,
+		close_time: null
+	}));
+
+	const { error } = await supabase
+		.from('daily_configs')
+		.upsert(updates, { onConflict: 'room_id,weekday' });
+
+	if (error) {
+		console.error('Error deleting day configs:', error);
+		throw error;
+	}
+
+	return updates.length;
 }
 
 // ========== AUTOMATIK-SERVICE ==========
