@@ -5,7 +5,7 @@
 	import TextColorPicker from './TextColorPicker.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
-	import { currentWeekday, currentTime } from '$lib/stores/appState';
+	import { viewWeekday, currentTime } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
 
 	// Svelte 5 Props Syntax
@@ -50,7 +50,7 @@
 			// Update/Insert Daily Config
 			const configData = {
 				room_id: room.id,
-				weekday: get(currentWeekday),
+				weekday: get(viewWeekday),
 				activity,
 				open_time: openTime || null,
 				close_time: closeTime || null,
@@ -219,7 +219,7 @@
 				<div class="section-body">
 					<div class="input-group">
 						<label for="room-activity-{room.id}">
-							Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(currentWeekday)]})
+							Aktivität (für {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][get(viewWeekday)]})
 							<span class="hint-inline">Mehrzeilig möglich</span>
 						</label>
 						<textarea

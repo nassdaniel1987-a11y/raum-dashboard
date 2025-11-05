@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs } from '$lib/stores/appState';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { cubicOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	import { toasts } from '$lib/stores/toastStore';
 
 	// Svelte 5 Props Syntax
 	let { onOpenScheduler, onOpenSettings, canvasRef } = $props<{
@@ -17,13 +18,17 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 	let menuOpen = $state(false);
-	let activeTab = $state<'view' | 'scroll' | 'edit'>('scroll'); // ✅ Start mit Scroll-Tab
+	let activeTab = $state<'view' | 'scroll' | 'edit' | 'days'>('scroll'); // ✅ Start mit Scroll-Tab
 
 	let autoScrollActive = $state(false);
 
 	// ✅ Slider-Werte für flexible Einstellung
 	let scrollSpeed = $state(0.6); // 0.1 - 3.0 px/Schritt
 	let pauseDuration = $state(4); // 1 - 10 Sekunden
+
+	// ✅ NEU: Tag-Verwaltung
+	let copiedDay = $state<number | null>(null);
+	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
 	onMount(() => {
 		// Lade gespeicherte Werte
@@ -91,6 +96,52 @@
 			autoScrollActive = canvasRef.toggleAutoScroll();
 		}
 	}
+
+	// ✅ NEU: Tag-Verwaltung Funktionen
+	function copyCurrentDay() {
+		copiedDay = get(viewWeekday);
+		toasts.show(`📋 ${weekdayNames[copiedDay]} kopiert!`, 'success');
+	}
+
+	async function pasteToCurrentDay() {
+		if (copiedDay === null) {
+			toasts.show('⚠️ Kein Tag kopiert!', 'error');
+			return;
+		}
+
+		const currentDay = get(viewWeekday);
+
+		if (copiedDay === currentDay) {
+			toasts.show('⚠️ Quell- und Ziel-Tag sind identisch!', 'error');
+			return;
+		}
+
+		const confirmText = `${weekdayNames[copiedDay]} nach ${weekdayNames[currentDay]} kopieren?\n\nAlle Raumkonfigurationen werden überschrieben!`;
+		if (!confirm(confirmText)) return;
+
+		try {
+			const count = await copyDayConfigs(copiedDay, currentDay);
+			toasts.show(`✓ ${count} Konfigurationen eingefügt!`, 'success');
+		} catch (error) {
+			console.error('Error pasting day:', error);
+			toasts.show('✕ Fehler beim Einfügen!', 'error');
+		}
+	}
+
+	async function deleteCurrentDay() {
+		const currentDay = get(viewWeekday);
+		const confirmText = `ALLE Raumkonfigurationen für ${weekdayNames[currentDay]} löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`;
+
+		if (!confirm(confirmText)) return;
+
+		try {
+			const count = await deleteDayConfigs(currentDay);
+			toasts.show(`🗑️ ${count} Konfigurationen gelöscht!`, 'success');
+		} catch (error) {
+			console.error('Error deleting day:', error);
+			toasts.show('✕ Fehler beim Löschen!', 'error');
+		}
+	}
 </script>
 
 <button
@@ -126,6 +177,14 @@
 			>
 				<span class="tab-icon">↕️</span>
 				<span class="tab-label">Scroll</span>
+			</button>
+			<button
+				class="tab-btn"
+				class:active={activeTab === 'days'}
+				onclick={() => activeTab = 'days'}
+			>
+				<span class="tab-icon">📅</span>
+				<span class="tab-label">Tage</span>
 			</button>
 			{#if $isEditMode}
 				<button
@@ -216,7 +275,62 @@
 				</div>
 			{/if}
 
-			<!-- TAB 3: Bearbeiten (nur im Edit-Mode) -->
+			<!-- TAB 3: Tage -->
+			{#if activeTab === 'days'}
+				<div class="tab-panel" transition:fade={{ duration: 200 }}>
+					<div class="day-info-banner">
+						<span class="day-icon">📅</span>
+						<div class="day-info-text">
+							<span class="day-info-label">Aktueller Tag:</span>
+							<span class="day-info-value">{weekdayNames[$viewWeekday]}</span>
+						</div>
+					</div>
+
+					<button
+						class="action-button copy-button"
+						onclick={copyCurrentDay}
+					>
+						<span class="btn-icon">📋</span>
+						<div class="btn-content">
+							<span class="btn-label">Tag kopieren</span>
+							<span class="btn-hint">Alle Raumkonfigurationen</span>
+						</div>
+					</button>
+
+					<button
+						class="action-button paste-button"
+						class:active={copiedDay !== null}
+						onclick={pasteToCurrentDay}
+						disabled={copiedDay === null}
+					>
+						<span class="btn-icon">📌</span>
+						<div class="btn-content">
+							<span class="btn-label">Tag einfügen</span>
+							<span class="btn-hint">
+								{copiedDay !== null ? `Von ${weekdayNames[copiedDay]}` : 'Zuerst Tag kopieren'}
+							</span>
+						</div>
+					</button>
+
+					<button
+						class="action-button delete-button"
+						onclick={deleteCurrentDay}
+					>
+						<span class="btn-icon">🗑️</span>
+						<div class="btn-content">
+							<span class="btn-label">Tag löschen</span>
+							<span class="btn-hint">Alle Konfigurationen entfernen</span>
+						</div>
+					</button>
+
+					<div class="info-box">
+						<span class="info-icon">💡</span>
+						<span class="info-text">Nutze die Pfeil-Buttons im Header um zwischen Tagen zu wechseln</span>
+					</div>
+				</div>
+			{/if}
+
+			<!-- TAB 4: Bearbeiten (nur im Edit-Mode) -->
 			{#if activeTab === 'edit' && $isEditMode}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
 					<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
@@ -504,6 +618,47 @@
 		font-weight: 500;
 	}
 
+	/* ✅ Day Info Banner */
+	.day-info-banner {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 16px 18px;
+		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+		border: 2px solid rgba(59, 130, 246, 0.4);
+		border-radius: 14px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.day-icon {
+		font-size: 32px;
+		min-width: 36px;
+		text-align: center;
+	}
+
+	.day-info-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.day-info-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.day-info-value {
+		font-size: 18px;
+		font-weight: 700;
+		color: white;
+		letter-spacing: 0.5px;
+	}
+
 	/* ✅ Color-Coded Buttons */
 	.mode-toggle.active {
 		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
@@ -512,6 +667,30 @@
 			0 0 24px rgba(34, 197, 94, 0.4),
 			0 4px 12px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.copy-button:hover {
+		border-color: rgba(59, 130, 246, 0.5);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	}
+
+	.paste-button.active {
+		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
+		border-color: rgba(34, 197, 94, 0.6);
+		box-shadow:
+			0 0 24px rgba(34, 197, 94, 0.4),
+			0 4px 12px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.delete-button {
+		border-color: rgba(239, 68, 68, 0.3);
+	}
+
+	.delete-button:hover {
+		background: rgba(239, 68, 68, 0.15);
+		border-color: rgba(239, 68, 68, 0.5);
+		box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 	}
 
 	.autoscroll-toggle.active {

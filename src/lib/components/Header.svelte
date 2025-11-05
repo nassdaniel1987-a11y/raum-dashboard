@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { currentTime, currentWeekday } from '$lib/stores/appState';
+	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
@@ -25,9 +25,30 @@
 	}));
 
 	let weekdayName = $derived(weekdayNames[$currentWeekday % 7]);
+	let viewWeekdayName = $derived(weekdayNames[$viewWeekday % 7]);
+	let isToday = $derived($viewWeekday === $currentWeekday);
 
 	// SVELTE 5 STATE für Vollbild
 	let isFullscreen = $state(false);
+
+	// ✅ NEU: Tag-Navigation
+	function previousDay() {
+		viewWeekday.update(day => {
+			const newDay = day - 1;
+			return newDay < 0 ? 6 : newDay;
+		});
+	}
+
+	function nextDay() {
+		viewWeekday.update(day => {
+			const newDay = day + 1;
+			return newDay > 6 ? 0 : newDay;
+		});
+	}
+
+	function goToToday() {
+		viewWeekday.set($currentWeekday);
+	}
 
 	onMount(() => {
 		// Überwache Vollbild-Status
@@ -100,7 +121,24 @@
 	</div>
 
 	<div class="header-center">
-		<div class="weekday">{weekdayName}</div>
+		<!-- ✅ NEU: Tag-Navigation -->
+		<button class="day-nav-btn" onclick={previousDay} title="Vorheriger Tag" aria-label="Vorheriger Tag">
+			◀
+		</button>
+
+		<div class="day-display">
+			<div class="weekday" class:today={isToday}>{viewWeekdayName}</div>
+			{#if !isToday}
+				<button class="today-btn" onclick={goToToday} title="Zurück zu heute">
+					Heute: {weekdayName}
+				</button>
+			{/if}
+		</div>
+
+		<button class="day-nav-btn" onclick={nextDay} title="Nächster Tag" aria-label="Nächster Tag">
+			▶
+		</button>
+
 		<div class="separator">•</div>
 		<div class="date">{formattedDate}</div>
 	</div>
@@ -202,6 +240,43 @@
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
+	/* ✅ NEU: Tag-Navigation */
+	.day-nav-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		color: var(--color-text-primary);
+		font-size: 18px;
+		font-weight: 700;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	}
+
+	.day-nav-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.05);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	}
+
+	.day-nav-btn:active {
+		transform: scale(0.95);
+	}
+
+	.day-display {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		min-width: 160px;
+	}
+
 	.weekday {
 		font-size: 18px;
 		font-weight: 700;
@@ -209,6 +284,34 @@
 		text-transform: uppercase;
 		letter-spacing: 1px;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+		transition: all 0.3s;
+	}
+
+	.weekday.today {
+		color: #22c55e;
+		text-shadow:
+			1px 1px 3px rgba(0, 0, 0, 0.4),
+			0 0 10px rgba(34, 197, 94, 0.5);
+	}
+
+	.today-btn {
+		background: rgba(34, 197, 94, 0.2);
+		border: 1px solid rgba(34, 197, 94, 0.4);
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 10px;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.today-btn:hover {
+		background: rgba(34, 197, 94, 0.3);
+		border-color: rgba(34, 197, 94, 0.6);
+		transform: scale(1.05);
 	}
 
 	.date {
