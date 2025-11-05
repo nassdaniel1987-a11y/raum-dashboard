@@ -457,24 +457,48 @@ export async function copyDayConfigs(sourceDay: number, targetDay: number) {
 export async function deleteDayConfigs(day: number) {
 	const $rooms = get(rooms);
 
-	const updates = $rooms.map(room => ({
-		room_id: room.id,
-		weekday: day,
-		activity: null,
-		open_time: null,
-		close_time: null
-	}));
-
+	// ✅ FIX: Wirklich DELETE aus der DB, nicht nur NULL setzen
 	const { error } = await supabase
 		.from('daily_configs')
-		.upsert(updates, { onConflict: 'room_id,weekday' });
+		.delete()
+		.eq('weekday', day);
 
 	if (error) {
 		console.error('Error deleting day configs:', error);
 		throw error;
 	}
 
-	return updates.length;
+	// Lokale State aktualisieren
+	dailyConfigs.update(map => {
+		const newMap = new Map(map);
+		for (const room of $rooms) {
+			newMap.delete(`${room.id}-${day}`);
+		}
+		return newMap;
+	});
+
+	return $rooms.length;
+}
+
+// ✅ NEU: Löscht nur die Config eines einzelnen Raums für einen bestimmten Tag
+export async function deleteRoomConfigForDay(roomId: string, day: number) {
+	const { error } = await supabase
+		.from('daily_configs')
+		.delete()
+		.eq('room_id', roomId)
+		.eq('weekday', day);
+
+	if (error) {
+		console.error('Error deleting room config:', error);
+		throw error;
+	}
+
+	// Lokale State aktualisieren
+	dailyConfigs.update(map => {
+		const newMap = new Map(map);
+		newMap.delete(`${roomId}-${day}`);
+		return newMap;
+	});
 }
 
 // ========== AUTOMATIK-SERVICE ==========
