@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { isEditMode, toggleRoomStatus, swapSelection, deleteRoom } from '$lib/stores/appState';
+	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay } from '$lib/stores/appState';
 	import { confirmDialog, toasts } from '$lib/stores/toastStore';
 	import type { RoomWithConfig } from '$lib/types';
+	import { get } from 'svelte/store';
 
 	// Svelte 5 Props Syntax
 	let { room, onEdit, onSelect, isSelected = false } = $props<{
@@ -11,6 +12,8 @@
 		onSelect: (roomId: string) => void;
 		isSelected?: boolean;
 	}>();
+
+	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
 	async function handleClick() {
 		if ($isEditMode) {
@@ -21,9 +24,12 @@
 	async function handleDelete(e: MouseEvent) {
 		e.stopPropagation();
 
+		const currentDay = get(viewWeekday);
+		const dayName = weekdayNames[currentDay];
+
 		const confirmed = await confirmDialog.ask({
-			title: 'Raum löschen?',
-			message: `Möchtest du den Raum "${room.name}" wirklich komplett löschen?\n\nDer Raum wird für alle Tage gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.`,
+			title: 'Raum für diesen Tag löschen?',
+			message: `Möchtest du "${room.name}" für ${dayName} löschen?\n\nDer Raum bleibt an anderen Tagen erhalten.`,
 			confirmText: 'Löschen',
 			cancelText: 'Abbrechen',
 			type: 'danger'
@@ -32,11 +38,10 @@
 		if (!confirmed) return;
 
 		try {
-			swapSelection.update(ids => ids.filter(id => id !== room.id));
-			await deleteRoom(room.id);
-			toasts.show('✓ Raum gelöscht', 'success');
+			await deleteRoomConfigForDay(room.id, currentDay);
+			toasts.show(`✓ Raum für ${dayName} gelöscht`, 'success');
 		} catch (error) {
-			console.error('Error deleting room:', error);
+			console.error('Error deleting room config:', error);
 			toasts.show('✕ Fehler beim Löschen', 'error');
 		}
 	}
