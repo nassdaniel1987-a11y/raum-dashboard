@@ -52,22 +52,24 @@ if (typeof window !== 'undefined') {
 export const visibleRooms = derived(
 	[rooms, roomStatuses, dailyConfigs, viewWeekday],
 	([$rooms, $statuses, $configs, $weekday]) => {
-		return $rooms.map((room) => {
-			const status = $statuses.get(room.id);
-			const configKey = `${room.id}-${$weekday}`;
-			const config = $configs.get(configKey);
+		return $rooms
+			.map((room) => {
+				const status = $statuses.get(room.id);
+				const configKey = `${room.id}-${$weekday}`;
+				const config = $configs.get(configKey);
 
-			const isOpen = status?.is_open ?? false;
+				const isOpen = status?.is_open ?? false;
 
-			const result: RoomWithConfig = {
-				...room,
-				config: config || null,
-				status: status || null,
-				isOpen
-			};
+				const result: RoomWithConfig = {
+					...room,
+					config: config || null,
+					status: status || null,
+					isOpen
+				};
 
-			return result;
-		});
+				return result;
+			})
+			.filter((room) => room.config !== null); // ✅ Nur Räume mit Config für diesen Tag anzeigen
 	}
 );
 
@@ -405,10 +407,24 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		.single();
 
 	if (data) {
+		// Room Status erstellen
 		await supabase.from('room_status').insert({
 			room_id: data.id,
 			is_open: false,
 			manual_override: false
+		});
+
+		// ✅ NEU: Daily Config nur für den aktuell angezeigten Tag erstellen
+		const currentViewDay = get(viewWeekday);
+		await supabase.from('daily_configs').insert({
+			room_id: data.id,
+			weekday: currentViewDay,
+			activity: null,
+			open_time: null,
+			close_time: null,
+			title_font_size: 42,
+			text_font_size: 28,
+			text_color: '#FFFFFF'
 		});
 	}
 }
