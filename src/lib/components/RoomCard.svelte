@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { isEditMode, toggleRoomStatus, swapSelection } from '$lib/stores/appState';
-	import { confirmDialog } from '$lib/stores/toastStore';
+	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay } from '$lib/stores/appState';
+	import { confirmDialog, toasts } from '$lib/stores/toastStore';
 	import { supabase } from '$lib/supabase/client';
 	import type { RoomWithConfig } from '$lib/types';
+	import { get } from 'svelte/store';
 
 	// Svelte 5 Props Syntax
 	let { room, onEdit, onSelect, isSelected = false } = $props<{
@@ -13,6 +14,8 @@
 		isSelected?: boolean;
 	}>();
 
+	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
 	async function handleClick() {
 		if ($isEditMode) {
 			await toggleRoomStatus(room.id);
@@ -21,10 +24,13 @@
 
 	async function handleDelete(e: MouseEvent) {
 		e.stopPropagation();
-		
+
+		const currentDay = get(viewWeekday);
+		const dayName = weekdayNames[currentDay];
+
 		const confirmed = await confirmDialog.ask({
-			title: 'Raum löschen?',
-			message: `Möchtest du den Raum "${room.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+			title: 'Raum-Konfiguration löschen?',
+			message: `Möchtest du die Konfiguration von "${room.name}" für ${dayName} löschen?\n\nDer Raum bleibt erhalten, nur die Einstellungen für diesen Tag werden gelöscht.`,
 			confirmText: 'Löschen',
 			cancelText: 'Abbrechen',
 			type: 'danger'
@@ -32,8 +38,13 @@
 
 		if (!confirmed) return;
 
-		swapSelection.update(ids => ids.filter(id => id !== room.id));
-		await supabase.from('rooms').delete().eq('id', room.id);
+		try {
+			await deleteRoomConfigForDay(room.id, currentDay);
+			toasts.show(`✓ Konfiguration für ${dayName} gelöscht`, 'success');
+		} catch (error) {
+			console.error('Error deleting room config:', error);
+			toasts.show('✕ Fehler beim Löschen', 'error');
+		}
 	}
 
 	// SVELTE 5 DERIVED SYNTAX
