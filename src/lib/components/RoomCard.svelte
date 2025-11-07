@@ -55,20 +55,12 @@
 	}
 
 	let roomStatus = $derived(() => {
-		// 🔍 DEBUG: Zeige IMMER was in room.config ist
-		console.log(`[RoomCard ${room.name}] isOpen=${room.isOpen}, hasConfig=${!!room.config}, close_time="${room.config?.close_time}"`);
-
 		if (!room.config?.open_time) return 'closed';
 
 		const now = $currentTime;
 		const nowMinutes = now.getHours() * 60 + now.getMinutes();
 		const openTime = parseTime(room.config.open_time);
 		const closeTime = parseTime(room.config.close_time);
-
-		// 🔍 DEBUG: Log close_time für diesen Raum
-		if (room.config.close_time) {
-			console.log(`[${room.name}] close_time aus config: "${room.config.close_time}", parsed: ${closeTime}, nowMinutes: ${nowMinutes}`);
-		}
 
 		if (openTime === null) return 'closed';
 
@@ -88,9 +80,7 @@
 		// Schließt bald (5 Min vor Schluss)
 		if (closeTime && room.isOpen) {
 			const minutesUntilClose = closeTime - nowMinutes;
-			console.log(`[${room.name}] 🔍 closeTime=${closeTime}, nowMinutes=${nowMinutes}, minutesUntilClose=${minutesUntilClose}, isOpen=${room.isOpen}`);
 			if (minutesUntilClose > 0 && minutesUntilClose <= 5) {
-				console.log(`[${room.name}] 🟠 CLOSING-SOON aktiviert!`);
 				return 'closing-soon';
 			}
 		}
