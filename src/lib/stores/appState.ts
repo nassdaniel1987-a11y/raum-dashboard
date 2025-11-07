@@ -522,8 +522,6 @@ if (typeof window !== 'undefined') {
 	const AUTOMATION_INTERVAL_MS = 10000;
 
 	const runAutomation = () => {
-		console.log('[AutoService] 🔄 Running automation check...');
-
 		const $rooms = get(rooms);
 		const $statuses = get(roomStatuses);
 		const $configs = get(dailyConfigs);
@@ -531,10 +529,7 @@ if (typeof window !== 'undefined') {
 		const $weekday = get(currentWeekday);
 		const $time = get(currentTime);
 
-		console.log(`[AutoService] 📊 Rooms: ${$rooms.length}, Settings: ${!!$settings}, Weekday: ${$weekday}`);
-
 		if (!$settings || $rooms.length === 0) {
-			console.log('[AutoService] ⏭️ Skipping - no settings or no rooms');
 			return;
 		}
 
@@ -579,13 +574,7 @@ if (typeof window !== 'undefined') {
 				if (!currentIsOpen) {
 					const openTime = parseTime(config?.open_time);
 
-					// 🔍 DEBUG
-					if (config?.open_time) {
-						console.log(`[AutoService] ${room.name}: open_time="${config.open_time}", parsed=${openTime}, now=${now}, currentIsOpen=${currentIsOpen}, condition=${openTime !== null && now >= openTime}`);
-					}
-
 					if (openTime !== null && now >= openTime) {
-						console.log(`[AutoService] ✅ ÖFFNE ${room.name}!`);
 						needsUpdate = true;
 						newIsOpen = true;
 						newManualOverride = false; // Reset manual_override
@@ -607,7 +596,6 @@ if (typeof window !== 'undefined') {
 		}
 
 		if (updates.length > 0) {
-			console.log(`[AutoService] Aktualisiere ${updates.length} Räume...`);
 			supabase
 				.from('room_status')
 				.upsert(updates, { onConflict: 'room_id' })
@@ -629,11 +617,7 @@ if (typeof window !== 'undefined') {
 						});
 					}
 				});
-		} else {
-			console.log('[AutoService] ✅ Keine Updates nötig');
 		}
-
-		console.log('[AutoService] 🏁 Check abgeschlossen');
 	};
 
 	let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -644,13 +628,11 @@ if (typeof window !== 'undefined') {
 
 		runAutomation();
 		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
-		console.log('[AutoService] Gestartet.');
 
 		(window as any).clearAutomationInterval = () => {
 			if (intervalId) {
 				clearInterval(intervalId);
 				intervalId = null;
-				console.log('[AutoService] Gestoppt.');
 			}
 		};
 	};

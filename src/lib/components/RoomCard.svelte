@@ -137,16 +137,20 @@
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
 
-	// ✅ Prüfe ob open_time noch in der Zukunft liegt
+	// ✅ Prüfe ob open_time noch in der Zukunft liegt (mit Grace Period)
 	let shouldShowOpenTime = $derived(() => {
-		if (!room.config?.open_time) return false;
+		if (!room.config?.open_time || room.isOpen) return false;
 
 		const now = $currentTime;
 		const nowMinutes = now.getHours() * 60 + now.getMinutes();
 		const openTime = parseTime(room.config.open_time);
 
-		// Nur zeigen wenn open_time noch NICHT erreicht wurde
-		return openTime !== null && nowMinutes < openTime;
+		if (openTime === null) return false;
+
+		// Zeige Banner wenn Zeit noch nicht erreicht wurde ODER
+		// innerhalb der ersten 30 Sekunden nach open_time (Grace Period für AutoService)
+		const timeDiff = nowMinutes - openTime;
+		return timeDiff < 0.5; // < 0.5 Minuten = < 30 Sekunden nach open_time
 	});
 
 	// ✅ NOCH KLEINERE Schriftgrößen für kompaktere Kacheln
