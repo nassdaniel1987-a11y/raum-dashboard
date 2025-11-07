@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay } from '$lib/stores/appState';
+	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay, currentTime } from '$lib/stores/appState';
 	import { confirmDialog, toasts } from '$lib/stores/toastStore';
 	import type { RoomWithConfig } from '$lib/types';
 	import { get } from 'svelte/store';
@@ -46,6 +46,47 @@
 		}
 	}
 
+	// ✅ NEU: Status-Berechnung für Indikatoren
+	function parseTime(timeStr: string | null | undefined): number | null {
+		if (!timeStr) return null;
+		const [hours, minutes] = timeStr.split(':').map(Number);
+		return hours * 60 + minutes;
+	}
+
+	let roomStatus = $derived(() => {
+		if (!room.config?.open_time) return 'closed';
+
+		const now = $currentTime;
+		const nowMinutes = now.getHours() * 60 + now.getMinutes();
+		const openTime = parseTime(room.config.open_time);
+		const closeTime = parseTime(room.config.close_time);
+
+		if (openTime === null) return 'closed';
+
+		const minutesUntilOpen = openTime - nowMinutes;
+		const minutesSinceOpen = nowMinutes - openTime;
+
+		// Bald offen (10 Min vorher)
+		if (minutesUntilOpen > 0 && minutesUntilOpen <= 10) {
+			return 'opening-soon';
+		}
+
+		// Gerade geöffnet (5 Min nachher)
+		if (room.isOpen && minutesSinceOpen >= 0 && minutesSinceOpen <= 5) {
+			return 'just-opened';
+		}
+
+		// Schließt bald (10 Min vor Schluss)
+		if (closeTime && room.isOpen) {
+			const minutesUntilClose = closeTime - nowMinutes;
+			if (minutesUntilClose > 0 && minutesUntilClose <= 10) {
+				return 'closing-soon';
+			}
+		}
+
+		return room.isOpen ? 'open' : 'closed';
+	});
+
 	// SVELTE 5 DERIVED SYNTAX
 	let roomStyle = $derived(`
 		background: ${room.isOpen ? room.background_color : '#6b7280'};
@@ -62,6 +103,9 @@
 <div
 	class="room-card"
 	class:locked={!$isEditMode}
+	class:status-opening-soon={roomStatus() === 'opening-soon'}
+	class:status-just-opened={roomStatus() === 'just-opened'}
+	class:status-closing-soon={roomStatus() === 'closing-soon'}
 	class:open={room.isOpen}
 	class:selected={isSelected}
 	style={roomStyle}
@@ -135,25 +179,28 @@
 <style>
 	.room-card {
 		position: relative;
-		border-radius: 16px; /* ✅ Rundere, modernere Ecken */
+		border-radius: 20px; /* ✅ Noch runder für moderneren Look */
 		box-shadow:
-			0 8px 24px rgba(0, 0, 0, 0.4), /* Tieferer äußerer Schatten */
-			0 2px 8px rgba(0, 0, 0, 0.2), /* Zusätzlicher mittlerer Schatten */
-			inset 0 1px 0 rgba(255, 255, 255, 0.1); /* Innerer Highlight für Tiefe */
-		transition: all 0.3s ease;
+			0 8px 32px rgba(0, 0, 0, 0.4),
+			0 2px 16px rgba(0, 0, 0, 0.2),
+			inset 0 2px 4px rgba(255, 255, 255, 0.1);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* ✅ Smooth cubic-bezier */
 		overflow: hidden;
-		backdrop-filter: blur(10px);
+		/* ✅ GLASSMORPHISM: Verstärkt */
+		backdrop-filter: blur(20px) saturate(180%);
+		-webkit-backdrop-filter: blur(20px) saturate(180%);
+		background: rgba(255, 255, 255, 0.1); /* ✅ Basis-Glass-Layer */
 		height: 100%;
 		min-height: 100px;
 		display: flex;
 		flex-direction: column;
-		border: 2px solid rgba(255, 255, 255, 0.15); /* ✅ Subtiler weißer Border */
+		border: 2px solid rgba(255, 255, 255, 0.2);
 		/* GPU-Beschleunigung */
 		transform: translateZ(0);
-		will-change: transform;
+		will-change: transform, box-shadow;
 	}
 
-	/* ✅ Gradient-Overlay für Premium-Tiefe */
+	/* ✅ Glassmorphism: Gradient-Overlay für Tiefe */
 	.room-card::before {
 		content: '';
 		position: absolute;
@@ -163,12 +210,28 @@
 		bottom: 0;
 		background: linear-gradient(
 			135deg,
-			rgba(255, 255, 255, 0.08) 0%,
-			rgba(255, 255, 255, 0) 50%,
-			rgba(0, 0, 0, 0.1) 100%
+			rgba(255, 255, 255, 0.15) 0%,
+			rgba(255, 255, 255, 0.05) 50%,
+			rgba(0, 0, 0, 0.15) 100%
 		);
 		pointer-events: none;
 		z-index: 1;
+		opacity: 0.8;
+	}
+
+	/* ✅ Status-Indikator: Pulsierender Ring */
+	.room-card::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		border-radius: 20px;
+		pointer-events: none;
+		z-index: 10;
+		opacity: 0;
+		transition: opacity 0.3s;
 	}
 
 	.room-card.selected {
@@ -181,12 +244,94 @@
 	}
 
 	.room-card:hover {
-		transform: translateY(-4px) translateZ(0);
+		transform: translateY(-6px) scale(1.02) translateZ(0); /* ✅ Micro-lift + scale */
 		box-shadow:
-			0 12px 32px rgba(0, 0, 0, 0.5),
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.25);
+			0 16px 40px rgba(0, 0, 0, 0.5),
+			0 8px 16px rgba(0, 0, 0, 0.3),
+			inset 0 2px 4px rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.room-card:active {
+		transform: translateY(-2px) scale(0.98) translateZ(0); /* ✅ Press-down effect */
+		transition: all 0.1s;
+	}
+
+	/* ✅ STATUS-INDIKATOREN: Bald offen (Gelb pulsierend) */
+	.room-card.status-opening-soon::after {
+		opacity: 1;
+		border: 3px solid #fbbf24;
+		box-shadow:
+			0 0 20px rgba(251, 191, 36, 0.6),
+			inset 0 0 20px rgba(251, 191, 36, 0.2);
+		animation: pulse-yellow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-yellow {
+		0%, 100% {
+			opacity: 1;
+			border-width: 3px;
+			box-shadow:
+				0 0 20px rgba(251, 191, 36, 0.6),
+				inset 0 0 20px rgba(251, 191, 36, 0.2);
+		}
+		50% {
+			opacity: 0.7;
+			border-width: 4px;
+			box-shadow:
+				0 0 30px rgba(251, 191, 36, 0.8),
+				inset 0 0 30px rgba(251, 191, 36, 0.3);
+		}
+	}
+
+	/* ✅ STATUS-INDIKATOREN: Gerade geöffnet (Grün mit Glow) */
+	.room-card.status-just-opened::after {
+		opacity: 1;
+		border: 3px solid #22c55e;
+		box-shadow:
+			0 0 30px rgba(34, 197, 94, 0.8),
+			inset 0 0 20px rgba(34, 197, 94, 0.3);
+		animation: glow-green 1.5s ease-in-out 3; /* ✅ 3x dann stop */
+	}
+
+	@keyframes glow-green {
+		0%, 100% {
+			opacity: 1;
+			box-shadow:
+				0 0 30px rgba(34, 197, 94, 0.8),
+				inset 0 0 20px rgba(34, 197, 94, 0.3);
+		}
+		50% {
+			opacity: 1;
+			box-shadow:
+				0 0 50px rgba(34, 197, 94, 1),
+				inset 0 0 30px rgba(34, 197, 94, 0.5);
+		}
+	}
+
+	/* ✅ STATUS-INDIKATOREN: Schließt bald (Orange blinkend) */
+	.room-card.status-closing-soon::after {
+		opacity: 1;
+		border: 3px solid #f97316;
+		box-shadow:
+			0 0 25px rgba(249, 115, 22, 0.7),
+			inset 0 0 20px rgba(249, 115, 22, 0.3);
+		animation: pulse-orange 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse-orange {
+		0%, 100% {
+			opacity: 1;
+			box-shadow:
+				0 0 25px rgba(249, 115, 22, 0.7),
+				inset 0 0 20px rgba(249, 115, 22, 0.3);
+		}
+		50% {
+			opacity: 0.6;
+			box-shadow:
+				0 0 40px rgba(249, 115, 22, 0.9),
+				inset 0 0 30px rgba(249, 115, 22, 0.4);
+		}
 	}
 
 	.card-bg-image {
