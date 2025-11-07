@@ -100,11 +100,11 @@
 	}
 
 	function applyDisplayScale(scale: number) {
-		// Wende horizontale Skalierung auf das Dashboard an
-		const dashboard = document.querySelector('.dashboard') as HTMLElement;
-		if (dashboard) {
-			dashboard.style.transform = `scaleX(${scale})`;
-			dashboard.style.transformOrigin = 'top center';
+		// Wende horizontale Skalierung NUR auf Canvas an (nicht auf Menüs!)
+		const canvas = document.querySelector('.canvas-container') as HTMLElement;
+		if (canvas) {
+			canvas.style.transform = `scaleX(${scale})`;
+			canvas.style.transformOrigin = 'top center';
 		}
 	}
 
