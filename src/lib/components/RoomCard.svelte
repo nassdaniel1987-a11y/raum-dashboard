@@ -200,7 +200,7 @@
 	{/if}
 
 	<!-- ✅ ÖFFNET UM Banner (mit Zeit) -->
-	{#if displayTime && !room.isOpen}
+	{#if displayTime && !room.isOpen && !room.status?.manual_override}
 		<div class="opens-banner" in:scale={{ duration: 300 }}>
 			Öffnet um {displayTime}
 		</div>
