@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { visibleRooms, isEditMode, swapSelection } from '$lib/stores/appState';
+	import { visibleRooms, isEditMode, swapSelection, viewWeekday } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
@@ -12,6 +12,49 @@
 	}>();
 
 	let scrollContainer: HTMLElement;
+
+	// ✅ iPad Swipe-Gesten
+	let touchStartX = 0;
+	let touchStartY = 0;
+	let touchStartTime = 0;
+
+	function handleTouchStart(e: TouchEvent) {
+		touchStartX = e.touches[0].clientX;
+		touchStartY = e.touches[0].clientY;
+		touchStartTime = Date.now();
+	}
+
+	function handleTouchEnd(e: TouchEvent) {
+		const touchEndX = e.changedTouches[0].clientX;
+		const touchEndY = e.changedTouches[0].clientY;
+		const touchEndTime = Date.now();
+
+		const deltaX = touchEndX - touchStartX;
+		const deltaY = touchEndY - touchStartY;
+		const duration = touchEndTime - touchStartTime;
+
+		// Nur als Swipe werten wenn:
+		// - Schnell genug (< 300ms)
+		// - Genug Bewegung (> 50px)
+		// - Mehr horizontal als vertikal (|deltaX| > |deltaY| * 1.5)
+		if (duration < 300 && Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+			e.preventDefault(); // ✅ Verhindert Browser-Navigation
+
+			if (deltaX > 0) {
+				// Swipe right → Vorheriger Tag
+				viewWeekday.update(day => {
+					const newDay = day - 1;
+					return newDay < 0 ? 6 : newDay;
+				});
+			} else {
+				// Swipe left → Nächster Tag
+				viewWeekday.update(day => {
+					const newDay = day + 1;
+					return newDay > 6 ? 0 : newDay;
+				});
+			}
+		}
+	}
 
 	// ✅ Vereinfachte State-Variablen
 	let autoScrollEnabled = $state(false);
@@ -229,6 +272,8 @@
 <div
 	class="canvas-container"
 	bind:this={scrollContainer}
+	ontouchstart={handleTouchStart}
+	ontouchend={handleTouchEnd}
 	transition:fade
 >
 	<div class="canvas">
@@ -275,7 +320,7 @@
 </div>
 
 <style>
-	/* ✅ Container für autoscroll optimiert */
+	/* ✅ Container für autoscroll + iPad Swipe-Gesten optimiert */
 	.canvas-container {
 		position: fixed;
 		top: 50px;
@@ -289,7 +334,10 @@
 		-webkit-overflow-scrolling: auto;
 		transform: translateZ(0);
 		will-change: scroll-position;
+		/* ✅ iPad Swipe-Gesten: Verhindert Gummiband-Effekt */
 		overscroll-behavior: contain;
+		overscroll-behavior-x: none; /* ✅ Horizontal-Swipe erlauben für Tag-Navigation */
+		touch-action: pan-y; /* ✅ Nur vertikales Scrollen, Horizontal für Gesten */
 	}
 
 	.canvas {
