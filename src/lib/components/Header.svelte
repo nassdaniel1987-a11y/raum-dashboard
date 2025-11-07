@@ -5,10 +5,11 @@
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
-	// SVELTE 5 PROPS - Auto-Scroll Controls
-	let { autoScrollActive = false, onToggleAutoScroll } = $props<{
+	// SVELTE 5 PROPS - Auto-Scroll Controls & Help
+	let { autoScrollActive = false, onToggleAutoScroll, onOpenHelp } = $props<{
 		autoScrollActive?: boolean;
 		onToggleAutoScroll?: () => void;
+		onOpenHelp?: () => void;
 	}>();
 
 	// SVELTE 5 DERIVED SYNTAX
@@ -118,6 +119,17 @@
 			<span class="logo-icon">🏫</span>
 			<span class="logo-text">Raum-Dashboard</span>
 		</div>
+
+		{#if onOpenHelp}
+			<button
+				class="help-btn"
+				onclick={onOpenHelp}
+				title="Hilfe & Anleitung"
+				aria-label="Hilfe öffnen"
+			>
+				<span class="icon">❓</span>
+			</button>
+		{/if}
 	</div>
 
 	<div class="header-center">
@@ -209,6 +221,7 @@
 
 	.header-left {
 		justify-content: flex-start;
+		gap: 12px;
 	}
 
 	.header-center {
@@ -238,6 +251,39 @@
 		font-weight: 700;
 		letter-spacing: 0.5px;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	}
+
+	/* ✅ Hilfe-Button */
+	.help-btn {
+		background: rgba(96, 165, 250, 0.2);
+		border: 2px solid rgba(96, 165, 250, 0.4);
+		color: var(--color-text-primary);
+		font-size: 20px;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		cursor: pointer;
+		transition: all 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	}
+
+	.help-btn:hover {
+		background: rgba(96, 165, 250, 0.4);
+		transform: scale(1.1);
+		box-shadow: 0 4px 12px rgba(96, 165, 250, 0.5);
+	}
+
+	.help-btn:active {
+		transform: scale(0.95);
+	}
+
+	.help-btn .icon {
+		font-size: 22px;
+		line-height: 1;
 	}
 
 	/* ✅ NEU: Tag-Navigation */
@@ -436,6 +482,11 @@
 			font-size: 16px;
 		}
 
+		.help-btn {
+			width: 40px;
+			height: 40px;
+		}
+
 		.weekday {
 			font-size: 16px;
 		}
@@ -464,6 +515,11 @@
 	@media (max-width: 768px) {
 		.header-right {
 			gap: 8px;
+		}
+
+		.help-btn {
+			width: 36px;
+			height: 36px;
 		}
 
 		.autoscroll-btn,

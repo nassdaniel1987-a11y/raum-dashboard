@@ -5,6 +5,7 @@
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import HelpModal from '$lib/components/HelpModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { RoomWithConfig } from '$lib/types';
@@ -13,6 +14,7 @@
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
 	let showSettings = $state(false);
+	let showHelp = $state(false);
 	let canvasRef: any = $state(null); // Referenz zur Canvas-Komponente
 	let autoScrollActive = $state(false); // ✅ NEU: State für Auto-Scroll Status
 
@@ -38,6 +40,14 @@
 
 	function closeSettings() {
 		showSettings = false;
+	}
+
+	function openHelp() {
+		showHelp = true;
+	}
+
+	function closeHelp() {
+		showHelp = false;
 	}
 
 	// ✅ NEU: Auto-Scroll Toggle Handler
@@ -74,13 +84,14 @@
 </script>
 
 <div class="dashboard">
-	<Header 
-		autoScrollActive={autoScrollActive} 
+	<Header
+		autoScrollActive={autoScrollActive}
 		onToggleAutoScroll={handleToggleAutoScroll}
+		onOpenHelp={openHelp}
 	/>
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
-	<FloatingMenu 
-		onOpenScheduler={openScheduler} 
+	<FloatingMenu
+		onOpenScheduler={openScheduler}
 		onOpenSettings={openSettings}
 		{canvasRef}
 	/>
@@ -97,6 +108,10 @@
 
 	{#if showSettings}
 		<SettingsModal onClose={closeSettings} />
+	{/if}
+
+	{#if showHelp}
+		<HelpModal onClose={closeHelp} />
 	{/if}
 </div>
 
