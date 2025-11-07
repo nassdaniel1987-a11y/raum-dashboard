@@ -583,7 +583,13 @@ if (typeof window !== 'undefined') {
 				if (currentIsOpen && !isManual) {
 					const closeTime = parseTime(config?.close_time);
 
+					// 🔍 DEBUG
+					if (config?.close_time) {
+						console.log(`[AutoService] ${room.name}: close_time="${config.close_time}", parsed=${closeTime}, now=${now}, currentIsOpen=${currentIsOpen}, isManual=${isManual}`);
+					}
+
 					if (closeTime !== null && now >= closeTime) {
+						console.log(`[AutoService] 🔴 AUTO-CLOSE: ${room.name} wird geschlossen (closeTime=${closeTime}, now=${now})`);
 						needsUpdate = true;
 						newIsOpen = false;
 						newManualOverride = false;

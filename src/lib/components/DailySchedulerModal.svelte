@@ -59,6 +59,9 @@
 		for (const [roomId, openTime] of localOpenTimes.entries()) {
 			const closeTime = localCloseTimes.get(roomId) || null;
 
+			// 🔍 DEBUG
+			console.log(`[DailyScheduler] Speichere für ${roomId}: open_time="${openTime}", close_time="${closeTime}"`);
+
 			// 1. Config-Update vorbereiten
 			configUpdates.push({
 				room_id: roomId,
