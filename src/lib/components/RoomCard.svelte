@@ -66,8 +66,8 @@
 		const minutesUntilOpen = openTime - nowMinutes;
 		const minutesSinceOpen = nowMinutes - openTime;
 
-		// Bald offen (10 Min vorher)
-		if (minutesUntilOpen > 0 && minutesUntilOpen <= 10) {
+		// Bald offen (5 Min vorher)
+		if (minutesUntilOpen > 0 && minutesUntilOpen <= 5) {
 			return 'opening-soon';
 		}
 
@@ -76,10 +76,10 @@
 			return 'just-opened';
 		}
 
-		// Schließt bald (10 Min vor Schluss)
+		// Schließt bald (5 Min vor Schluss)
 		if (closeTime && room.isOpen) {
 			const minutesUntilClose = closeTime - nowMinutes;
-			if (minutesUntilClose > 0 && minutesUntilClose <= 10) {
+			if (minutesUntilClose > 0 && minutesUntilClose <= 5) {
 				return 'closing-soon';
 			}
 		}
