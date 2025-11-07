@@ -49,11 +49,15 @@
 	// ✅ NEU: Status-Berechnung für Indikatoren
 	function parseTime(timeStr: string | null | undefined): number | null {
 		if (!timeStr) return null;
+		// ✅ FIX: Unterstütze sowohl "HH:MM" als auch "HH:MM:SS" (PostgreSQL time format)
 		const [hours, minutes] = timeStr.split(':').map(Number);
 		return hours * 60 + minutes;
 	}
 
 	let roomStatus = $derived(() => {
+		// 🔍 DEBUG: Zeige IMMER was in room.config ist
+		console.log(`[RoomCard ${room.name}] isOpen=${room.isOpen}, hasConfig=${!!room.config}, close_time="${room.config?.close_time}"`);
+
 		if (!room.config?.open_time) return 'closed';
 
 		const now = $currentTime;
