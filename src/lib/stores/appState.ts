@@ -570,14 +570,21 @@ if (typeof window !== 'undefined') {
 					newManualOverride = false;
 				}
 			} else {
-				// Auto-Open: Raum öffnen wenn open_time erreicht ist (ignoriert manual_override)
+				// Auto-Open: Raum öffnen wenn open_time erreicht ist
+				// ✅ NUR innerhalb des ersten Zeitfensters (60 Sekunden), danach manual_override respektieren
 				if (!currentIsOpen) {
 					const openTime = parseTime(config?.open_time);
 
 					if (openTime !== null && now >= openTime) {
-						needsUpdate = true;
-						newIsOpen = true;
-						newManualOverride = false; // Reset manual_override
+						const minutesSinceOpen = now - openTime;
+
+						// Nur auto-open innerhalb der ersten 1 Minute nach open_time
+						// Danach: Respektiere manual_override (Benutzer hat manuell geschlossen)
+						if (minutesSinceOpen < 1 && !isManual) {
+							needsUpdate = true;
+							newIsOpen = true;
+							newManualOverride = false;
+						}
 					}
 				}
 			}
