@@ -20,16 +20,20 @@
 
 	// SVELTE 5 STATE SYNTAX
 	let localOpenTimes = $state(new Map<string, string>());
+	let localCloseTimes = $state(new Map<string, string>());
 
 	// ✅ FIX: Reaktiv mit $effect statt einmalig
 	$effect(() => {
-		const newMap = new Map<string, string>();
+		const openMap = new Map<string, string>();
+		const closeMap = new Map<string, string>();
 		allRooms.forEach(room => {
 			const configKey = `${room.id}-${weekday}`;
 			const config = $dailyConfigs.get(configKey);
-			newMap.set(room.id, config?.open_time || '');
+			openMap.set(room.id, config?.open_time || '');
+			closeMap.set(room.id, config?.close_time || '');
 		});
-		localOpenTimes = newMap;
+		localOpenTimes = openMap;
+		localCloseTimes = closeMap;
 	});
 
 	let message = $state('');
@@ -53,12 +57,14 @@
 		const statusUpdates: any[] = [];
 
 		for (const [roomId, openTime] of localOpenTimes.entries()) {
+			const closeTime = localCloseTimes.get(roomId) || null;
+
 			// 1. Config-Update vorbereiten
 			configUpdates.push({
 				room_id: roomId,
 				weekday: weekday,
 				open_time: openTime || null,
-				close_time: null
+				close_time: closeTime
 			});
 
 			// 2. Status-Update vorbereiten
@@ -114,11 +120,18 @@
 		return a.position_x - b.position_x;
 	}));
 
-	// Funktion zum Aktualisieren der Zeit für einen Raum
+	// Funktion zum Aktualisieren der Öffnungszeit für einen Raum
 	function updateRoomTime(roomId: string, value: string) {
 		const newMap = new Map(localOpenTimes);
 		newMap.set(roomId, value);
 		localOpenTimes = newMap;
+	}
+
+	// Funktion zum Aktualisieren der Schließzeit für einen Raum
+	function updateRoomCloseTime(roomId: string, value: string) {
+		const newMap = new Map(localCloseTimes);
+		newMap.set(roomId, value);
+		localCloseTimes = newMap;
 	}
 </script>
 
@@ -139,7 +152,7 @@
 		<div class="modal-header">
 			<div class="header-content">
 				<h2>📅 Tagesplan für {weekdaysFull[weekday]}</h2>
-				<p class="subtitle">Setze die automatische Öffnungszeit für heute.</p>
+				<p class="subtitle">Setze die automatische Öffnungs- und Schließzeit für heute.</p>
 			</div>
 			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
@@ -153,7 +166,8 @@
 		<div class="modal-content">
 			<div class="room-list-header">
 				<span class="room-name-header">Raum</span>
-				<span class="room-time-header">Öffnet um (leer = keine Automatik)</span>
+				<span class="room-time-header">Öffnet um</span>
+				<span class="room-time-header">Schließt um</span>
 			</div>
 			<div class="room-list">
 				{#each sortedRooms as room (room.id)}
@@ -169,6 +183,14 @@
 								class="time-input"
 								value={localOpenTimes.get(room.id) || ''}
 								oninput={(e) => updateRoomTime(room.id, e.currentTarget.value)}
+							/>
+						</div>
+						<div class="time-input-wrapper">
+							<input
+								type="time"
+								class="time-input"
+								value={localCloseTimes.get(room.id) || ''}
+								oninput={(e) => updateRoomCloseTime(room.id, e.currentTarget.value)}
 							/>
 						</div>
 					</div>
@@ -265,8 +287,9 @@
 	}
 
 	.room-list-header {
-		display: flex;
-		justify-content: space-between;
+		display: grid;
+		grid-template-columns: 1fr auto auto;
+		gap: 16px;
 		padding: 16px 12px;
 		font-weight: 600;
 		font-size: 14px;
@@ -286,8 +309,9 @@
 	}
 
 	.room-row {
-		display: flex;
-		justify-content: space-between;
+		display: grid;
+		grid-template-columns: 1fr auto auto;
+		gap: 16px;
 		align-items: center;
 		padding: 12px;
 		background: rgba(255, 255, 255, 0.05);
@@ -298,9 +322,7 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		flex: 1;
 		min-width: 0;
-		margin-right: 16px;
 	}
 
 	.room-color {
