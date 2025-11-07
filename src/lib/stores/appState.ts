@@ -522,6 +522,8 @@ if (typeof window !== 'undefined') {
 	const AUTOMATION_INTERVAL_MS = 10000;
 
 	const runAutomation = () => {
+		console.log('[AutoService] 🔄 Running automation check...');
+
 		const $rooms = get(rooms);
 		const $statuses = get(roomStatuses);
 		const $configs = get(dailyConfigs);
@@ -529,7 +531,12 @@ if (typeof window !== 'undefined') {
 		const $weekday = get(currentWeekday);
 		const $time = get(currentTime);
 
-		if (!$settings || $rooms.length === 0) return;
+		console.log(`[AutoService] 📊 Rooms: ${$rooms.length}, Settings: ${!!$settings}, Weekday: ${$weekday}`);
+
+		if (!$settings || $rooms.length === 0) {
+			console.log('[AutoService] ⏭️ Skipping - no settings or no rooms');
+			return;
+		}
 
 		let isNightModeActive = false;
 		const now = $time.getHours() * 60 + $time.getMinutes();
@@ -622,7 +629,11 @@ if (typeof window !== 'undefined') {
 						});
 					}
 				});
+		} else {
+			console.log('[AutoService] ✅ Keine Updates nötig');
 		}
+
+		console.log('[AutoService] 🏁 Check abgeschlossen');
 	};
 
 	let intervalId: ReturnType<typeof setInterval> | null = null;
