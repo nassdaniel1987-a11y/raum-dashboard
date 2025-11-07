@@ -26,6 +26,9 @@
 	let scrollSpeed = $state(0.6); // 0.1 - 3.0 px/Schritt
 	let pauseDuration = $state(4); // 1 - 10 Sekunden
 
+	// ✅ Display-Skalierung für TV-Kompensation
+	let displayScaleX = $state(1.0); // 0.5 - 1.0
+
 	// ✅ NEU: Tag-Verwaltung
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -35,11 +38,16 @@
 		const savedSpeed = localStorage.getItem('scrollSpeed');
 		const savedPause = localStorage.getItem('pauseDuration');
 		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
+		const savedScaleX = localStorage.getItem('displayScaleX');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDuration = parseInt(savedPause);
 		if (savedAutoScroll !== null) {
 			autoScrollActive = savedAutoScroll === 'true';
+		}
+		if (savedScaleX) {
+			displayScaleX = parseFloat(savedScaleX);
+			applyDisplayScale(displayScaleX);
 		}
 	});
 
@@ -89,6 +97,25 @@
 		if (canvasRef?.setScrollSpeed) {
 			canvasRef.setScrollSpeed(scrollSpeed, pauseDuration);
 		}
+	}
+
+	function applyDisplayScale(scale: number) {
+		// Wende horizontale Skalierung auf das Dashboard an
+		const dashboard = document.querySelector('.dashboard') as HTMLElement;
+		if (dashboard) {
+			dashboard.style.transform = `scaleX(${scale})`;
+			dashboard.style.transformOrigin = 'top center';
+		}
+	}
+
+	function updateDisplayScale() {
+		// Speichere in localStorage
+		localStorage.setItem('displayScaleX', displayScaleX.toString());
+
+		// Wende sofort an
+		applyDisplayScale(displayScaleX);
+
+		console.log(`📺 Display-Skalierung: ${(displayScaleX * 100).toFixed(0)}%`);
 	}
 
 	function toggleAutoScroll() {
@@ -214,6 +241,34 @@
 							<span class="btn-hint">{$isEditMode ? 'Aktiv' : 'Inaktiv'}</span>
 						</div>
 					</button>
+
+					<div class="scroll-controls">
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">📺</span>
+								<span class="control-label">Display-Breite</span>
+								<span class="control-value">{(displayScaleX * 100).toFixed(0)}%</span>
+							</div>
+							<input
+								type="range"
+								min="0.5"
+								max="1.0"
+								step="0.01"
+								bind:value={displayScaleX}
+								oninput={updateDisplayScale}
+								class="slider"
+							/>
+							<div class="scale-hints">
+								<span class="hint-label">← TV (4:3→16:9): ~75%</span>
+								<span class="hint-label">Normal: 100% →</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="info-box">
+						<span class="info-icon">ℹ️</span>
+						<span class="info-text">Kompensiert horizontales Strecken vom iPad auf TV</span>
+					</div>
 				</div>
 			{/if}
 
@@ -1097,5 +1152,17 @@
 			min-height: 52px;
 			padding: 16px;
 		}
+	}
+
+	.scale-hints {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 8px;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.hint-label {
+		font-size: 10px;
 	}
 </style>
