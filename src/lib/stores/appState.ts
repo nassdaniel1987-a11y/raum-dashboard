@@ -58,6 +58,11 @@ export const visibleRooms = derived(
 				const configKey = `${room.id}-${$weekday}`;
 				const config = $configs.get(configKey);
 
+				// 🔍 DEBUG: close_time in visibleRooms tracken
+				if (config?.close_time) {
+					console.log(`[visibleRooms] ${room.name}: close_time="${config.close_time}" aus config`);
+				}
+
 				const isOpen = status?.is_open ?? false;
 
 				const result: RoomWithConfig = {
@@ -133,6 +138,12 @@ export function subscribeToRealtimeUpdates() {
 			if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
 				const config = payload.new as DailyConfig;
 				const key = `${config.room_id}-${config.weekday}`;
+
+				// 🔍 DEBUG: close_time tracken
+				if (config.close_time) {
+					console.log(`📅 Config UPDATE: close_time="${config.close_time}" für key=${key}`);
+				}
+
 				dailyConfigs.update((map) => {
 					const newMap = new Map(map);
 					newMap.set(key, config);

@@ -65,10 +65,20 @@
 			// 🔍 DEBUG
 			console.log(`[DailyScheduler] Speichere für ${roomId}: open_time="${openTime}", close_time=${closeTimeValue}`);
 
-			// 1. Config-Update vorbereiten
+			// 1. Config-Update vorbereiten - ✅ WICHTIG: Alle Felder beibehalten!
+			const configKey = `${roomId}-${weekday}`;
+			const existingConfig = $dailyConfigs.get(configKey);
+
 			configUpdates.push({
 				room_id: roomId,
 				weekday: weekday,
+				activity: existingConfig?.activity || null,
+				title_font_size: existingConfig?.title_font_size || 42,
+				text_font_size: existingConfig?.text_font_size || 28,
+				text_color: existingConfig?.text_color || '#FFFFFF',
+				title_alignment: existingConfig?.title_alignment || 'center',
+				text_alignment: existingConfig?.text_alignment || 'center',
+				is_locked: existingConfig?.is_locked || false,
 				open_time: openTime || null,
 				close_time: closeTimeValue
 			});
@@ -87,12 +97,24 @@
 		try {
 			// Configs speichern
 			if (configUpdates.length > 0) {
-				await supabase.from('daily_configs').upsert(configUpdates, { onConflict: 'room_id,weekday' });
+				const { data, error } = await supabase
+					.from('daily_configs')
+					.upsert(configUpdates, { onConflict: 'room_id,weekday' })
+					.select(); // ✅ FIX: .select() hinzufügen um die gespeicherten Daten zu bekommen
+
+				if (error) {
+					console.error('❌ Fehler beim Speichern:', error);
+				} else {
+					console.log('✅ Configs gespeichert:', data);
+				}
 			}
 			// Status sofort aktualisieren
 			if (statusUpdates.length > 0) {
 				await supabase.from('room_status').upsert(statusUpdates, { onConflict: 'room_id' });
 			}
+
+			// ✅ Warte kurz damit Realtime-Updates greifen können
+			await new Promise(resolve => setTimeout(resolve, 500));
 
 			showMessage('Tagesplan gespeichert!', 'success');
 		} catch (error) {
