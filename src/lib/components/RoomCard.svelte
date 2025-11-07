@@ -55,6 +55,9 @@
 	}
 
 	let roomStatus = $derived(() => {
+		// 🔍 DEBUG: Zeige IMMER was in room.config ist
+		console.log(`[RoomCard ${room.name}] isOpen=${room.isOpen}, hasConfig=${!!room.config}, close_time="${room.config?.close_time}"`);
+
 		if (!room.config?.open_time) return 'closed';
 
 		const now = $currentTime;
