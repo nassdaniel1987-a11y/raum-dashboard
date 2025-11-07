@@ -57,17 +57,20 @@
 		const statusUpdates: any[] = [];
 
 		for (const [roomId, openTime] of localOpenTimes.entries()) {
-			const closeTime = localCloseTimes.get(roomId) || null;
+			const closeTime = localCloseTimes.get(roomId);
+
+			// ✅ FIX: Leere Strings zu null konvertieren, nicht zu String "null"
+			const closeTimeValue = (closeTime && closeTime !== '') ? closeTime : null;
 
 			// 🔍 DEBUG
-			console.log(`[DailyScheduler] Speichere für ${roomId}: open_time="${openTime}", close_time="${closeTime}"`);
+			console.log(`[DailyScheduler] Speichere für ${roomId}: open_time="${openTime}", close_time=${closeTimeValue}`);
 
 			// 1. Config-Update vorbereiten
 			configUpdates.push({
 				room_id: roomId,
 				weekday: weekday,
 				open_time: openTime || null,
-				close_time: closeTime
+				close_time: closeTimeValue
 			});
 
 			// 2. Status-Update vorbereiten
