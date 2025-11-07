@@ -261,27 +261,30 @@
 	/* ✅ STATUS-INDIKATOREN: Bald offen (Gelb pulsierend) */
 	.room-card.status-opening-soon::after {
 		opacity: 1;
-		border: 3px solid #fbbf24;
+		border: 4px solid #ffd700; /* ✅ Helleres, leuchtenderes Goldgelb */
 		box-shadow:
-			0 0 20px rgba(251, 191, 36, 0.6),
-			inset 0 0 20px rgba(251, 191, 36, 0.2);
-		animation: pulse-yellow 2s ease-in-out infinite;
+			0 0 30px rgba(255, 215, 0, 0.9), /* ✅ Stärkerer Außen-Glow */
+			0 0 15px rgba(255, 215, 0, 0.7),
+			inset 0 0 25px rgba(255, 215, 0, 0.4); /* ✅ Stärkerer Innen-Glow */
+		animation: pulse-yellow 1.5s ease-in-out infinite; /* ✅ Etwas schneller */
 	}
 
 	@keyframes pulse-yellow {
 		0%, 100% {
 			opacity: 1;
-			border-width: 3px;
-			box-shadow:
-				0 0 20px rgba(251, 191, 36, 0.6),
-				inset 0 0 20px rgba(251, 191, 36, 0.2);
-		}
-		50% {
-			opacity: 0.7;
 			border-width: 4px;
 			box-shadow:
-				0 0 30px rgba(251, 191, 36, 0.8),
-				inset 0 0 30px rgba(251, 191, 36, 0.3);
+				0 0 30px rgba(255, 215, 0, 0.9),
+				0 0 15px rgba(255, 215, 0, 0.7),
+				inset 0 0 25px rgba(255, 215, 0, 0.4);
+		}
+		50% {
+			opacity: 1;
+			border-width: 5px; /* ✅ Dickerer Border beim Puls */
+			box-shadow:
+				0 0 50px rgba(255, 215, 0, 1), /* ✅ Maximaler Glow */
+				0 0 25px rgba(255, 215, 0, 0.9),
+				inset 0 0 35px rgba(255, 215, 0, 0.6);
 		}
 	}
 
