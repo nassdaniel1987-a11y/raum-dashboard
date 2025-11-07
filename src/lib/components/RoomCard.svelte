@@ -137,6 +137,18 @@
 	`);
 	let displayTime = $derived(room.config?.open_time ? room.config.open_time.substring(0, 5) : '');
 
+	// ✅ Prüfe ob open_time noch in der Zukunft liegt
+	let shouldShowOpenTime = $derived(() => {
+		if (!room.config?.open_time) return false;
+
+		const now = $currentTime;
+		const nowMinutes = now.getHours() * 60 + now.getMinutes();
+		const openTime = parseTime(room.config.open_time);
+
+		// Nur zeigen wenn open_time noch NICHT erreicht wurde
+		return openTime !== null && nowMinutes < openTime;
+	});
+
 	// ✅ NOCH KLEINERE Schriftgrößen für kompaktere Kacheln
 	let titleFontSize = $derived(room.config?.title_font_size || 16); // Reduziert von 18
 	let textFontSize = $derived(room.config?.text_font_size || 12);  // Reduziert von 14
@@ -192,15 +204,15 @@
 		</div>
 	{/if}
 
-	<!-- ✅ GESCHLOSSEN Banner (nur wenn KEINE Zeit) -->
-	{#if !room.isOpen && !displayTime}
+	<!-- ✅ GESCHLOSSEN Banner (nur wenn KEINE Zeit ODER Zeit bereits vorbei) -->
+	{#if !room.isOpen && !shouldShowOpenTime()}
 		<div class="closed-banner" in:scale={{ duration: 300 }}>
 			GESCHLOSSEN
 		</div>
 	{/if}
 
-	<!-- ✅ ÖFFNET UM Banner (mit Zeit) -->
-	{#if displayTime && !room.isOpen && !room.status?.manual_override}
+	<!-- ✅ ÖFFNET UM Banner (nur wenn Zeit noch in der Zukunft liegt) -->
+	{#if shouldShowOpenTime() && !room.isOpen}
 		<div class="opens-banner" in:scale={{ duration: 300 }}>
 			Öffnet um {displayTime}
 		</div>
