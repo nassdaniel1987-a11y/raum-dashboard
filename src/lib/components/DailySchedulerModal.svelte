@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
-	import { rooms, dailyConfigs, currentWeekday, currentTime } from '$lib/stores/appState';
+	import { rooms, dailyConfigs, viewWeekday, currentTime } from '$lib/stores/appState';
 	import { scale, fade, fly } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
@@ -10,15 +10,26 @@
 	}>();
 
 	const weekdaysFull = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-	const weekday = get(currentWeekday);
-	const allRooms = get(rooms);
+
+	// ✅ FIX: Verwende viewWeekday und filtere nur Räume mit Config für diesen Tag
+	let weekday = $derived($viewWeekday);
+	let allRooms = $derived($rooms.filter(room => {
+		const configKey = `${room.id}-${weekday}`;
+		return $dailyConfigs.has(configKey);
+	}));
 
 	// SVELTE 5 STATE SYNTAX
 	let localOpenTimes = $state(new Map<string, string>());
-	allRooms.forEach(room => {
-		const configKey = `${room.id}-${weekday}`;
-		const config = get(dailyConfigs).get(configKey);
-		localOpenTimes.set(room.id, config?.open_time || '');
+
+	// ✅ FIX: Reaktiv mit $effect statt einmalig
+	$effect(() => {
+		const newMap = new Map<string, string>();
+		allRooms.forEach(room => {
+			const configKey = `${room.id}-${weekday}`;
+			const config = $dailyConfigs.get(configKey);
+			newMap.set(room.id, config?.open_time || '');
+		});
+		localOpenTimes = newMap;
 	});
 
 	let message = $state('');
