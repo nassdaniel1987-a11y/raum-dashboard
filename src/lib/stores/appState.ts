@@ -572,7 +572,13 @@ if (typeof window !== 'undefined') {
 				if (!currentIsOpen) {
 					const openTime = parseTime(config?.open_time);
 
+					// 🔍 DEBUG
+					if (config?.open_time) {
+						console.log(`[AutoService] ${room.name}: open_time="${config.open_time}", parsed=${openTime}, now=${now}, currentIsOpen=${currentIsOpen}, condition=${openTime !== null && now >= openTime}`);
+					}
+
 					if (openTime !== null && now >= openTime) {
+						console.log(`[AutoService] ✅ ÖFFNE ${room.name}!`);
 						needsUpdate = true;
 						newIsOpen = true;
 						newManualOverride = false; // Reset manual_override
