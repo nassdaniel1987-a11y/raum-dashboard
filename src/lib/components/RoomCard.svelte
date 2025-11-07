@@ -61,6 +61,11 @@
 		const openTime = parseTime(room.config.open_time);
 		const closeTime = parseTime(room.config.close_time);
 
+		// 🔍 DEBUG: Log close_time für diesen Raum
+		if (room.config.close_time) {
+			console.log(`[${room.name}] close_time aus config: "${room.config.close_time}", parsed: ${closeTime}, nowMinutes: ${nowMinutes}`);
+		}
+
 		if (openTime === null) return 'closed';
 
 		const minutesUntilOpen = openTime - nowMinutes;
@@ -79,7 +84,9 @@
 		// Schließt bald (5 Min vor Schluss)
 		if (closeTime && room.isOpen) {
 			const minutesUntilClose = closeTime - nowMinutes;
+			console.log(`[${room.name}] 🔍 closeTime=${closeTime}, nowMinutes=${nowMinutes}, minutesUntilClose=${minutesUntilClose}, isOpen=${room.isOpen}`);
 			if (minutesUntilClose > 0 && minutesUntilClose <= 5) {
+				console.log(`[${room.name}] 🟠 CLOSING-SOON aktiviert!`);
 				return 'closing-soon';
 			}
 		}
