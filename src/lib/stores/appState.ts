@@ -568,14 +568,14 @@ if (typeof window !== 'undefined') {
 					newManualOverride = false;
 				}
 			} else {
-				// Auto-Open: Raum öffnen wenn open_time erreicht ist
-				if (!currentIsOpen && !isManual) {
+				// Auto-Open: Raum öffnen wenn open_time erreicht ist (ignoriert manual_override)
+				if (!currentIsOpen) {
 					const openTime = parseTime(config?.open_time);
 
 					if (openTime !== null && now >= openTime) {
 						needsUpdate = true;
 						newIsOpen = true;
-						newManualOverride = false;
+						newManualOverride = false; // Reset manual_override
 					}
 				}
 			}
