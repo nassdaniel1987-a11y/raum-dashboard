@@ -15,9 +15,51 @@
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
+	// ✅ Long-press und Double-click Logic
+	let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+	let lastClickTime = 0;
+	let isLongPressing = $state(false);
+
+	function handlePressStart(e: MouseEvent | TouchEvent) {
+		// Im Edit-Mode kein Long-press (dort sind Buttons)
+		if ($isEditMode) return;
+
+		isLongPressing = true;
+
+		// Long-press Timer starten (500ms)
+		longPressTimer = setTimeout(() => {
+			isLongPressing = false;
+			// Vibrieren auf mobilen Geräten
+			if (navigator.vibrate) navigator.vibrate(50);
+			onEdit(room);
+		}, 500);
+	}
+
+	function handlePressEnd(e: MouseEvent | TouchEvent) {
+		isLongPressing = false;
+
+		// Timer stoppen falls er läuft
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
 	async function handleClick() {
 		if ($isEditMode) {
+			// Edit-Mode: Normaler Click togglet Status
 			await toggleRoomStatus(room.id);
+		} else {
+			// Normal-Mode: Double-click zum Togglen
+			const now = Date.now();
+			const timeSinceLastClick = now - lastClickTime;
+			lastClickTime = now;
+
+			if (timeSinceLastClick < 300) {
+				// Double-click erkannt!
+				await toggleRoomStatus(room.id);
+				toasts.show(room.isOpen ? '🔴 Geschlossen' : '🟢 Geöffnet', 'success');
+			}
 		}
 	}
 
@@ -166,7 +208,14 @@
 
 	<div
 		class="card-content"
+		class:long-pressing={isLongPressing}
 		onclick={handleClick}
+		onmousedown={handlePressStart}
+		onmouseup={handlePressEnd}
+		onmouseleave={handlePressEnd}
+		ontouchstart={handlePressStart}
+		ontouchend={handlePressEnd}
+		ontouchcancel={handlePressEnd}
 	>
 		<h3 class="room-title" style="font-size: {titleFontSize}px; color: {textColor};">{room.name}</h3>
 
@@ -436,6 +485,13 @@
 		text-align: center;
 		cursor: pointer;
 		flex-grow: 1;
+		transition: transform 0.1s, filter 0.1s;
+	}
+
+	/* ✅ Long-press visuelles Feedback */
+	.card-content.long-pressing {
+		transform: scale(0.95);
+		filter: brightness(1.2);
 	}
 
 	.room-title {
