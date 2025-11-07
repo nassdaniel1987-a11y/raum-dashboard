@@ -62,9 +62,6 @@
 			// ✅ FIX: Leere Strings zu null konvertieren, nicht zu String "null"
 			const closeTimeValue = (closeTime && closeTime !== '') ? closeTime : null;
 
-			// 🔍 DEBUG
-			console.log(`[DailyScheduler] Speichere für ${roomId}: open_time="${openTime}", close_time=${closeTimeValue}`);
-
 			// 1. Config-Update vorbereiten - ✅ WICHTIG: Alle Felder beibehalten!
 			const configKey = `${roomId}-${weekday}`;
 			const existingConfig = $dailyConfigs.get(configKey);
@@ -97,15 +94,13 @@
 		try {
 			// Configs speichern
 			if (configUpdates.length > 0) {
-				const { data, error } = await supabase
+				const { error } = await supabase
 					.from('daily_configs')
-					.upsert(configUpdates, { onConflict: 'room_id,weekday' })
-					.select(); // ✅ FIX: .select() hinzufügen um die gespeicherten Daten zu bekommen
+					.upsert(configUpdates, { onConflict: 'room_id,weekday' });
 
 				if (error) {
-					console.error('❌ Fehler beim Speichern:', error);
-				} else {
-					console.log('✅ Configs gespeichert:', data);
+					console.error('Fehler beim Speichern:', error);
+					throw error;
 				}
 			}
 			// Status sofort aktualisieren
