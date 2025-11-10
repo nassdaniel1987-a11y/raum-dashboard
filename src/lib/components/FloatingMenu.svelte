@@ -29,6 +29,13 @@
 	// ✅ Display-Skalierung für TV-Kompensation
 	let displayScaleX = $state(1.0); // 0.5 - 1.0
 
+	// ✅ Kachelgröße individuell einstellbar
+	let cardWidth = $state(1.0); // 0.6 - 1.4
+	let cardHeight = $state(1.0); // 0.6 - 1.4
+
+	// ✅ Vollbild-Status
+	let isFullscreen = $state(false);
+
 	// ✅ NEU: Tag-Verwaltung
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -39,6 +46,8 @@
 		const savedPause = localStorage.getItem('pauseDuration');
 		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
 		const savedScaleX = localStorage.getItem('displayScaleX');
+		const savedCardWidth = localStorage.getItem('cardWidth');
+		const savedCardHeight = localStorage.getItem('cardHeight');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDuration = parseInt(savedPause);
@@ -49,6 +58,38 @@
 			displayScaleX = parseFloat(savedScaleX);
 			applyDisplayScale(displayScaleX);
 		}
+		if (savedCardWidth) {
+			cardWidth = parseFloat(savedCardWidth);
+			applyCardSize();
+		}
+		if (savedCardHeight) {
+			cardHeight = parseFloat(savedCardHeight);
+			applyCardSize();
+		}
+
+		// Vollbild-Status überwachen
+		const handleFullscreenChange = () => {
+			isFullscreen = !!(
+				document.fullscreenElement ||
+				(document as any).webkitFullscreenElement ||
+				(document as any).mozFullScreenElement ||
+				(document as any).msFullscreenElement
+			);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+		document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+		document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+		handleFullscreenChange(); // Initial check
+
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+			document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+		};
 	});
 
 	async function handleCreateRoom() {
@@ -113,6 +154,58 @@
 		applyDisplayScale(displayScaleX);
 
 		console.log(`📺 Display-Skalierung: ${(displayScaleX * 100).toFixed(0)}%`);
+	}
+
+	function applyCardSize() {
+		// Setze CSS Variablen für Kachelgröße
+		document.documentElement.style.setProperty('--card-width-scale', cardWidth.toString());
+		document.documentElement.style.setProperty('--card-height-scale', cardHeight.toString());
+	}
+
+	function updateCardWidth() {
+		localStorage.setItem('cardWidth', cardWidth.toString());
+		applyCardSize();
+		console.log(`📏 Kachel-Breite: ${(cardWidth * 100).toFixed(0)}%`);
+	}
+
+	function updateCardHeight() {
+		localStorage.setItem('cardHeight', cardHeight.toString());
+		applyCardSize();
+		console.log(`📐 Kachel-Höhe: ${(cardHeight * 100).toFixed(0)}%`);
+	}
+
+	async function toggleFullscreen() {
+		if (!isFullscreen) {
+			// Vollbild aktivieren
+			try {
+				if (document.documentElement.requestFullscreen) {
+					await document.documentElement.requestFullscreen();
+				} else if ((document.documentElement as any).webkitRequestFullscreen) {
+					await (document.documentElement as any).webkitRequestFullscreen();
+				} else if ((document.documentElement as any).mozRequestFullScreen) {
+					await (document.documentElement as any).mozRequestFullScreen();
+				} else if ((document.documentElement as any).msRequestFullscreen) {
+					await (document.documentElement as any).msRequestFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht aktiviert werden:', err);
+			}
+		} else {
+			// Vollbild verlassen
+			try {
+				if (document.exitFullscreen) {
+					await document.exitFullscreen();
+				} else if ((document as any).webkitExitFullscreen) {
+					await (document as any).webkitExitFullscreen();
+				} else if ((document as any).mozCancelFullScreen) {
+					await (document as any).mozCancelFullScreen();
+				} else if ((document as any).msExitFullscreen) {
+					await (document as any).msExitFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht verlassen werden:', err);
+			}
+		}
 	}
 
 	function toggleAutoScroll() {
