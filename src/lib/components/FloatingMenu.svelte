@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, appSettings } from '$lib/stores/appState';
+	import { supabase } from '$lib/supabase/client';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { cubicOut } from 'svelte/easing';
@@ -33,9 +34,9 @@
 	let cardWidth = $state(1.0); // 0.6 - 1.4
 	let cardHeight = $state(1.0); // 0.6 - 1.4
 
-	// ✅ Globale Schriftgrößen
-	let globalTitleSize = $state(16); // 12-24px
-	let globalActivitySize = $state(12); // 10-18px
+	// ✅ Globale Schriftgrößen (aus DB)
+	let globalTitleSize = $state($appSettings?.global_title_font_size ?? 16); // 12-24px
+	let globalActivitySize = $state($appSettings?.global_activity_font_size ?? 12); // 10-18px
 
 	// ✅ Vollbild-Status
 	let isFullscreen = $state(false);
@@ -72,11 +73,11 @@
 			cardHeight = parseFloat(savedCardHeight);
 			applyCardSize();
 		}
-		if (savedTitleSize) {
-			globalTitleSize = parseInt(savedTitleSize);
-		}
-		if (savedActivitySize) {
-			globalActivitySize = parseInt(savedActivitySize);
+
+		// ✅ Globale Schriftgrößen aus appSettings laden (nicht localStorage!)
+		if ($appSettings) {
+			globalTitleSize = $appSettings.global_title_font_size ?? 16;
+			globalActivitySize = $appSettings.global_activity_font_size ?? 12;
 		}
 		// ✅ Immer anwenden, auch wenn keine gespeicherten Werte (dann Default-Werte)
 		applyFontSizes();
@@ -194,16 +195,44 @@
 		document.documentElement.style.setProperty('--global-activity-size', `${globalActivitySize}px`);
 	}
 
-	function updateTitleSize() {
-		localStorage.setItem('globalTitleSize', globalTitleSize.toString());
+	async function updateTitleSize() {
 		applyFontSizes();
 		console.log(`📝 Titel-Schriftgröße: ${globalTitleSize}px`);
+
+		// ✅ In Datenbank speichern (für alle Geräte)
+		try {
+			const { error } = await supabase
+				.from('app_settings')
+				.update({ global_title_font_size: globalTitleSize })
+				.eq('id', 1);
+
+			if (error) {
+				console.error('Fehler beim Speichern der Titel-Schriftgröße:', error);
+				toasts.show('⚠️ Fehler beim Speichern', 'error');
+			}
+		} catch (err) {
+			console.error('Fehler beim Update:', err);
+		}
 	}
 
-	function updateActivitySize() {
-		localStorage.setItem('globalActivitySize', globalActivitySize.toString());
+	async function updateActivitySize() {
 		applyFontSizes();
 		console.log(`📄 Aktivitäts-Schriftgröße: ${globalActivitySize}px`);
+
+		// ✅ In Datenbank speichern (für alle Geräte)
+		try {
+			const { error } = await supabase
+				.from('app_settings')
+				.update({ global_activity_font_size: globalActivitySize })
+				.eq('id', 1);
+
+			if (error) {
+				console.error('Fehler beim Speichern der Aktivitäts-Schriftgröße:', error);
+				toasts.show('⚠️ Fehler beim Speichern', 'error');
+			}
+		} catch (err) {
+			console.error('Fehler beim Update:', err);
+		}
 	}
 
 	async function toggleFullscreen() {
