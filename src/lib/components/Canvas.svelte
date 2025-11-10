@@ -405,7 +405,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		gap: 6px;
+		gap: 4px; /* ✅ Kleinere Abstände */
 		contain: layout;
 	}
 
@@ -420,8 +420,10 @@
 		transform: translateZ(0);
 		will-change: transform;
 		flex: 0 0 auto;
-		width: calc((100% - 30px) / 6);
-		min-width: 160px;
+		/* ✅ Weniger Spalten = BREITERE Kacheln */
+		width: calc((100% - 12px) / 4);
+		min-width: 180px;
+		max-height: 140px; /* ✅ Begrenzt die Höhe */
 	}
 
 	.room-wrapper.selected {
@@ -431,17 +433,17 @@
 
 	@media (min-width: 1024px) {
 		.room-wrapper {
-			width: calc((100% - 24px) / 5);
+			width: calc((100% - 16px) / 5);
 		}
 	}
 
 	@media (min-width: 1600px) {
 		.rooms-grid {
-			gap: 8px;
+			gap: 6px;
 		}
 
 		.room-wrapper {
-			width: calc((100% - 42px) / 6);
+			width: calc((100% - 24px) / 5); /* ✅ 5 statt 6 Spalten */
 		}
 
 		.canvas {

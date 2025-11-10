@@ -257,7 +257,7 @@
 		-webkit-backdrop-filter: blur(20px) saturate(180%);
 		background: rgba(255, 255, 255, 0.1); /* ✅ Basis-Glass-Layer */
 		height: 100%;
-		min-height: 100px;
+		min-height: 80px; /* ✅ Niedriger für kompaktere Kacheln */
 		display: flex;
 		flex-direction: column;
 		border: 2px solid rgba(255, 255, 255, 0.2);
