@@ -45,13 +45,23 @@
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
+	// ✅ Debounce Timer für DB-Updates
+	let fontSizeUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+
 	// ✅ Reagiere auf appSettings-Änderungen (Realtime Updates von anderen Geräten)
+	// ABER: Nur wenn sich der Wert wirklich geändert hat (verhindert Loops)
 	$effect(() => {
 		if ($appSettings) {
-			globalTitleSize = $appSettings.global_title_font_size ?? 16;
-			globalActivitySize = $appSettings.global_activity_font_size ?? 12;
-			applyFontSizes();
-			console.log(`🔄 Globale Schriftgrößen aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+			const newTitleSize = $appSettings.global_title_font_size ?? 16;
+			const newActivitySize = $appSettings.global_activity_font_size ?? 12;
+
+			// Nur aktualisieren wenn sich wirklich was geändert hat
+			if (newTitleSize !== globalTitleSize || newActivitySize !== globalActivitySize) {
+				globalTitleSize = newTitleSize;
+				globalActivitySize = newActivitySize;
+				applyFontSizes();
+				console.log(`🔄 Globale Schriftgrößen aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+			}
 		}
 	});
 
@@ -205,45 +215,50 @@
 		document.documentElement.style.setProperty('--global-activity-size', `${globalActivitySize}px`);
 	}
 
-	async function updateTitleSize() {
-		applyFontSizes();
-		console.log(`📝 Titel-Schriftgröße: ${globalTitleSize}px`);
+	// ✅ Debounced DB-Update für Schriftgrößen
+	async function saveFontSizesToDB() {
+		console.log(`💾 Speichere Schriftgrößen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
 
-		// ✅ In Datenbank speichern (für alle Geräte)
 		try {
 			const { error } = await supabase
 				.from('app_settings')
-				.update({ global_title_font_size: globalTitleSize })
+				.update({
+					global_title_font_size: globalTitleSize,
+					global_activity_font_size: globalActivitySize
+				})
 				.eq('id', 1);
 
 			if (error) {
-				console.error('Fehler beim Speichern der Titel-Schriftgröße:', error);
+				console.error('Fehler beim Speichern der Schriftgrößen:', error);
 				toasts.show('⚠️ Fehler beim Speichern', 'error');
+			} else {
+				console.log('✅ Schriftgrößen gespeichert');
 			}
 		} catch (err) {
 			console.error('Fehler beim Update:', err);
 		}
 	}
 
-	async function updateActivitySize() {
-		applyFontSizes();
-		console.log(`📄 Aktivitäts-Schriftgröße: ${globalActivitySize}px`);
+	// ✅ Watcher für lokale Schriftgrößen-Änderungen (Slider-Bewegungen)
+	let lastTitleSize = globalTitleSize;
+	let lastActivitySize = globalActivitySize;
 
-		// ✅ In Datenbank speichern (für alle Geräte)
-		try {
-			const { error } = await supabase
-				.from('app_settings')
-				.update({ global_activity_font_size: globalActivitySize })
-				.eq('id', 1);
+	$effect(() => {
+		// Nur reagieren wenn sich lokal was geändert hat (User bewegt Slider)
+		if (globalTitleSize !== lastTitleSize || globalActivitySize !== lastActivitySize) {
+			lastTitleSize = globalTitleSize;
+			lastActivitySize = globalActivitySize;
 
-			if (error) {
-				console.error('Fehler beim Speichern der Aktivitäts-Schriftgröße:', error);
-				toasts.show('⚠️ Fehler beim Speichern', 'error');
-			}
-		} catch (err) {
-			console.error('Fehler beim Update:', err);
+			// Sofort CSS aktualisieren (für sofortiges visuelles Feedback)
+			applyFontSizes();
+
+			// DB-Update debounced (erst nach 500ms Pause)
+			if (fontSizeUpdateTimer) clearTimeout(fontSizeUpdateTimer);
+			fontSizeUpdateTimer = setTimeout(() => {
+				saveFontSizesToDB();
+			}, 500);
 		}
-	}
+	});
 
 	async function toggleFullscreen() {
 		if (!isFullscreen) {
@@ -466,7 +481,6 @@
 								max="24"
 								step="1"
 								bind:value={globalTitleSize}
-								oninput={updateTitleSize}
 								class="slider"
 							/>
 						</div>
@@ -484,7 +498,6 @@
 								max="18"
 								step="1"
 								bind:value={globalActivitySize}
-								oninput={updateActivitySize}
 								class="slider"
 							/>
 						</div>
