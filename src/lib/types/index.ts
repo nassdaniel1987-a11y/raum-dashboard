@@ -19,8 +19,8 @@ export interface DailyConfig {
 	room_id: string;
 	weekday: number; // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
 	activity: string | null;
-	title_font_size: number | null; // ✅ Optional: Wenn null, wird global_title_font_size verwendet
-	text_font_size: number | null; // ✅ Optional: Wenn null, wird global_activity_font_size verwendet
+	title_font_size: number;
+	text_font_size: number;
 	text_color: string; // ✅ NEU: Textfarbe für Titel und Aktivität
 	title_alignment: 'left' | 'center' | 'right';
 	text_alignment: 'left' | 'center' | 'right';
@@ -42,8 +42,6 @@ export interface AppSettings {
 	night_start: string; // HH:MM format
 	night_end: string; // HH:MM format
 	current_theme: string;
-	global_title_font_size: number; // ✅ Globale Schriftgröße für Titel
-	global_activity_font_size: number; // ✅ Globale Schriftgröße für Aktivitäten
 }
 
 export interface RoomWithConfig extends Room {
