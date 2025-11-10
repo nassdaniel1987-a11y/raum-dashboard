@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, appSettings } from '$lib/stores/appState';
-	import { supabase } from '$lib/supabase/client';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs } from '$lib/stores/appState';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { cubicOut } from 'svelte/easing';
@@ -34,19 +33,12 @@
 	let cardWidth = $state(1.0); // 0.6 - 1.4
 	let cardHeight = $state(1.0); // 0.6 - 1.4
 
-	// ✅ Globale Schriftgrößen (aus DB)
-	let globalTitleSize = $state($appSettings?.global_title_font_size ?? 16); // 12-24px
-	let globalActivitySize = $state($appSettings?.global_activity_font_size ?? 12); // 10-18px
-
 	// ✅ Vollbild-Status
 	let isFullscreen = $state(false);
 
 	// ✅ NEU: Tag-Verwaltung
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-
-	// ✅ Debounce Timer für DB-Updates
-	let fontSizeUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		// Lade gespeicherte Werte
@@ -76,15 +68,6 @@
 			cardHeight = parseFloat(savedCardHeight);
 			applyCardSize();
 		}
-
-		// ✅ Globale Schriftgrößen aus appSettings laden (nur beim Start!)
-		if ($appSettings) {
-			globalTitleSize = $appSettings.global_title_font_size ?? 16;
-			globalActivitySize = $appSettings.global_activity_font_size ?? 12;
-			console.log(`🔄 Globale Schriftgrößen von DB geladen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
-		}
-		// ✅ Immer anwenden, auch wenn keine gespeicherten Werte (dann Default-Werte)
-		applyFontSizes();
 
 		// Vollbild-Status überwachen
 		const handleFullscreenChange = () => {
@@ -191,45 +174,6 @@
 		localStorage.setItem('cardHeight', cardHeight.toString());
 		applyCardSize();
 		console.log(`📐 Kachel-Höhe: ${(cardHeight * 100).toFixed(0)}%`);
-	}
-
-	function applyFontSizes() {
-		// Setze CSS Variablen für globale Schriftgrößen
-		document.documentElement.style.setProperty('--global-title-size', `${globalTitleSize}px`);
-		document.documentElement.style.setProperty('--global-activity-size', `${globalActivitySize}px`);
-	}
-
-	// ✅ Handler wenn User den Slider bewegt
-	function handleFontSizeChange() {
-		console.log(`📝 Slider bewegt: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
-
-		// Sofort CSS aktualisieren (für sofortiges visuelles Feedback)
-		applyFontSizes();
-
-		// DB-Update debounced (erst nach 500ms Pause)
-		if (fontSizeUpdateTimer) clearTimeout(fontSizeUpdateTimer);
-		fontSizeUpdateTimer = setTimeout(async () => {
-			console.log(`💾 Speichere Schriftgrößen in DB...`);
-
-			try {
-				const { error } = await supabase
-					.from('app_settings')
-					.update({
-						global_title_font_size: globalTitleSize,
-						global_activity_font_size: globalActivitySize
-					})
-					.eq('id', 1);
-
-				if (error) {
-					console.error('Fehler beim Speichern der Schriftgrößen:', error);
-					toasts.show('⚠️ Fehler beim Speichern', 'error');
-				} else {
-					console.log('✅ Schriftgrößen gespeichert');
-				}
-			} catch (err) {
-				console.error('Fehler beim Update:', err);
-			}
-		}, 500);
 	}
 
 	async function toggleFullscreen() {
@@ -436,42 +380,6 @@
 								step="0.05"
 								bind:value={cardHeight}
 								oninput={updateCardHeight}
-								class="slider"
-							/>
-						</div>
-
-						<!-- Schriftgröße Titel -->
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">📝</span>
-								<span class="control-label">Schriftgröße Titel</span>
-								<span class="control-value">{globalTitleSize}px</span>
-							</div>
-							<input
-								type="range"
-								min="12"
-								max="24"
-								step="1"
-								bind:value={globalTitleSize}
-								oninput={handleFontSizeChange}
-								class="slider"
-							/>
-						</div>
-
-						<!-- Schriftgröße Aktivität -->
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">📄</span>
-								<span class="control-label">Schriftgröße Aktivität</span>
-								<span class="control-value">{globalActivitySize}px</span>
-							</div>
-							<input
-								type="range"
-								min="10"
-								max="18"
-								step="1"
-								bind:value={globalActivitySize}
-								oninput={handleFontSizeChange}
 								class="slider"
 							/>
 						</div>
