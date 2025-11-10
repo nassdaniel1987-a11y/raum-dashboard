@@ -157,6 +157,76 @@
 	let titleFontSize = $derived(room.config?.title_font_size || 16); // Reduziert von 18
 	let textFontSize = $derived(room.config?.text_font_size || 12);  // Reduziert von 14
 	let textColor = $derived(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
+
+	// ✅ Resize-Handle für globale Kachelgröße
+	let isResizing = $state(false);
+	let resizeStartY = 0;
+	let resizeStartScale = 1.0;
+
+	function handleResizeStart(e: TouchEvent | MouseEvent) {
+		e.stopPropagation();
+		e.preventDefault();
+		isResizing = true;
+
+		// Aktuelle globale Skalierung aus CSS Variable lesen
+		const currentScale = parseFloat(
+			getComputedStyle(document.documentElement).getPropertyValue('--card-scale') || '1.0'
+		);
+		resizeStartScale = currentScale;
+
+		if (e instanceof TouchEvent) {
+			resizeStartY = e.touches[0].clientY;
+		} else {
+			resizeStartY = e.clientY;
+		}
+
+		// Touch-Move Events global registrieren
+		if (e instanceof TouchEvent) {
+			document.addEventListener('touchmove', handleResizeMove);
+			document.addEventListener('touchend', handleResizeEnd);
+		} else {
+			document.addEventListener('mousemove', handleResizeMove);
+			document.addEventListener('mouseup', handleResizeEnd);
+		}
+	}
+
+	function handleResizeMove(e: TouchEvent | MouseEvent) {
+		if (!isResizing) return;
+		e.preventDefault();
+
+		const currentY = e instanceof TouchEvent ? e.touches[0].clientY : e.clientY;
+		const deltaY = currentY - resizeStartY;
+
+		// Runter ziehen = größer, hoch ziehen = kleiner
+		// Pro 100px = 0.2 Scale-Änderung
+		const scaleChange = deltaY / 500;
+		let newScale = resizeStartScale + scaleChange;
+
+		// Begrenzen auf 0.6 - 1.4
+		newScale = Math.max(0.6, Math.min(1.4, newScale));
+
+		// CSS Variable setzen
+		document.documentElement.style.setProperty('--card-scale', newScale.toString());
+	}
+
+	function handleResizeEnd(e: TouchEvent | MouseEvent) {
+		if (!isResizing) return;
+		isResizing = false;
+
+		// Events entfernen
+		if (e instanceof TouchEvent) {
+			document.removeEventListener('touchmove', handleResizeMove);
+			document.removeEventListener('touchend', handleResizeEnd);
+		} else {
+			document.removeEventListener('mousemove', handleResizeMove);
+			document.removeEventListener('mouseup', handleResizeEnd);
+		}
+
+		// In localStorage speichern
+		const finalScale = getComputedStyle(document.documentElement).getPropertyValue('--card-scale');
+		localStorage.setItem('cardScale', finalScale);
+		console.log(`🎴 Kachelgröße gespeichert: ${(parseFloat(finalScale) * 100).toFixed(0)}%`);
+	}
 </script>
 
 <div
@@ -239,6 +309,21 @@
 			<p class="room-activity" style="font-size: {textFontSize}px; color: {textColor};">{room.config.activity}</p>
 		{/if}
 	</div>
+
+	<!-- ✅ Resize-Handle (nur im Edit-Modus) -->
+	{#if $isEditMode}
+		<div
+			class="resize-handle"
+			class:active={isResizing}
+			onmousedown={handleResizeStart}
+			ontouchstart={handleResizeStart}
+			role="button"
+			tabindex="-1"
+			aria-label="Größe anpassen"
+		>
+			<div class="resize-icon">⋮⋮</div>
+		</div>
+	{/if}
 
 </div>
 
@@ -602,6 +687,49 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
+	/* ✅ Resize-Handle - Unten rechts in der Ecke */
+	.resize-handle {
+		position: absolute;
+		bottom: 4px;
+		right: 4px;
+		width: 36px;
+		height: 36px;
+		background: rgba(96, 165, 250, 0.9);
+		border: 2px solid rgba(255, 255, 255, 0.6);
+		border-radius: 8px;
+		cursor: nwse-resize;
+		touch-action: none;
+		z-index: 15;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		transition: all 0.2s;
+	}
+
+	.resize-handle:hover,
+	.resize-handle:active {
+		background: rgba(96, 165, 250, 1);
+		transform: scale(1.1);
+		box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6);
+	}
+
+	.resize-handle.active {
+		background: rgba(34, 197, 94, 0.9);
+		border-color: rgba(34, 197, 94, 1);
+		transform: scale(1.15);
+		box-shadow: 0 6px 16px rgba(34, 197, 94, 0.7);
+	}
+
+	.resize-icon {
+		font-size: 18px;
+		font-weight: bold;
+		color: white;
+		line-height: 1;
+		letter-spacing: -2px;
+		transform: rotate(45deg);
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+	}
 
 	/* ✅ Große Displays: Noch kleinere Kacheln */
 	@media (min-width: 1600px) {

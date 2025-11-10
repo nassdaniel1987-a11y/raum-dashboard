@@ -176,10 +176,17 @@
 		const savedSpeed = localStorage.getItem('scrollSpeed');
 		const savedPause = localStorage.getItem('pauseDuration');
 		const savedEnabled = localStorage.getItem('autoScrollEnabled');
+		const savedCardScale = localStorage.getItem('cardScale');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDurationSeconds = parseInt(savedPause);
 		if (savedEnabled) autoScrollEnabled = savedEnabled === 'true';
+
+		// ✅ Kachelgröße wiederherstellen
+		if (savedCardScale) {
+			document.documentElement.style.setProperty('--card-scale', savedCardScale);
+			console.log(`🎴 Kachelgröße wiederhergestellt: ${(parseFloat(savedCardScale) * 100).toFixed(0)}%`);
+		}
 
 		// Auto-Start wenn enabled
 		if (autoScrollEnabled) {
@@ -417,17 +424,18 @@
 		height: auto;
 		display: flex;
 		flex-direction: column;
-		transform: translateZ(0);
+		/* ✅ Globale Kachelgröße über CSS Variable */
+		transform: scale(var(--card-scale, 1)) translateZ(0);
 		will-change: transform;
 		flex: 0 0 auto;
 		/* ✅ Weniger Spalten = BREITERE Kacheln */
 		width: calc((100% - 12px) / 4);
 		min-width: 180px;
-		max-height: 140px; /* ✅ Begrenzt die Höhe */
+		max-height: calc(140px * var(--card-scale, 1)); /* ✅ Max-Höhe skaliert mit */
 	}
 
 	.room-wrapper.selected {
-		transform: scale(1.05) translateZ(0);
+		transform: scale(calc(var(--card-scale, 1) * 1.05)) translateZ(0);
 		filter: brightness(1.1);
 	}
 
