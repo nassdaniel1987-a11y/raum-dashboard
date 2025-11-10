@@ -420,8 +420,11 @@
 		transform: translateZ(0);
 		will-change: transform;
 		flex: 0 0 auto;
-		width: calc((100% - 30px) / 6);
-		min-width: 160px;
+		/* ✅ Standard: 4 Spalten statt 6 für breitere Kacheln */
+		width: calc((100% - 18px) / 4);
+		min-width: 200px;
+		/* ✅ Aspect Ratio für konsistente Proportionen */
+		aspect-ratio: 1.2 / 1;
 	}
 
 	.room-wrapper.selected {
@@ -431,7 +434,8 @@
 
 	@media (min-width: 1024px) {
 		.room-wrapper {
-			width: calc((100% - 24px) / 5);
+			/* ✅ 4 Spalten auf mittelgroßen Bildschirmen */
+			width: calc((100% - 18px) / 4);
 		}
 	}
 
@@ -441,7 +445,8 @@
 		}
 
 		.room-wrapper {
-			width: calc((100% - 42px) / 6);
+			/* ✅ 5 Spalten auf sehr großen Bildschirmen */
+			width: calc((100% - 32px) / 5);
 		}
 
 		.canvas {
