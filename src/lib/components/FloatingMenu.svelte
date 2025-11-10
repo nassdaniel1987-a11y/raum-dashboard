@@ -74,12 +74,12 @@
 		}
 		if (savedTitleSize) {
 			globalTitleSize = parseInt(savedTitleSize);
-			applyFontSizes();
 		}
 		if (savedActivitySize) {
 			globalActivitySize = parseInt(savedActivitySize);
-			applyFontSizes();
 		}
+		// ✅ Immer anwenden, auch wenn keine gespeicherten Werte (dann Default-Werte)
+		applyFontSizes();
 
 		// Vollbild-Status überwachen
 		const handleFullscreenChange = () => {
