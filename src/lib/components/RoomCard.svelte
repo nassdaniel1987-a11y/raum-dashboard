@@ -261,8 +261,8 @@
 		display: flex;
 		flex-direction: column;
 		border: 2px solid rgba(255, 255, 255, 0.2);
-		/* GPU-Beschleunigung */
-		transform: translateZ(0);
+		/* GPU-Beschleunigung + TV-Skalierung */
+		transform: scaleX(var(--card-scale-x, 1)) translateZ(0);
 		will-change: transform, box-shadow;
 	}
 
