@@ -159,11 +159,12 @@
 	let textColor = $derived(room.config?.text_color || '#FFFFFF');
 
 	// ✅ Style-String mit Fallback auf CSS Variablen
+	// Wichtig: Explizit auf null/undefined prüfen, nicht nur truthy!
 	let titleStyle = $derived(
-		`font-size: ${titleFontSize ? `${titleFontSize}px` : 'var(--global-title-size, 16px)'}; color: ${textColor};`
+		`font-size: ${titleFontSize != null ? `${titleFontSize}px` : 'var(--global-title-size, 16px)'}; color: ${textColor};`
 	);
 	let activityStyle = $derived(
-		`font-size: ${textFontSize ? `${textFontSize}px` : 'var(--global-activity-size, 12px)'}; color: ${textColor};`
+		`font-size: ${textFontSize != null ? `${textFontSize}px` : 'var(--global-activity-size, 12px)'}; color: ${textColor};`
 	);
 </script>
 

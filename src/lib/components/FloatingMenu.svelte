@@ -45,6 +45,16 @@
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
+	// ✅ Reagiere auf appSettings-Änderungen (Realtime Updates von anderen Geräten)
+	$effect(() => {
+		if ($appSettings) {
+			globalTitleSize = $appSettings.global_title_font_size ?? 16;
+			globalActivitySize = $appSettings.global_activity_font_size ?? 12;
+			applyFontSizes();
+			console.log(`🔄 Globale Schriftgrößen aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+		}
+	});
+
 	onMount(() => {
 		// Lade gespeicherte Werte
 		const savedSpeed = localStorage.getItem('scrollSpeed');
