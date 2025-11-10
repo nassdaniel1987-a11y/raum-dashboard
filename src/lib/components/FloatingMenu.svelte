@@ -100,12 +100,9 @@
 	}
 
 	function applyDisplayScale(scale: number) {
-		// Wende Skalierung auf BEIDE Achsen an, damit Proportionen erhalten bleiben
-		const canvas = document.querySelector('.canvas-container') as HTMLElement;
-		if (canvas) {
-			canvas.style.transform = `scale(${scale})`;
-			canvas.style.transformOrigin = 'top center';
-		}
+		// Setze CSS Variable für Kachel-Skalierung
+		// Der Container bleibt normal breit, nur die Kacheln werden schmaler
+		document.documentElement.style.setProperty('--card-scale-x', scale.toString());
 	}
 
 	function updateDisplayScale() {
