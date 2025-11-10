@@ -424,18 +424,18 @@
 		height: auto;
 		display: flex;
 		flex-direction: column;
-		/* ✅ Globale Kachelgröße über CSS Variable */
-		transform: scale(var(--card-scale, 1)) translateZ(0);
+		/* ✅ Globale Kachelgröße über CSS Variablen (Breite und Höhe separat) */
+		transform: scaleX(var(--card-width-scale, 1)) scaleY(var(--card-height-scale, 1)) translateZ(0);
 		will-change: transform;
 		flex: 0 0 auto;
 		/* ✅ Weniger Spalten = BREITERE Kacheln */
 		width: calc((100% - 12px) / 4);
 		min-width: 180px;
-		max-height: calc(140px * var(--card-scale, 1)); /* ✅ Max-Höhe skaliert mit */
+		max-height: calc(140px * var(--card-height-scale, 1)); /* ✅ Max-Höhe skaliert mit */
 	}
 
 	.room-wrapper.selected {
-		transform: scale(calc(var(--card-scale, 1) * 1.05)) translateZ(0);
+		transform: scaleX(calc(var(--card-width-scale, 1) * 1.05)) scaleY(calc(var(--card-height-scale, 1) * 1.05)) translateZ(0);
 		filter: brightness(1.1);
 	}
 

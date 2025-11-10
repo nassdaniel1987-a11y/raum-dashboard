@@ -29,6 +29,13 @@
 	// ✅ Display-Skalierung für TV-Kompensation
 	let displayScaleX = $state(1.0); // 0.5 - 1.0
 
+	// ✅ Kachelgröße individuell einstellbar
+	let cardWidth = $state(1.0); // 0.6 - 1.4
+	let cardHeight = $state(1.0); // 0.6 - 1.4
+
+	// ✅ Vollbild-Status
+	let isFullscreen = $state(false);
+
 	// ✅ NEU: Tag-Verwaltung
 	let copiedDay = $state<number | null>(null);
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -39,6 +46,8 @@
 		const savedPause = localStorage.getItem('pauseDuration');
 		const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
 		const savedScaleX = localStorage.getItem('displayScaleX');
+		const savedCardWidth = localStorage.getItem('cardWidth');
+		const savedCardHeight = localStorage.getItem('cardHeight');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDuration = parseInt(savedPause);
@@ -49,6 +58,38 @@
 			displayScaleX = parseFloat(savedScaleX);
 			applyDisplayScale(displayScaleX);
 		}
+		if (savedCardWidth) {
+			cardWidth = parseFloat(savedCardWidth);
+			applyCardSize();
+		}
+		if (savedCardHeight) {
+			cardHeight = parseFloat(savedCardHeight);
+			applyCardSize();
+		}
+
+		// Vollbild-Status überwachen
+		const handleFullscreenChange = () => {
+			isFullscreen = !!(
+				document.fullscreenElement ||
+				(document as any).webkitFullscreenElement ||
+				(document as any).mozFullScreenElement ||
+				(document as any).msFullscreenElement
+			);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+		document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+		document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+		handleFullscreenChange(); // Initial check
+
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+			document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+			document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+		};
 	});
 
 	async function handleCreateRoom() {
@@ -113,6 +154,58 @@
 		applyDisplayScale(displayScaleX);
 
 		console.log(`📺 Display-Skalierung: ${(displayScaleX * 100).toFixed(0)}%`);
+	}
+
+	function applyCardSize() {
+		// Setze CSS Variablen für Kachelgröße
+		document.documentElement.style.setProperty('--card-width-scale', cardWidth.toString());
+		document.documentElement.style.setProperty('--card-height-scale', cardHeight.toString());
+	}
+
+	function updateCardWidth() {
+		localStorage.setItem('cardWidth', cardWidth.toString());
+		applyCardSize();
+		console.log(`📏 Kachel-Breite: ${(cardWidth * 100).toFixed(0)}%`);
+	}
+
+	function updateCardHeight() {
+		localStorage.setItem('cardHeight', cardHeight.toString());
+		applyCardSize();
+		console.log(`📐 Kachel-Höhe: ${(cardHeight * 100).toFixed(0)}%`);
+	}
+
+	async function toggleFullscreen() {
+		if (!isFullscreen) {
+			// Vollbild aktivieren
+			try {
+				if (document.documentElement.requestFullscreen) {
+					await document.documentElement.requestFullscreen();
+				} else if ((document.documentElement as any).webkitRequestFullscreen) {
+					await (document.documentElement as any).webkitRequestFullscreen();
+				} else if ((document.documentElement as any).mozRequestFullScreen) {
+					await (document.documentElement as any).mozRequestFullScreen();
+				} else if ((document.documentElement as any).msRequestFullscreen) {
+					await (document.documentElement as any).msRequestFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht aktiviert werden:', err);
+			}
+		} else {
+			// Vollbild verlassen
+			try {
+				if (document.exitFullscreen) {
+					await document.exitFullscreen();
+				} else if ((document as any).webkitExitFullscreen) {
+					await (document as any).webkitExitFullscreen();
+				} else if ((document as any).mozCancelFullScreen) {
+					await (document as any).mozCancelFullScreen();
+				} else if ((document as any).msExitFullscreen) {
+					await (document as any).msExitFullscreen();
+				}
+			} catch (err) {
+				console.error('Vollbild konnte nicht verlassen werden:', err);
+			}
+		}
 	}
 
 	function toggleAutoScroll() {
@@ -184,6 +277,33 @@
 
 {#if menuOpen}
 	<div class="menu-panel" transition:slide={{ duration: 300, axis: 'y' }}>
+		<!-- ✅ Haupt-Buttons (immer sichtbar, außerhalb der Tabs) -->
+		<div class="main-buttons">
+			<button
+				class="big-button edit-toggle"
+				class:active={$isEditMode}
+				onclick={() => isEditMode.update(v => !v)}
+			>
+				<span class="big-icon">{$isEditMode ? '🔓' : '🔒'}</span>
+				<div class="big-label">
+					<span class="label-text">{$isEditMode ? 'Edit-Modus' : 'Ansicht-Modus'}</span>
+					<span class="label-hint">{$isEditMode ? 'Aktiv' : 'Inaktiv'}</span>
+				</div>
+			</button>
+
+			<button
+				class="big-button fullscreen-toggle"
+				class:active={isFullscreen}
+				onclick={toggleFullscreen}
+			>
+				<span class="big-icon">{isFullscreen ? '⛶' : '⛶'}</span>
+				<div class="big-label">
+					<span class="label-text">Vollbild</span>
+					<span class="label-hint">{isFullscreen ? 'Aktiv' : 'Inaktiv'}</span>
+				</div>
+			</button>
+		</div>
+
 		<!-- ✅ Tab Navigation -->
 		<div class="tab-navigation">
 			<button
@@ -210,16 +330,14 @@
 				<span class="tab-icon">📅</span>
 				<span class="tab-label">Tage</span>
 			</button>
-			{#if $isEditMode}
-				<button
-					class="tab-btn"
-					class:active={activeTab === 'edit'}
-					onclick={() => activeTab = 'edit'}
-				>
-					<span class="tab-icon">✏️</span>
-					<span class="tab-label">Bearbeiten</span>
-				</button>
-			{/if}
+			<button
+				class="tab-btn"
+				class:active={activeTab === 'edit'}
+				onclick={() => activeTab = 'edit'}
+			>
+				<span class="tab-icon">⚙️</span>
+				<span class="tab-label">Aktionen</span>
+			</button>
 		</div>
 
 		<!-- ✅ Tab Content -->
@@ -227,23 +345,48 @@
 			<!-- TAB 1: Ansicht -->
 			{#if activeTab === 'view'}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<button
-						class="action-button mode-toggle"
-						class:active={$isEditMode}
-						onclick={() => isEditMode.update(v => !v)}
-					>
-						<span class="btn-icon">{$isEditMode ? '🔓' : '🔒'}</span>
-						<div class="btn-content">
-							<span class="btn-label">{$isEditMode ? 'Bearbeitungs-Modus' : 'Ansicht-Modus'}</span>
-							<span class="btn-hint">{$isEditMode ? 'Aktiv' : 'Inaktiv'}</span>
-						</div>
-					</button>
-
 					<div class="scroll-controls">
+						<!-- Kachel-Breite -->
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">↔️</span>
+								<span class="control-label">Kachel-Breite</span>
+								<span class="control-value">{(cardWidth * 100).toFixed(0)}%</span>
+							</div>
+							<input
+								type="range"
+								min="0.6"
+								max="1.4"
+								step="0.05"
+								bind:value={cardWidth}
+								oninput={updateCardWidth}
+								class="slider"
+							/>
+						</div>
+
+						<!-- Kachel-Höhe -->
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">↕️</span>
+								<span class="control-label">Kachel-Höhe</span>
+								<span class="control-value">{(cardHeight * 100).toFixed(0)}%</span>
+							</div>
+							<input
+								type="range"
+								min="0.6"
+								max="1.4"
+								step="0.05"
+								bind:value={cardHeight}
+								oninput={updateCardHeight}
+								class="slider"
+							/>
+						</div>
+
+						<!-- Display-Breite -->
 						<div class="control-group">
 							<div class="control-header">
 								<span class="control-icon">📺</span>
-								<span class="control-label">Display-Breite</span>
+								<span class="control-label">Display-Breite (TV)</span>
 								<span class="control-value">{(displayScaleX * 100).toFixed(0)}%</span>
 							</div>
 							<input
@@ -264,7 +407,7 @@
 
 					<div class="info-box">
 						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Kompensiert horizontales Strecken vom iPad auf TV</span>
+						<span class="info-text">Passe Kachelgröße und Display-Breite für optimale TV-Darstellung an</span>
 					</div>
 				</div>
 			{/if}
@@ -382,39 +525,70 @@
 				</div>
 			{/if}
 
-			<!-- TAB 4: Bearbeiten (nur im Edit-Mode) -->
-			{#if activeTab === 'edit' && $isEditMode}
+			<!-- TAB 4: Aktionen -->
+			{#if activeTab === 'edit'}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
-						<span class="btn-icon">➕</span>
-						<div class="btn-content">
-							<span class="btn-label">Raum erstellen</span>
-						</div>
-					</button>
+					<!-- Tagesplaner & Einstellungen -->
+					<div class="action-grid">
+						<button class="grid-button info" onclick={onOpenScheduler}>
+							<span class="grid-icon">📅</span>
+							<span class="grid-label">Tagesplaner</span>
+						</button>
 
-					{#if showCreateForm}
-						<div class="create-form" transition:slide={{ duration: 200 }}>
-							<input
-								type="text"
-								bind:value={newRoomName}
-								placeholder="Raum-Name..."
-								onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
-							/>
-							<select bind:value={newRoomFloor}>
-								<option value="extern">🏃 Außenbereich</option>
-								<option value="dach">🏠 Dachgeschoss</option>
-								<option value="og2">2️⃣ 2. OG</option>
-								<option value="og1">1️⃣ 1. OG</option>
-								<option value="eg">🚪 Erdgeschoss</option>
-								<option value="ug">⬇️ Untergeschoss</option>
-							</select>
-							<div class="form-actions">
-								<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
-								<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
+						<button class="grid-button info" onclick={onOpenSettings}>
+							<span class="grid-icon">⚙️</span>
+							<span class="grid-label">Einstellungen</span>
+						</button>
+					</div>
+
+					<!-- Raum erstellen (nur im Edit-Mode) -->
+					{#if $isEditMode}
+						<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
+							<span class="btn-icon">➕</span>
+							<div class="btn-content">
+								<span class="btn-label">Raum erstellen</span>
 							</div>
-						</div>
+						</button>
+
+						{#if showCreateForm}
+							<div class="create-form" transition:slide={{ duration: 200 }}>
+								<input
+									type="text"
+									bind:value={newRoomName}
+									placeholder="Raum-Name..."
+									onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
+								/>
+								<select bind:value={newRoomFloor}>
+									<option value="extern">🏃 Außenbereich</option>
+									<option value="dach">🏠 Dachgeschoss</option>
+									<option value="og2">2️⃣ 2. OG</option>
+									<option value="og1">1️⃣ 1. OG</option>
+									<option value="eg">🚪 Erdgeschoss</option>
+									<option value="ug">⬇️ Untergeschoss</option>
+								</select>
+								<div class="form-actions">
+									<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
+									<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
+								</div>
+							</div>
+						{/if}
+
+						<!-- Räume tauschen -->
+						<button
+							class="action-button swap-button"
+							class:active={$swapSelection.length > 0}
+							onclick={handleSwap}
+							disabled={$swapSelection.length !== 2}
+						>
+							<span class="btn-icon">⮀</span>
+							<div class="btn-content">
+								<span class="btn-label">Räume tauschen</span>
+								<span class="btn-hint">{$swapSelection.length}/2 ausgewählt</span>
+							</div>
+						</button>
 					{/if}
 
+					<!-- Alle öffnen/schließen -->
 					<div class="action-grid">
 						<button class="grid-button success" onclick={bulkOpenAllRooms}>
 							<span class="grid-icon">✅</span>
@@ -424,31 +598,6 @@
 						<button class="grid-button danger" onclick={bulkCloseAllRooms}>
 							<span class="grid-icon">🔒</span>
 							<span class="grid-label">Alle schließen</span>
-						</button>
-					</div>
-
-					<button
-						class="action-button swap-button"
-						class:active={$swapSelection.length > 0}
-						onclick={handleSwap}
-						disabled={$swapSelection.length !== 2}
-					>
-						<span class="btn-icon">⮀</span>
-						<div class="btn-content">
-							<span class="btn-label">Räume tauschen</span>
-							<span class="btn-hint">{$swapSelection.length}/2 ausgewählt</span>
-						</div>
-					</button>
-
-					<div class="action-grid">
-						<button class="grid-button info" onclick={onOpenScheduler}>
-							<span class="grid-icon">📅</span>
-							<span class="grid-label">Tagesplan</span>
-						</button>
-
-						<button class="grid-button info" onclick={onOpenSettings}>
-							<span class="grid-icon">⚙️</span>
-							<span class="grid-label">Einstellungen</span>
 						</button>
 					</div>
 				</div>
@@ -515,7 +664,7 @@
 		bottom: 100px;
 		right: 20px;
 		width: 360px;
-		height: 500px; /* ✅ Feste Höhe - kein Springen mehr */
+		height: 550px; /* ✅ Etwas höher wegen main-buttons */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
 		border-radius: 16px;
@@ -528,6 +677,67 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
+	}
+
+	/* ✅ Haupt-Buttons oben */
+	.main-buttons {
+		display: flex;
+		gap: 8px;
+		padding: 12px;
+		background: rgba(0, 0, 0, 0.4);
+		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.big-button {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.3s;
+		color: white;
+	}
+
+	.big-button:hover {
+		background: rgba(255, 255, 255, 0.12);
+		border-color: rgba(255, 255, 255, 0.25);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	}
+
+	.big-button.active {
+		background: rgba(34, 197, 94, 0.2);
+		border-color: rgba(34, 197, 94, 0.5);
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+	}
+
+	.big-icon {
+		font-size: 28px;
+		line-height: 1;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+	}
+
+	.big-label {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+	}
+
+	.label-text {
+		font-size: 14px;
+		font-weight: 700;
+		color: white;
+	}
+
+	.label-hint {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.6);
+		font-weight: 500;
 	}
 
 	/* ✅ Tab Navigation Bar */
