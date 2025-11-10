@@ -48,19 +48,6 @@
 	// ✅ Debounce Timer für DB-Updates
 	let fontSizeUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 
-	// ✅ Reagiere auf appSettings-Änderungen (Realtime Updates von anderen Geräten)
-	$effect(() => {
-		if ($appSettings) {
-			const newTitleSize = $appSettings.global_title_font_size ?? 16;
-			const newActivitySize = $appSettings.global_activity_font_size ?? 12;
-
-			globalTitleSize = newTitleSize;
-			globalActivitySize = newActivitySize;
-			applyFontSizes();
-			console.log(`🔄 Globale Schriftgrößen von DB geladen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
-		}
-	});
-
 	onMount(() => {
 		// Lade gespeicherte Werte
 		const savedSpeed = localStorage.getItem('scrollSpeed');
@@ -90,10 +77,11 @@
 			applyCardSize();
 		}
 
-		// ✅ Globale Schriftgrößen aus appSettings laden (nicht localStorage!)
+		// ✅ Globale Schriftgrößen aus appSettings laden (nur beim Start!)
 		if ($appSettings) {
 			globalTitleSize = $appSettings.global_title_font_size ?? 16;
 			globalActivitySize = $appSettings.global_activity_font_size ?? 12;
+			console.log(`🔄 Globale Schriftgrößen von DB geladen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
 		}
 		// ✅ Immer anwenden, auch wenn keine gespeicherten Werte (dann Default-Werte)
 		applyFontSizes();
