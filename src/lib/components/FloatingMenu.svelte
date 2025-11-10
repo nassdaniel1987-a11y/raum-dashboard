@@ -47,33 +47,17 @@
 
 	// ✅ Debounce Timer für DB-Updates
 	let fontSizeUpdateTimer: ReturnType<typeof setTimeout> | null = null;
-	let isUpdatingFromDB = false; // Flag um Loops zu verhindern
-
-	// ✅ Tracking für Änderungen
-	let lastTitleSize = $state(globalTitleSize);
-	let lastActivitySize = $state(globalActivitySize);
 
 	// ✅ Reagiere auf appSettings-Änderungen (Realtime Updates von anderen Geräten)
 	$effect(() => {
-		if ($appSettings && !isUpdatingFromDB) {
+		if ($appSettings) {
 			const newTitleSize = $appSettings.global_title_font_size ?? 16;
 			const newActivitySize = $appSettings.global_activity_font_size ?? 12;
 
-			// Nur aktualisieren wenn sich wirklich was geändert hat
-			if (newTitleSize !== globalTitleSize || newActivitySize !== globalActivitySize) {
-				isUpdatingFromDB = true; // Flag setzen
-				globalTitleSize = newTitleSize;
-				globalActivitySize = newActivitySize;
-				lastTitleSize = newTitleSize; // ✅ lastSize auch aktualisieren!
-				lastActivitySize = newActivitySize;
-				applyFontSizes();
-				console.log(`🔄 Globale Schriftgrößen von DB aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
-
-				// Flag nach kurzer Verzögerung zurücksetzen
-				setTimeout(() => {
-					isUpdatingFromDB = false;
-				}, 100);
-			}
+			globalTitleSize = newTitleSize;
+			globalActivitySize = newActivitySize;
+			applyFontSizes();
+			console.log(`🔄 Globale Schriftgrößen von DB geladen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
 		}
 	});
 
@@ -227,50 +211,38 @@
 		document.documentElement.style.setProperty('--global-activity-size', `${globalActivitySize}px`);
 	}
 
-	// ✅ Debounced DB-Update für Schriftgrößen
-	async function saveFontSizesToDB() {
-		console.log(`💾 Speichere Schriftgrößen: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+	// ✅ Handler wenn User den Slider bewegt
+	function handleFontSizeChange() {
+		console.log(`📝 Slider bewegt: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
 
-		try {
-			const { error } = await supabase
-				.from('app_settings')
-				.update({
-					global_title_font_size: globalTitleSize,
-					global_activity_font_size: globalActivitySize
-				})
-				.eq('id', 1);
+		// Sofort CSS aktualisieren (für sofortiges visuelles Feedback)
+		applyFontSizes();
 
-			if (error) {
-				console.error('Fehler beim Speichern der Schriftgrößen:', error);
-				toasts.show('⚠️ Fehler beim Speichern', 'error');
-			} else {
-				console.log('✅ Schriftgrößen gespeichert');
+		// DB-Update debounced (erst nach 500ms Pause)
+		if (fontSizeUpdateTimer) clearTimeout(fontSizeUpdateTimer);
+		fontSizeUpdateTimer = setTimeout(async () => {
+			console.log(`💾 Speichere Schriftgrößen in DB...`);
+
+			try {
+				const { error } = await supabase
+					.from('app_settings')
+					.update({
+						global_title_font_size: globalTitleSize,
+						global_activity_font_size: globalActivitySize
+					})
+					.eq('id', 1);
+
+				if (error) {
+					console.error('Fehler beim Speichern der Schriftgrößen:', error);
+					toasts.show('⚠️ Fehler beim Speichern', 'error');
+				} else {
+					console.log('✅ Schriftgrößen gespeichert');
+				}
+			} catch (err) {
+				console.error('Fehler beim Update:', err);
 			}
-		} catch (err) {
-			console.error('Fehler beim Update:', err);
-		}
+		}, 500);
 	}
-
-	// ✅ Watcher für lokale Schriftgrößen-Änderungen (Slider-Bewegungen)
-	$effect(() => {
-		// Nur reagieren wenn sich lokal was geändert hat (User bewegt Slider)
-		// NICHT triggern wenn wir gerade von der DB updaten
-		if (!isUpdatingFromDB && (globalTitleSize !== lastTitleSize || globalActivitySize !== lastActivitySize)) {
-			lastTitleSize = globalTitleSize;
-			lastActivitySize = globalActivitySize;
-
-			console.log(`📝 Slider bewegt: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
-
-			// Sofort CSS aktualisieren (für sofortiges visuelles Feedback)
-			applyFontSizes();
-
-			// DB-Update debounced (erst nach 500ms Pause)
-			if (fontSizeUpdateTimer) clearTimeout(fontSizeUpdateTimer);
-			fontSizeUpdateTimer = setTimeout(() => {
-				saveFontSizesToDB();
-			}, 500);
-		}
-	});
 
 	async function toggleFullscreen() {
 		if (!isFullscreen) {
@@ -493,6 +465,7 @@
 								max="24"
 								step="1"
 								bind:value={globalTitleSize}
+								oninput={handleFontSizeChange}
 								class="slider"
 							/>
 						</div>
@@ -510,6 +483,7 @@
 								max="18"
 								step="1"
 								bind:value={globalActivitySize}
+								oninput={handleFontSizeChange}
 								class="slider"
 							/>
 						</div>
