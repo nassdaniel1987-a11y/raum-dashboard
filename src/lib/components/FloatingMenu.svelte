@@ -100,10 +100,10 @@
 	}
 
 	function applyDisplayScale(scale: number) {
-		// Wende horizontale Skalierung NUR auf Canvas an (nicht auf Menüs!)
+		// Wende Skalierung auf BEIDE Achsen an, damit Proportionen erhalten bleiben
 		const canvas = document.querySelector('.canvas-container') as HTMLElement;
 		if (canvas) {
-			canvas.style.transform = `scaleX(${scale})`;
+			canvas.style.transform = `scale(${scale})`;
 			canvas.style.transformOrigin = 'top center';
 		}
 	}
