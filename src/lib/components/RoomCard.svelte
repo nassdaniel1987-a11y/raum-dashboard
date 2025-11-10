@@ -153,10 +153,18 @@
 		return timeDiff < 0.5; // < 0.5 Minuten = < 30 Sekunden nach open_time
 	});
 
-	// ✅ NOCH KLEINERE Schriftgrößen für kompaktere Kacheln
-	let titleFontSize = $derived(room.config?.title_font_size || 16); // Reduziert von 18
-	let textFontSize = $derived(room.config?.text_font_size || 12);  // Reduziert von 14
-	let textColor = $derived(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
+	// ✅ Schriftgrößen: Individuelle Einstellung oder globaler Default
+	let titleFontSize = $derived(room.config?.title_font_size); // Falls gesetzt, wird individuelle Größe verwendet
+	let textFontSize = $derived(room.config?.text_font_size);
+	let textColor = $derived(room.config?.text_color || '#FFFFFF');
+
+	// ✅ Style-String mit Fallback auf CSS Variablen
+	let titleStyle = $derived(
+		`font-size: ${titleFontSize ? `${titleFontSize}px` : 'var(--global-title-size, 16px)'}; color: ${textColor};`
+	);
+	let activityStyle = $derived(
+		`font-size: ${textFontSize ? `${textFontSize}px` : 'var(--global-activity-size, 12px)'}; color: ${textColor};`
+	);
 </script>
 
 <div
@@ -233,10 +241,10 @@
 		ontouchend={handlePressEnd}
 		ontouchcancel={handlePressEnd}
 	>
-		<h3 class="room-title" style="font-size: {titleFontSize}px; color: {textColor};">{room.name}</h3>
+		<h3 class="room-title" style="{titleStyle}">{room.name}</h3>
 
 		{#if room.config?.activity}
-			<p class="room-activity" style="font-size: {textFontSize}px; color: {textColor};">{room.config.activity}</p>
+			<p class="room-activity" style="{activityStyle}">{room.config.activity}</p>
 		{/if}
 	</div>
 

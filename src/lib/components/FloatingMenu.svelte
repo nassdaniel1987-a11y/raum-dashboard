@@ -33,6 +33,10 @@
 	let cardWidth = $state(1.0); // 0.6 - 1.4
 	let cardHeight = $state(1.0); // 0.6 - 1.4
 
+	// ✅ Globale Schriftgrößen
+	let globalTitleSize = $state(16); // 12-24px
+	let globalActivitySize = $state(12); // 10-18px
+
 	// ✅ Vollbild-Status
 	let isFullscreen = $state(false);
 
@@ -48,6 +52,8 @@
 		const savedScaleX = localStorage.getItem('displayScaleX');
 		const savedCardWidth = localStorage.getItem('cardWidth');
 		const savedCardHeight = localStorage.getItem('cardHeight');
+		const savedTitleSize = localStorage.getItem('globalTitleSize');
+		const savedActivitySize = localStorage.getItem('globalActivitySize');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDuration = parseInt(savedPause);
@@ -65,6 +71,14 @@
 		if (savedCardHeight) {
 			cardHeight = parseFloat(savedCardHeight);
 			applyCardSize();
+		}
+		if (savedTitleSize) {
+			globalTitleSize = parseInt(savedTitleSize);
+			applyFontSizes();
+		}
+		if (savedActivitySize) {
+			globalActivitySize = parseInt(savedActivitySize);
+			applyFontSizes();
 		}
 
 		// Vollbild-Status überwachen
@@ -172,6 +186,24 @@
 		localStorage.setItem('cardHeight', cardHeight.toString());
 		applyCardSize();
 		console.log(`📐 Kachel-Höhe: ${(cardHeight * 100).toFixed(0)}%`);
+	}
+
+	function applyFontSizes() {
+		// Setze CSS Variablen für globale Schriftgrößen
+		document.documentElement.style.setProperty('--global-title-size', `${globalTitleSize}px`);
+		document.documentElement.style.setProperty('--global-activity-size', `${globalActivitySize}px`);
+	}
+
+	function updateTitleSize() {
+		localStorage.setItem('globalTitleSize', globalTitleSize.toString());
+		applyFontSizes();
+		console.log(`📝 Titel-Schriftgröße: ${globalTitleSize}px`);
+	}
+
+	function updateActivitySize() {
+		localStorage.setItem('globalActivitySize', globalActivitySize.toString());
+		applyFontSizes();
+		console.log(`📄 Aktivitäts-Schriftgröße: ${globalActivitySize}px`);
 	}
 
 	async function toggleFullscreen() {
@@ -378,6 +410,42 @@
 								step="0.05"
 								bind:value={cardHeight}
 								oninput={updateCardHeight}
+								class="slider"
+							/>
+						</div>
+
+						<!-- Schriftgröße Titel -->
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">📝</span>
+								<span class="control-label">Schriftgröße Titel</span>
+								<span class="control-value">{globalTitleSize}px</span>
+							</div>
+							<input
+								type="range"
+								min="12"
+								max="24"
+								step="1"
+								bind:value={globalTitleSize}
+								oninput={updateTitleSize}
+								class="slider"
+							/>
+						</div>
+
+						<!-- Schriftgröße Aktivität -->
+						<div class="control-group">
+							<div class="control-header">
+								<span class="control-icon">📄</span>
+								<span class="control-label">Schriftgröße Aktivität</span>
+								<span class="control-value">{globalActivitySize}px</span>
+							</div>
+							<input
+								type="range"
+								min="10"
+								max="18"
+								step="1"
+								bind:value={globalActivitySize}
+								oninput={updateActivitySize}
 								class="slider"
 							/>
 						</div>
