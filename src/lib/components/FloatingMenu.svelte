@@ -47,20 +47,32 @@
 
 	// ✅ Debounce Timer für DB-Updates
 	let fontSizeUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+	let isUpdatingFromDB = false; // Flag um Loops zu verhindern
+
+	// ✅ Tracking für Änderungen
+	let lastTitleSize = $state(globalTitleSize);
+	let lastActivitySize = $state(globalActivitySize);
 
 	// ✅ Reagiere auf appSettings-Änderungen (Realtime Updates von anderen Geräten)
-	// ABER: Nur wenn sich der Wert wirklich geändert hat (verhindert Loops)
 	$effect(() => {
-		if ($appSettings) {
+		if ($appSettings && !isUpdatingFromDB) {
 			const newTitleSize = $appSettings.global_title_font_size ?? 16;
 			const newActivitySize = $appSettings.global_activity_font_size ?? 12;
 
 			// Nur aktualisieren wenn sich wirklich was geändert hat
 			if (newTitleSize !== globalTitleSize || newActivitySize !== globalActivitySize) {
+				isUpdatingFromDB = true; // Flag setzen
 				globalTitleSize = newTitleSize;
 				globalActivitySize = newActivitySize;
+				lastTitleSize = newTitleSize; // ✅ lastSize auch aktualisieren!
+				lastActivitySize = newActivitySize;
 				applyFontSizes();
-				console.log(`🔄 Globale Schriftgrößen aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+				console.log(`🔄 Globale Schriftgrößen von DB aktualisiert: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
+
+				// Flag nach kurzer Verzögerung zurücksetzen
+				setTimeout(() => {
+					isUpdatingFromDB = false;
+				}, 100);
 			}
 		}
 	});
@@ -240,14 +252,14 @@
 	}
 
 	// ✅ Watcher für lokale Schriftgrößen-Änderungen (Slider-Bewegungen)
-	let lastTitleSize = globalTitleSize;
-	let lastActivitySize = globalActivitySize;
-
 	$effect(() => {
 		// Nur reagieren wenn sich lokal was geändert hat (User bewegt Slider)
-		if (globalTitleSize !== lastTitleSize || globalActivitySize !== lastActivitySize) {
+		// NICHT triggern wenn wir gerade von der DB updaten
+		if (!isUpdatingFromDB && (globalTitleSize !== lastTitleSize || globalActivitySize !== lastActivitySize)) {
 			lastTitleSize = globalTitleSize;
 			lastActivitySize = globalActivitySize;
+
+			console.log(`📝 Slider bewegt: Titel=${globalTitleSize}px, Aktivität=${globalActivitySize}px`);
 
 			// Sofort CSS aktualisieren (für sofortiges visuelles Feedback)
 			applyFontSizes();
