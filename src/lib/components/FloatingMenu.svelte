@@ -18,7 +18,7 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 	let menuOpen = $state(false);
-	let activeTab = $state<'view' | 'days' | 'edit'>('view'); // ✅ Nur noch 3 Tabs, Start mit Darstellung
+	let activeTab = $state<'view' | 'scroll' | 'edit' | 'days'>('scroll'); // ✅ Start mit Scroll-Tab
 
 	let autoScrollActive = $state(false);
 
@@ -304,29 +304,25 @@
 					<span class="label-hint">{isFullscreen ? 'Aktiv' : 'Inaktiv'}</span>
 				</div>
 			</button>
-
-			<button
-				class="big-button autoscroll-toggle"
-				class:active={autoScrollActive}
-				onclick={toggleAutoScroll}
-			>
-				<span class="big-icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
-				<div class="big-label">
-					<span class="label-text">Auto-Scroll</span>
-					<span class="label-hint">{autoScrollActive ? 'Läuft' : 'Gestoppt'}</span>
-				</div>
-			</button>
 		</div>
 
-		<!-- ✅ Tab Navigation (Nur noch 3 Tabs) -->
+		<!-- ✅ Tab Navigation -->
 		<div class="tab-navigation">
 			<button
 				class="tab-btn"
 				class:active={activeTab === 'view'}
 				onclick={() => activeTab = 'view'}
 			>
-				<span class="tab-icon">🎨</span>
-				<span class="tab-label">Darstellung</span>
+				<span class="tab-icon">👁️</span>
+				<span class="tab-label">Ansicht</span>
+			</button>
+			<button
+				class="tab-btn"
+				class:active={activeTab === 'scroll'}
+				onclick={() => activeTab = 'scroll'}
+			>
+				<span class="tab-icon">↕️</span>
+				<span class="tab-label">Scroll</span>
 			</button>
 			<button
 				class="tab-btn"
@@ -348,7 +344,7 @@
 
 		<!-- ✅ Tab Content -->
 		<div class="tab-content">
-			<!-- TAB 1: Darstellung -->
+			<!-- TAB 1: Ansicht -->
 			{#if activeTab === 'view'}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
 					<div class="scroll-controls">
@@ -409,12 +405,35 @@
 								<span class="hint-label">Normal: 100% →</span>
 							</div>
 						</div>
+					</div>
 
-						<!-- Scroll-Geschwindigkeit -->
+					<div class="info-box">
+						<span class="info-icon">ℹ️</span>
+						<span class="info-text">Passe Kachelgröße und Display-Breite für optimale TV-Darstellung an</span>
+					</div>
+				</div>
+			{/if}
+
+			<!-- TAB 2: Scroll -->
+			{#if activeTab === 'scroll'}
+				<div class="tab-panel" transition:fade={{ duration: 200 }}>
+					<button
+						class="action-button autoscroll-toggle"
+						class:active={autoScrollActive}
+						onclick={toggleAutoScroll}
+					>
+						<span class="btn-icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
+						<div class="btn-content">
+							<span class="btn-label">Auto-Scroll</span>
+							<span class="btn-hint">{autoScrollActive ? 'Läuft...' : 'Gestoppt'}</span>
+						</div>
+					</button>
+
+					<div class="scroll-controls">
 						<div class="control-group">
 							<div class="control-header">
 								<span class="control-icon">🐌</span>
-								<span class="control-label">Scroll-Geschwindigkeit</span>
+								<span class="control-label">Geschwindigkeit</span>
 								<span class="control-value">{scrollSpeed.toFixed(1)} px</span>
 							</div>
 							<input
@@ -428,7 +447,6 @@
 							/>
 						</div>
 
-						<!-- Scroll-Pause -->
 						<div class="control-group">
 							<div class="control-header">
 								<span class="control-icon">⏱️</span>
@@ -449,12 +467,12 @@
 
 					<div class="info-box">
 						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Passe Layout, Kachelgröße und Scroll-Verhalten für optimale Darstellung an</span>
+						<span class="info-text">Einstellungen werden automatisch gespeichert</span>
 					</div>
 				</div>
 			{/if}
 
-			<!-- TAB 2: Tage -->
+			<!-- TAB 3: Tage -->
 			{#if activeTab === 'days'}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
 					<div class="day-info-banner">
@@ -509,7 +527,7 @@
 				</div>
 			{/if}
 
-			<!-- TAB 3: Aktionen -->
+			<!-- TAB 4: Aktionen -->
 			{#if activeTab === 'edit'}
 				<div class="tab-panel" transition:fade={{ duration: 200 }}>
 					<!-- Tagesplaner & Einstellungen -->
@@ -595,7 +613,8 @@
 	.fab {
 		position: fixed;
 		bottom: 20px;
-		right: 20px;
+		right: 50%;
+		transform: translateX(calc(50% - 40px)); /* ✅ Aligned mit Menu */
 		width: 68px;
 		height: 68px;
 		border-radius: 50%;
@@ -612,13 +631,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transform: translateZ(0);
 		will-change: transform;
 		touch-action: manipulation;
 	}
 
 	.fab:hover {
-		transform: scale(1.1) rotate(90deg) translateZ(0);
+		transform: translateX(calc(50% - 40px)) scale(1.1) rotate(90deg);
 		box-shadow:
 			0 12px 40px rgba(0, 0, 0, 0.6),
 			0 4px 16px rgba(0, 0, 0, 0.4),
@@ -627,11 +645,11 @@
 	}
 
 	.fab:active {
-		transform: scale(1.05) translateZ(0);
+		transform: translateX(calc(50% - 40px)) scale(1.05);
 	}
 
 	.fab.active {
-		transform: rotate(180deg) translateZ(0);
+		transform: translateX(calc(50% - 40px)) rotate(180deg);
 		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
 	}
 
@@ -646,8 +664,10 @@
 	.menu-panel {
 		position: fixed;
 		bottom: 100px;
-		right: 20px;
+		right: 50%;
+		transform: translateX(calc(50% - 40px)); /* ✅ Zentriert mit leichtem Offset nach links */
 		width: 360px;
+		max-width: calc(100vw - 80px); /* ✅ Nie breiter als Viewport minus Padding */
 		height: 550px; /* ✅ Etwas höher wegen main-buttons */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
@@ -1289,7 +1309,20 @@
 			width: 60px;
 			height: 60px;
 			bottom: 16px;
-			right: 16px;
+			right: 50%;
+			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
+		}
+
+		.fab:hover {
+			transform: translateX(50%) scale(1.1) rotate(90deg);
+		}
+
+		.fab:active {
+			transform: translateX(50%) scale(1.05);
+		}
+
+		.fab.active {
+			transform: translateX(50%) rotate(180deg);
 		}
 
 		.fab-icon {
@@ -1297,7 +1330,8 @@
 		}
 
 		.menu-panel {
-			right: 16px;
+			right: 50%;
+			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
 			bottom: 85px;
 			width: calc(100vw - 32px);
 			max-width: 380px;
