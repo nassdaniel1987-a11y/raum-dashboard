@@ -595,7 +595,8 @@
 	.fab {
 		position: fixed;
 		bottom: 20px;
-		right: 20px;
+		right: 50%;
+		transform: translateX(calc(50% - 40px)); /* ✅ Aligned mit Menu */
 		width: 68px;
 		height: 68px;
 		border-radius: 50%;
@@ -612,13 +613,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transform: translateZ(0);
 		will-change: transform;
 		touch-action: manipulation;
 	}
 
 	.fab:hover {
-		transform: scale(1.1) rotate(90deg) translateZ(0);
+		transform: translateX(calc(50% - 40px)) scale(1.1) rotate(90deg);
 		box-shadow:
 			0 12px 40px rgba(0, 0, 0, 0.6),
 			0 4px 16px rgba(0, 0, 0, 0.4),
@@ -627,11 +627,11 @@
 	}
 
 	.fab:active {
-		transform: scale(1.05) translateZ(0);
+		transform: translateX(calc(50% - 40px)) scale(1.05);
 	}
 
 	.fab.active {
-		transform: rotate(180deg) translateZ(0);
+		transform: translateX(calc(50% - 40px)) rotate(180deg);
 		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
 	}
 
@@ -646,8 +646,10 @@
 	.menu-panel {
 		position: fixed;
 		bottom: 100px;
-		right: 20px;
+		right: 50%;
+		transform: translateX(calc(50% - 40px)); /* ✅ Zentriert mit leichtem Offset nach links */
 		width: 360px;
+		max-width: calc(100vw - 80px); /* ✅ Nie breiter als Viewport minus Padding */
 		height: 550px; /* ✅ Etwas höher wegen main-buttons */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
@@ -1289,7 +1291,20 @@
 			width: 60px;
 			height: 60px;
 			bottom: 16px;
-			right: 16px;
+			right: 50%;
+			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
+		}
+
+		.fab:hover {
+			transform: translateX(50%) scale(1.1) rotate(90deg);
+		}
+
+		.fab:active {
+			transform: translateX(50%) scale(1.05);
+		}
+
+		.fab.active {
+			transform: translateX(50%) rotate(180deg);
 		}
 
 		.fab-icon {
@@ -1297,7 +1312,8 @@
 		}
 
 		.menu-panel {
-			right: 16px;
+			right: 50%;
+			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
 			bottom: 85px;
 			width: calc(100vw - 32px);
 			max-width: 380px;
