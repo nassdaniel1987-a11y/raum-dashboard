@@ -409,7 +409,7 @@
 
 					<div class="info-box">
 						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Passe Kachelgröße und Display-Breite für optimale TV-Darstellung an</span>
+						<span class="info-text">Einstellungen werden automatisch gespeichert</span>
 					</div>
 				</div>
 			{/if}
