@@ -613,8 +613,7 @@
 	.fab {
 		position: fixed;
 		bottom: 20px;
-		right: 50%;
-		transform: translateX(calc(50% - 40px)); /* ✅ Aligned mit Menu */
+		right: 50px; /* ✅ Weiter vom Rand als vorher (war 20px) */
 		width: 68px;
 		height: 68px;
 		border-radius: 50%;
@@ -631,12 +630,13 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transform: translateZ(0);
 		will-change: transform;
 		touch-action: manipulation;
 	}
 
 	.fab:hover {
-		transform: translateX(calc(50% - 40px)) scale(1.1) rotate(90deg);
+		transform: scale(1.1) rotate(90deg) translateZ(0);
 		box-shadow:
 			0 12px 40px rgba(0, 0, 0, 0.6),
 			0 4px 16px rgba(0, 0, 0, 0.4),
@@ -645,11 +645,11 @@
 	}
 
 	.fab:active {
-		transform: translateX(calc(50% - 40px)) scale(1.05);
+		transform: scale(1.05) translateZ(0);
 	}
 
 	.fab.active {
-		transform: translateX(calc(50% - 40px)) rotate(180deg);
+		transform: rotate(180deg) translateZ(0);
 		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
 	}
 
@@ -664,10 +664,9 @@
 	.menu-panel {
 		position: fixed;
 		bottom: 100px;
-		right: 50%;
-		transform: translateX(calc(50% - 40px)); /* ✅ Zentriert mit leichtem Offset nach links */
+		right: 50px; /* ✅ Weiter vom Rand als vorher (war 20px) */
 		width: 360px;
-		max-width: calc(100vw - 80px); /* ✅ Nie breiter als Viewport minus Padding */
+		max-width: calc(100vw - 100px); /* ✅ Nie breiter als Viewport minus Padding */
 		height: 550px; /* ✅ Etwas höher wegen main-buttons */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
@@ -1309,20 +1308,7 @@
 			width: 60px;
 			height: 60px;
 			bottom: 16px;
-			right: 50%;
-			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
-		}
-
-		.fab:hover {
-			transform: translateX(50%) scale(1.1) rotate(90deg);
-		}
-
-		.fab:active {
-			transform: translateX(50%) scale(1.05);
-		}
-
-		.fab.active {
-			transform: translateX(50%) rotate(180deg);
+			right: 20px;
 		}
 
 		.fab-icon {
@@ -1330,10 +1316,9 @@
 		}
 
 		.menu-panel {
-			right: 50%;
-			transform: translateX(50%); /* ✅ Zentriert auf Mobile */
+			right: 20px;
 			bottom: 85px;
-			width: calc(100vw - 32px);
+			width: calc(100vw - 40px);
 			max-width: 380px;
 			height: 450px; /* ✅ Etwas kleiner auf Mobile */
 		}
