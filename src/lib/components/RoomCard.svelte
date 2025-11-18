@@ -491,7 +491,6 @@
 			rgba(255, 255, 255, 0.92) 40px
 		);
 		color: #1a1a1a;
-		animation: tape-shift 20s linear infinite;
 	}
 
 	/* Absperrband - ÖFFNET UM (Gelb/Schwarz gestreift) */
@@ -507,17 +506,6 @@
 		text-shadow:
 			2px 2px 4px rgba(0, 0, 0, 0.8),
 			-1px -1px 2px rgba(0, 0, 0, 0.6);
-		animation: tape-shift 20s linear infinite;
-	}
-
-	/* Animation für bewegende Streifen */
-	@keyframes tape-shift {
-		0% {
-			background-position: 0 0;
-		}
-		100% {
-			background-position: 56.57px 56.57px; /* sqrt(40²+40²) für 45deg */
-		}
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
