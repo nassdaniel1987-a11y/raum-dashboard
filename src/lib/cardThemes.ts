@@ -68,9 +68,49 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 1;
 				animation: spring-bloom 3s ease-in-out infinite;
 			}
+
+			/* Hängende Dekorationen - Blumen */
+			.card-content::before {
+				content: '🌸';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: spring-hang-left 3.5s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.4));
+				border-top: 2px solid rgba(134, 239, 172, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🌼';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: spring-hang-right 3s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(251, 207, 232, 0.4));
+				border-top: 2px solid rgba(134, 239, 172, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes spring-bloom {
 				0%, 100% { transform: translateX(-50%) scale(1); }
 				50% { transform: translateX(-50%) scale(1.1); }
+			}
+			@keyframes spring-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes spring-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(2deg); }
+				50% { transform: translateX(50%) rotate(-2deg); }
 			}
 		`
 	},
@@ -152,11 +192,51 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 1;
 				animation: autumn-fall 8s ease-in-out infinite;
 			}
+
+			/* Hängende Dekorationen - Herbstblätter */
+			.card-content::before {
+				content: '🍂';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: autumn-hang-left 3.2s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(249, 115, 22, 0.4));
+				border-top: 2px solid rgba(161, 98, 7, 0.4);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🍁';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: autumn-hang-right 2.8s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(217, 119, 6, 0.4));
+				border-top: 2px solid rgba(161, 98, 7, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes autumn-fall {
 				0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
 				25% { transform: translateY(3px) rotate(-5deg); opacity: 0.5; }
 				50% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
 				75% { transform: translateY(3px) rotate(5deg); opacity: 0.5; }
+			}
+			@keyframes autumn-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-4deg); }
+				50% { transform: translateX(-50%) rotate(4deg); }
+			}
+			@keyframes autumn-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(4deg); }
+				50% { transform: translateX(50%) rotate(-4deg); }
 			}
 		`
 	},
@@ -245,6 +325,41 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 1;
 				animation: christmas-sparkle 2s ease-in-out infinite;
 			}
+
+			/* Hängende Dekorationen - Zuckerstange links */
+			.card-content::before {
+				content: '🍬';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: hanging-swing-left 3.2s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+				/* Kette/Schnur */
+				border-top: 2px solid rgba(255, 255, 255, 0.4);
+				padding-top: 8px;
+			}
+
+			/* Hängende Dekorationen - Geschenk rechts */
+			.card-content::after {
+				content: '🎁';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: hanging-swing-right 3s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+				/* Kette/Schnur */
+				border-top: 2px solid rgba(255, 255, 255, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes christmas-glow {
 				0%, 100% { box-shadow: 0 8px 32px rgba(220, 38, 38, 0.5), 0 0 60px rgba(34, 197, 94, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.5), 0 0 60px rgba(251, 191, 36, 0.4); }
@@ -252,6 +367,14 @@ export const cardThemes: Record<string, CardTheme> = {
 			@keyframes christmas-sparkle {
 				0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
 				50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+			}
+			@keyframes hanging-swing-left {
+				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+				50% { transform: translateX(-50%) rotate(3deg); }
+			}
+			@keyframes hanging-swing-right {
+				0%, 100% { transform: translateX(50%) rotate(3deg); }
+				50% { transform: translateX(50%) rotate(-3deg); }
 			}
 		`
 	},
@@ -291,9 +414,49 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 1;
 				animation: easter-hop 3s ease-in-out infinite;
 			}
+
+			/* Hängende Dekorationen - Ostereier */
+			.card-content::before {
+				content: '🥚';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: easter-hang-left 3s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(196, 181, 253, 0.4));
+				border-top: 2px solid rgba(196, 181, 253, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🐰';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: easter-hang-right 3.5s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(251, 207, 232, 0.4));
+				border-top: 2px solid rgba(251, 207, 232, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes easter-hop {
 				0%, 100% { transform: translateX(-50%) translateY(0); }
 				50% { transform: translateX(-50%) translateY(-5px); }
+			}
+			@keyframes easter-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg) translateY(0); }
+				50% { transform: translateX(-50%) rotate(2deg) translateY(-3px); }
+			}
+			@keyframes easter-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(2deg) translateY(0); }
+				50% { transform: translateX(50%) rotate(-2deg) translateY(-3px); }
 			}
 		`
 	},
@@ -334,9 +497,52 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 1;
 				animation: halloween-spook 4s ease-in-out infinite;
 			}
+
+			/* Hängende Dekorationen - Kürbis links */
+			.card-content::before {
+				content: '🎃';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: halloween-hang-left 2.8s ease-in-out infinite;
+				filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+				/* Spinnenfaden */
+				border-top: 2px dashed rgba(124, 58, 237, 0.5);
+				padding-top: 8px;
+			}
+
+			/* Hängende Dekorationen - Kürbis rechts */
+			.card-content::after {
+				content: '🎃';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: halloween-hang-right 3.2s ease-in-out infinite;
+				filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+				/* Spinnenfaden */
+				border-top: 2px dashed rgba(124, 58, 237, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes halloween-spook {
 				0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
 				50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.05); }
+			}
+			@keyframes halloween-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+				50% { transform: translateX(-50%) rotate(5deg); }
+			}
+			@keyframes halloween-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(5deg); }
+				50% { transform: translateX(50%) rotate(-5deg); }
 			}
 		`
 	},
