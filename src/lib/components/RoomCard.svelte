@@ -438,50 +438,51 @@
 		animation: badge-swing 3s ease-in-out infinite;
 	}
 
-	/* ✅ Status-Badge Kompakt - Oben rechts auf der Kachel */
+	/* ✅ Status-Badge - Oben rechts auf der Kachel, gut lesbar */
 	.status-badge-compact {
 		position: absolute;
-		top: 8px;
-		right: 8px;
+		top: 10px;
+		right: 10px;
 		z-index: 10;
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 10px;
-		font-weight: 700;
+		padding: 6px 12px;
+		border-radius: 8px;
+		font-size: 11px;
+		font-weight: 800;
 		color: white;
 		text-transform: uppercase;
-		letter-spacing: 0.8px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		backdrop-filter: blur(8px);
+		letter-spacing: 1px;
+		border: 2px solid rgba(255, 255, 255, 0.4);
+		backdrop-filter: blur(10px);
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 		transition: all 0.3s;
 		pointer-events: none;
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 	}
 
 	.closed-badge-compact {
 		background: linear-gradient(
 			135deg,
-			rgba(220, 38, 38, 0.95) 0%,
-			rgba(239, 68, 68, 0.95) 100%
+			rgba(220, 38, 38, 0.97) 0%,
+			rgba(239, 68, 68, 0.97) 100%
 		);
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			0 0 20px rgba(220, 38, 38, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 24px rgba(220, 38, 38, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 	}
 
 	.opens-badge-compact {
 		background: linear-gradient(
 			135deg,
-			rgba(37, 99, 235, 0.95) 0%,
-			rgba(59, 130, 246, 0.95) 100%
+			rgba(37, 99, 235, 0.97) 0%,
+			rgba(59, 130, 246, 0.97) 100%
 		);
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			0 0 20px rgba(37, 99, 235, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 24px rgba(37, 99, 235, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
