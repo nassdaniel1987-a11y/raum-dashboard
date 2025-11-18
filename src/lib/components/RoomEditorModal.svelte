@@ -19,6 +19,7 @@
 	let floor = $state(room.floor || 'eg');
 	let backgroundColor = $state(room.background_color);
 	let textColor = $state(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
+	let person = $state(room.person || ''); // ✅ NEU: Person im Raum
 	let activity = $state(room.config?.activity || '');
 	let openTime = $state(room.config?.open_time || '');
 	let closeTime = $state(room.config?.close_time || '');
@@ -43,7 +44,8 @@
 				.update({
 					name,
 					floor,
-					background_color: backgroundColor
+					background_color: backgroundColor,
+					person: person || null // ✅ NEU: Person speichern
 				})
 				.eq('id', room.id);
 
@@ -173,6 +175,12 @@
 							<option value="eg">🚪 Erdgeschoss</option>
 							<option value="ug">⬇️ Untergeschoss</option>
 						</select>
+					</div>
+
+					<div class="input-group">
+						<label for="room-person-{room.id}">👤 Person im Raum</label>
+						<input id="room-person-{room.id}" type="text" bind:value={person} placeholder="z.B. Max Mustermann" />
+						<p class="hint">💡 Optional: Zeigt an, wer aktuell in diesem Raum ist</p>
 					</div>
 				</div>
 			</div>

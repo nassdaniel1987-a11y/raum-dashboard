@@ -401,7 +401,8 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 			width: 300,
 			height: 250,
 			theme: 'space',
-			image_url: null
+			image_url: null,
+			person: null // ✅ NEU: Person-Feld initialisieren
 		})
 		.select()
 		.single();
