@@ -207,16 +207,22 @@
 			</button>
 		</div>
 	{:else}
-		<!-- ✅ Status-Badges oben rechts wenn NICHT im Edit-Modus -->
+		<!-- ✅ Status-Badges hängend in der Mitte (Absperrband-Stil) -->
 		{#if !room.isOpen && !shouldShowOpenTime()}
-			<div class="status-badge-compact closed-badge-compact" in:scale={{ duration: 300 }}>
-				GESCHLOSSEN
+			<div class="status-badge-hanging closed-badge-hanging" in:scale={{ duration: 300 }}>
+				<div class="badge-chain"></div>
+				<div class="badge-tape">
+					GESCHLOSSEN
+				</div>
 			</div>
 		{/if}
 
 		{#if shouldShowOpenTime() && !room.isOpen}
-			<div class="status-badge-compact opens-badge-compact" in:scale={{ duration: 300 }}>
-				Öffnet {displayTime}
+			<div class="status-badge-hanging opens-badge-hanging" in:scale={{ duration: 300 }}>
+				<div class="badge-chain"></div>
+				<div class="badge-tape">
+					Öffnet {displayTime}
+				</div>
 			</div>
 		{/if}
 	{/if}
@@ -438,51 +444,80 @@
 		animation: badge-swing 3s ease-in-out infinite;
 	}
 
-	/* ✅ Status-Badge - Oben rechts auf der Kachel, gut lesbar */
-	.status-badge-compact {
+	/* ✅ Status-Badge - Hängend in der Mitte (Absperrband-Stil) */
+	.status-badge-hanging {
 		position: absolute;
-		top: 10px;
-		right: 10px;
-		z-index: 10;
-		padding: 6px 12px;
-		border-radius: 8px;
-		font-size: 11px;
-		font-weight: 800;
-		color: white;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		border: 2px solid rgba(255, 255, 255, 0.4);
-		backdrop-filter: blur(10px);
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.5),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
-		transition: all 0.3s;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		z-index: 12;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		animation: badge-swing 2.5s ease-in-out infinite;
 		pointer-events: none;
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 	}
 
-	.closed-badge-compact {
-		background: linear-gradient(
-			135deg,
-			rgba(220, 38, 38, 0.97) 0%,
-			rgba(239, 68, 68, 0.97) 100%
-		);
+	/* Das Absperrband */
+	.badge-tape {
+		padding: 8px 20px;
+		font-size: 13px;
+		font-weight: 900;
+		text-transform: uppercase;
+		letter-spacing: 1.5px;
+		color: #000;
+		border: 3px solid rgba(0, 0, 0, 0.3);
+		border-radius: 4px;
 		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.5),
-			0 0 24px rgba(220, 38, 38, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+			0 6px 20px rgba(0, 0, 0, 0.6),
+			inset 0 2px 0 rgba(255, 255, 255, 0.4),
+			inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+		backdrop-filter: blur(4px);
+		position: relative;
+		overflow: hidden;
+		white-space: nowrap;
+		text-shadow:
+			1px 1px 0 rgba(255, 255, 255, 0.5),
+			-1px -1px 0 rgba(255, 255, 255, 0.3);
 	}
 
-	.opens-badge-compact {
-		background: linear-gradient(
-			135deg,
-			rgba(37, 99, 235, 0.97) 0%,
-			rgba(59, 130, 246, 0.97) 100%
+	/* Absperrband - GESCHLOSSEN (Rot/Weiß gestreift) */
+	.closed-badge-hanging .badge-tape {
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(220, 38, 38, 0.92),
+			rgba(220, 38, 38, 0.92) 20px,
+			rgba(255, 255, 255, 0.92) 20px,
+			rgba(255, 255, 255, 0.92) 40px
 		);
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.5),
-			0 0 24px rgba(37, 99, 235, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+		color: #1a1a1a;
+		animation: tape-shift 20s linear infinite;
+	}
+
+	/* Absperrband - ÖFFNET UM (Gelb/Schwarz gestreift) */
+	.opens-badge-hanging .badge-tape {
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(234, 179, 8, 0.92),
+			rgba(234, 179, 8, 0.92) 20px,
+			rgba(20, 20, 20, 0.92) 20px,
+			rgba(20, 20, 20, 0.92) 40px
+		);
+		color: #fff;
+		text-shadow:
+			2px 2px 4px rgba(0, 0, 0, 0.8),
+			-1px -1px 2px rgba(0, 0, 0, 0.6);
+		animation: tape-shift 20s linear infinite;
+	}
+
+	/* Animation für bewegende Streifen */
+	@keyframes tape-shift {
+		0% {
+			background-position: 0 0;
+		}
+		100% {
+			background-position: 56.57px 56.57px; /* sqrt(40²+40²) für 45deg */
+		}
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
