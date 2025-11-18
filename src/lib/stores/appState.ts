@@ -34,17 +34,30 @@ export const appSettings = writable<AppSettings | null>(null);
 // ===== THEME HANDLING (BENUTZERSPEZIFISCH) =====
 export const userTheme = writable<string>('default');
 
+// ===== CARD THEME HANDLING (NEU) =====
+export const cardTheme = writable<string>('default');
+
 // Theme aus LocalStorage laden beim Start
 if (typeof window !== 'undefined') {
 	const savedTheme = localStorage.getItem('user-theme');
 	if (savedTheme) {
 		userTheme.set(savedTheme);
 	}
-	
+
+	const savedCardTheme = localStorage.getItem('card-theme');
+	if (savedCardTheme) {
+		cardTheme.set(savedCardTheme);
+	}
+
 	// Wenn sich das User-Theme ändert, speichern und anwenden
 	userTheme.subscribe(($theme) => {
 		localStorage.setItem('user-theme', $theme);
 		applyTheme($theme);
+	});
+
+	// Wenn sich das Card-Theme ändert, speichern
+	cardTheme.subscribe(($theme) => {
+		localStorage.setItem('card-theme', $theme);
 	});
 }
 

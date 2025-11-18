@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
+	import { currentTime, currentWeekday, viewWeekday, cardTheme } from '$lib/stores/appState';
+	import { getAllThemes } from '$lib/cardThemes';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
@@ -31,6 +32,19 @@
 
 	// SVELTE 5 STATE für Vollbild
 	let isFullscreen = $state(false);
+
+	// SVELTE 5 STATE für Theme-Switcher
+	let showThemeMenu = $state(false);
+	const allThemes = getAllThemes();
+
+	function selectTheme(themeName: string) {
+		cardTheme.set(themeName);
+		showThemeMenu = false;
+	}
+
+	function toggleThemeMenu() {
+		showThemeMenu = !showThemeMenu;
+	}
 
 	// ✅ NEU: Tag-Navigation
 	function previousDay() {
@@ -175,8 +189,35 @@
 			</button>
 		{/if}
 
-		<button 
-			class="fullscreen-btn" 
+		<!-- ✅ NEU: Theme-Switcher -->
+		<div class="theme-switcher">
+			<button
+				class="theme-btn"
+				onclick={toggleThemeMenu}
+				title="Theme wechseln"
+				aria-label="Theme wechseln"
+			>
+				<span class="icon">🎨</span>
+			</button>
+
+			{#if showThemeMenu}
+				<div class="theme-menu" transition:fade={{ duration: 200 }}>
+					{#each allThemes as theme}
+						<button
+							class="theme-option"
+							class:active={$cardTheme === theme.name}
+							onclick={() => selectTheme(theme.name)}
+						>
+							<span class="theme-emoji">{theme.emoji}</span>
+							<span class="theme-label">{theme.displayName}</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<button
+			class="fullscreen-btn"
 			onclick={toggleFullscreen}
 			title={isFullscreen ? 'Vollbild verlassen (ESC)' : 'Vollbild aktivieren'}
 			aria-label={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
@@ -423,6 +464,101 @@
 
 	.autoscroll-btn .label {
 		font-size: 13px;
+	}
+
+	/* ✅ NEU: Theme-Switcher Styles */
+	.theme-switcher {
+		position: relative;
+	}
+
+	.theme-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		color: var(--color-text-primary);
+		font-size: 20px;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	}
+
+	.theme-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.05);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	}
+
+	.theme-btn:active {
+		transform: scale(0.95);
+	}
+
+	.theme-btn .icon {
+		font-size: 22px;
+		line-height: 1;
+	}
+
+	.theme-menu {
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		background: rgba(30, 41, 59, 0.98);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 12px;
+		padding: 8px;
+		min-width: 200px;
+		max-height: 400px;
+		overflow-y: auto;
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.6),
+			0 2px 16px rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(20px);
+		z-index: 1000;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.theme-option {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 14px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		text-align: left;
+	}
+
+	.theme-option:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+		transform: translateX(4px);
+	}
+
+	.theme-option.active {
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	}
+
+	.theme-emoji {
+		font-size: 20px;
+		line-height: 1;
+	}
+
+	.theme-label {
+		flex: 1;
 	}
 
 	.fullscreen-btn {
