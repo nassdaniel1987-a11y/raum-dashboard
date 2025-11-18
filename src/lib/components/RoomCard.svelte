@@ -208,17 +208,23 @@
 		</div>
 	{/if}
 
-	<!-- ✅ GESCHLOSSEN Banner (nur wenn KEINE Zeit ODER Zeit bereits vorbei) -->
+	<!-- ✅ GESCHLOSSEN Badge (nur wenn KEINE Zeit ODER Zeit bereits vorbei) -->
 	{#if !room.isOpen && !shouldShowOpenTime()}
-		<div class="closed-banner" in:scale={{ duration: 300 }}>
-			GESCHLOSSEN
+		<div class="status-badge closed-badge" in:scale={{ duration: 300 }}>
+			<div class="badge-chain"></div>
+			<div class="badge-content">
+				GESCHLOSSEN
+			</div>
 		</div>
 	{/if}
 
-	<!-- ✅ ÖFFNET UM Banner (nur wenn Zeit noch in der Zukunft liegt) -->
+	<!-- ✅ ÖFFNET UM Badge (nur wenn Zeit noch in der Zukunft liegt) -->
 	{#if shouldShowOpenTime() && !room.isOpen}
-		<div class="opens-banner" in:scale={{ duration: 300 }}>
-			Öffnet um {displayTime}
+		<div class="status-badge opens-badge" in:scale={{ duration: 300 }}>
+			<div class="badge-chain"></div>
+			<div class="badge-content">
+				Öffnet um {displayTime}
+			</div>
 		</div>
 	{/if}
 
@@ -426,17 +432,30 @@
 		border-radius: 20px; /* ✅ Hält das Bild innerhalb der Kachel */
 	}
 
-	/* ✅ Personen-Badge - Hängendes Schild unten */
+	/* ✅ Personen-Badge - Hängendes Schild unten links */
 	.person-badge {
 		position: absolute;
 		bottom: -20px; /* Hängt unter der Kachel */
-		left: 50%;
+		left: 30%; /* Leicht links von der Mitte */
 		transform: translateX(-50%);
 		z-index: 15; /* Über allen anderen Elementen */
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		animation: badge-swing 3s ease-in-out infinite;
+	}
+
+	/* ✅ Status-Badge - Hängendes Schild unten rechts */
+	.status-badge {
+		position: absolute;
+		bottom: -20px; /* Hängt unter der Kachel */
+		left: 70%; /* Leicht rechts von der Mitte */
+		transform: translateX(-50%);
+		z-index: 15;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		animation: badge-swing 3.5s ease-in-out infinite; /* Leicht versetzt animiert */
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
@@ -451,7 +470,7 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
-	/* Das eigentliche Badge */
+	/* Das eigentliche Badge - Standard (Personen-Badge) */
 	.badge-content {
 		display: flex;
 		align-items: center;
@@ -476,11 +495,49 @@
 		white-space: nowrap;
 	}
 
-	.person-badge:hover .badge-content {
+	/* Status Badge - GESCHLOSSEN (Rot) */
+	.closed-badge .badge-content {
+		background: linear-gradient(
+			135deg,
+			rgba(220, 38, 38, 0.98) 0%,
+			rgba(239, 68, 68, 0.98) 100%
+		);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.5),
+			0 2px 8px rgba(220, 38, 38, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+		text-transform: uppercase;
+		letter-spacing: 1.2px;
+		font-size: 11px;
+	}
+
+	/* Status Badge - ÖFFNET UM (Blau) */
+	.opens-badge .badge-content {
+		background: linear-gradient(
+			135deg,
+			rgba(37, 99, 235, 0.98) 0%,
+			rgba(59, 130, 246, 0.98) 100%
+		);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.5),
+			0 2px 8px rgba(37, 99, 235, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+		font-size: 11px;
+	}
+
+	.person-badge:hover .badge-content,
+	.status-badge:hover .badge-content {
 		transform: scale(1.08);
 		box-shadow:
 			0 8px 20px rgba(0, 0, 0, 0.6),
 			0 0 30px rgba(59, 130, 246, 0.6),
+			inset 0 1px 0 rgba(255, 255, 255, 0.4);
+	}
+
+	.closed-badge:hover .badge-content {
+		box-shadow:
+			0 8px 20px rgba(0, 0, 0, 0.6),
+			0 0 30px rgba(220, 38, 38, 0.6),
 			inset 0 1px 0 rgba(255, 255, 255, 0.4);
 	}
 
@@ -637,65 +694,6 @@
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
-	}
-
-	/* ✅ GESCHLOSSEN Banner - Premium-Design mit Tiefe */
-	.closed-banner {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 10px 12px;
-		background: linear-gradient(
-			to top,
-			rgba(220, 38, 38, 0.98) 0%,
-			rgba(239, 68, 68, 0.95) 100%
-		);
-		color: white;
-		font-size: 13px;
-		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 1.5px;
-		text-align: center;
-		z-index: 5;
-		border-top: 2px solid rgba(255, 255, 255, 0.4);
-		text-shadow:
-			2px 2px 6px rgba(0, 0, 0, 0.9),
-			0 0 10px rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(5px);
-		pointer-events: none;
-		box-shadow:
-			0 -4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
-	}
-
-	/* ✅ ÖFFNET UM Banner - Premium-Design mit Tiefe */
-	.opens-banner {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 10px 12px;
-		background: linear-gradient(
-			to top,
-			rgba(37, 99, 235, 0.98) 0%,
-			rgba(59, 130, 246, 0.95) 100%
-		);
-		color: white;
-		font-size: 13px;
-		font-weight: 700;
-		text-align: center;
-		z-index: 5;
-		border-top: 2px solid rgba(255, 255, 255, 0.4);
-		text-shadow:
-			2px 2px 6px rgba(0, 0, 0, 0.9),
-			0 0 10px rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(5px);
-		pointer-events: none;
-		letter-spacing: 0.5px;
-		box-shadow:
-			0 -4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
 	/* ✅ Große Displays: Noch kleinere Kacheln */
