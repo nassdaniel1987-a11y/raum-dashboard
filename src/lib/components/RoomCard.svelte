@@ -178,14 +178,6 @@
 		<img src={room.image_url} alt={room.name} class="card-bg-image" />
 	{/if}
 
-	<!-- ✅ Personen-Indikator links oben (immer sichtbar wenn Person gesetzt) -->
-	{#if room.person}
-		<div class="person-indicator" title="Person: {room.person}">
-			<span class="person-icon">👤</span>
-			<span class="person-name">{room.person}</span>
-		</div>
-	{/if}
-
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
 	{#if $isEditMode}
 		<div class="button-container">
@@ -247,6 +239,17 @@
 			<p class="room-activity" style="font-size: {textFontSize}px; color: {textColor};">{room.config.activity}</p>
 		{/if}
 	</div>
+
+	<!-- ✅ Personen-Indikator - Hängendes Schild unten (immer sichtbar wenn Person gesetzt) -->
+	{#if room.person}
+		<div class="person-badge" title="Person: {room.person}">
+			<div class="badge-chain"></div>
+			<div class="badge-content">
+				<span class="person-icon">👤</span>
+				<span class="person-name">{room.person}</span>
+			</div>
+		</div>
+	{/if}
 
 </div>
 
@@ -422,49 +425,88 @@
 		z-index: 0;
 	}
 
-	/* ✅ Personen-Indikator - links oben */
-	.person-indicator {
+	/* ✅ Personen-Badge - Hängendes Schild unten */
+	.person-badge {
 		position: absolute;
-		top: 6px;
-		left: 6px;
-		z-index: 10;
+		bottom: -20px; /* Hängt unter der Kachel */
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 15; /* Über allen anderen Elementen */
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		animation: badge-swing 3s ease-in-out infinite;
+	}
+
+	/* Kleine "Kette" oder Verbindung oben */
+	.badge-chain {
+		width: 2px;
+		height: 8px;
+		background: linear-gradient(
+			to bottom,
+			rgba(255, 255, 255, 0.5),
+			rgba(255, 255, 255, 0.2)
+		);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Das eigentliche Badge */
+	.badge-content {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 6px 12px;
-		background: rgba(59, 130, 246, 0.95);
-		border: 2px solid rgba(255, 255, 255, 0.3);
+		padding: 6px 14px;
+		background: linear-gradient(
+			135deg,
+			rgba(59, 130, 246, 0.98) 0%,
+			rgba(37, 99, 235, 0.98) 100%
+		);
+		border: 2px solid rgba(255, 255, 255, 0.4);
 		border-radius: 8px;
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 700;
 		color: white;
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			0 0 20px rgba(59, 130, 246, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+			0 6px 16px rgba(0, 0, 0, 0.5),
+			0 2px 8px rgba(59, 130, 246, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(8px);
 		transition: all 0.3s;
+		white-space: nowrap;
 	}
 
-	.person-indicator:hover {
-		transform: scale(1.05);
+	.person-badge:hover .badge-content {
+		transform: scale(1.08);
 		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.5),
-			0 0 30px rgba(59, 130, 246, 0.5),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+			0 8px 20px rgba(0, 0, 0, 0.6),
+			0 0 30px rgba(59, 130, 246, 0.6),
+			inset 0 1px 0 rgba(255, 255, 255, 0.4);
+	}
+
+	/* Sanftes Schwingen des Badges */
+	@keyframes badge-swing {
+		0%, 100% {
+			transform: translateX(-50%) rotate(0deg);
+		}
+		25% {
+			transform: translateX(-50%) rotate(-2deg);
+		}
+		75% {
+			transform: translateX(-50%) rotate(2deg);
+		}
 	}
 
 	.person-icon {
-		font-size: 16px;
+		font-size: 15px;
 		line-height: 1;
 	}
 
 	.person-name {
-		max-width: 120px;
+		max-width: 180px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
 	}
 
 	/* ✅ Button Container - kompakter */
