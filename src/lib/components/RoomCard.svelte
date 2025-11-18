@@ -190,42 +190,35 @@
 				{isSelected ? '✓' : '⇄'}
 			</button>
 
-			<button 
-				class="icon-button edit-button" 
-				title="Bearbeiten" 
+			<button
+				class="icon-button edit-button"
+				title="Bearbeiten"
 				onclick={(e) => { e.stopPropagation(); onEdit(room); }}
 			>
 				✏️
 			</button>
 
-			<button 
-				class="icon-button delete-button" 
-				title="Löschen" 
+			<button
+				class="icon-button delete-button"
+				title="Löschen"
 				onclick={handleDelete}
 			>
 				🗑️
 			</button>
 		</div>
-	{/if}
-
-	<!-- ✅ GESCHLOSSEN Badge (nur wenn KEINE Zeit ODER Zeit bereits vorbei) -->
-	{#if !room.isOpen && !shouldShowOpenTime()}
-		<div class="status-badge closed-badge" in:scale={{ duration: 300 }}>
-			<div class="badge-chain"></div>
-			<div class="badge-content">
+	{:else}
+		<!-- ✅ Status-Badges oben rechts wenn NICHT im Edit-Modus -->
+		{#if !room.isOpen && !shouldShowOpenTime()}
+			<div class="status-badge-compact closed-badge-compact" in:scale={{ duration: 300 }}>
 				GESCHLOSSEN
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	<!-- ✅ ÖFFNET UM Badge (nur wenn Zeit noch in der Zukunft liegt) -->
-	{#if shouldShowOpenTime() && !room.isOpen}
-		<div class="status-badge opens-badge" in:scale={{ duration: 300 }}>
-			<div class="badge-chain"></div>
-			<div class="badge-content">
-				Öffnet um {displayTime}
+		{#if shouldShowOpenTime() && !room.isOpen}
+			<div class="status-badge-compact opens-badge-compact" in:scale={{ duration: 300 }}>
+				Öffnet {displayTime}
 			</div>
-		</div>
+		{/if}
 	{/if}
 
 	<div
@@ -432,11 +425,11 @@
 		border-radius: 20px; /* ✅ Hält das Bild innerhalb der Kachel */
 	}
 
-	/* ✅ Personen-Badge - Hängendes Schild unten links */
+	/* ✅ Personen-Badge - Hängendes Schild unten mittig */
 	.person-badge {
 		position: absolute;
 		bottom: -20px; /* Hängt unter der Kachel */
-		left: 30%; /* Leicht links von der Mitte */
+		left: 50%; /* Mittig */
 		transform: translateX(-50%);
 		z-index: 15; /* Über allen anderen Elementen */
 		display: flex;
@@ -445,17 +438,51 @@
 		animation: badge-swing 3s ease-in-out infinite;
 	}
 
-	/* ✅ Status-Badge - Hängendes Schild unten rechts */
-	.status-badge {
+	/* ✅ Status-Badge - Oben rechts auf der Kachel, gut lesbar */
+	.status-badge-compact {
 		position: absolute;
-		bottom: -20px; /* Hängt unter der Kachel */
-		left: 70%; /* Leicht rechts von der Mitte */
-		transform: translateX(-50%);
-		z-index: 15;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		animation: badge-swing 3.5s ease-in-out infinite; /* Leicht versetzt animiert */
+		top: 10px;
+		right: 10px;
+		z-index: 10;
+		padding: 6px 12px;
+		border-radius: 8px;
+		font-size: 11px;
+		font-weight: 800;
+		color: white;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		border: 2px solid rgba(255, 255, 255, 0.4);
+		backdrop-filter: blur(10px);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+		transition: all 0.3s;
+		pointer-events: none;
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+	}
+
+	.closed-badge-compact {
+		background: linear-gradient(
+			135deg,
+			rgba(220, 38, 38, 0.97) 0%,
+			rgba(239, 68, 68, 0.97) 100%
+		);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 24px rgba(220, 38, 38, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+	}
+
+	.opens-badge-compact {
+		background: linear-gradient(
+			135deg,
+			rgba(37, 99, 235, 0.97) 0%,
+			rgba(59, 130, 246, 0.97) 100%
+		);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.5),
+			0 0 24px rgba(37, 99, 235, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
@@ -470,7 +497,7 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
-	/* Das eigentliche Badge - Standard (Personen-Badge) */
+	/* Das eigentliche Badge - Personen-Badge */
 	.badge-content {
 		display: flex;
 		align-items: center;
@@ -495,49 +522,11 @@
 		white-space: nowrap;
 	}
 
-	/* Status Badge - GESCHLOSSEN (Rot) */
-	.closed-badge .badge-content {
-		background: linear-gradient(
-			135deg,
-			rgba(220, 38, 38, 0.98) 0%,
-			rgba(239, 68, 68, 0.98) 100%
-		);
-		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.5),
-			0 2px 8px rgba(220, 38, 38, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
-		text-transform: uppercase;
-		letter-spacing: 1.2px;
-		font-size: 11px;
-	}
-
-	/* Status Badge - ÖFFNET UM (Blau) */
-	.opens-badge .badge-content {
-		background: linear-gradient(
-			135deg,
-			rgba(37, 99, 235, 0.98) 0%,
-			rgba(59, 130, 246, 0.98) 100%
-		);
-		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.5),
-			0 2px 8px rgba(37, 99, 235, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
-		font-size: 11px;
-	}
-
-	.person-badge:hover .badge-content,
-	.status-badge:hover .badge-content {
+	.person-badge:hover .badge-content {
 		transform: scale(1.08);
 		box-shadow:
 			0 8px 20px rgba(0, 0, 0, 0.6),
 			0 0 30px rgba(59, 130, 246, 0.6),
-			inset 0 1px 0 rgba(255, 255, 255, 0.4);
-	}
-
-	.closed-badge:hover .badge-content {
-		box-shadow:
-			0 8px 20px rgba(0, 0, 0, 0.6),
-			0 0 30px rgba(220, 38, 38, 0.6),
 			inset 0 1px 0 rgba(255, 255, 255, 0.4);
 	}
 
