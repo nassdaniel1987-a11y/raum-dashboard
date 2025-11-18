@@ -262,7 +262,7 @@
 			0 2px 16px rgba(0, 0, 0, 0.2),
 			inset 0 2px 4px rgba(255, 255, 255, 0.1);
 		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* ✅ Smooth cubic-bezier */
-		overflow: hidden;
+		overflow: visible; /* ✅ Erlaubt Badge außerhalb der Kachel */
 		/* ✅ GLASSMORPHISM: Verstärkt */
 		backdrop-filter: blur(20px) saturate(180%);
 		-webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -423,6 +423,7 @@
 		object-fit: cover;
 		opacity: 0.2;
 		z-index: 0;
+		border-radius: 20px; /* ✅ Hält das Bild innerhalb der Kachel */
 	}
 
 	/* ✅ Personen-Badge - Hängendes Schild unten */
