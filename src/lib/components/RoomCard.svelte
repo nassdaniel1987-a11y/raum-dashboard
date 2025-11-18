@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay, currentTime } from '$lib/stores/appState';
+	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay, currentTime, cardTheme } from '$lib/stores/appState';
 	import { confirmDialog, toasts } from '$lib/stores/toastStore';
 	import type { RoomWithConfig } from '$lib/types';
 	import { get } from 'svelte/store';
+	import { getCardTheme } from '$lib/cardThemes';
 
 	// Svelte 5 Props Syntax
 	let { room, onEdit, onSelect, isSelected = false } = $props<{
@@ -157,6 +158,9 @@
 	let titleFontSize = $derived(room.config?.title_font_size);
 	let textFontSize = $derived(room.config?.text_font_size);
 	let textColor = $derived(room.config?.text_color || '#FFFFFF');
+
+	// ✅ Aktuelles Theme
+	let currentTheme = $derived(getCardTheme($cardTheme));
 </script>
 
 <div
@@ -167,7 +171,7 @@
 	class:status-closing-soon={roomStatus() === 'closing-soon'}
 	class:open={room.isOpen}
 	class:selected={isSelected}
-	style={roomStyle}
+	style="{roomStyle}; border: {currentTheme.borderWidth} {currentTheme.borderStyle} {currentTheme.borderColor}; box-shadow: {currentTheme.boxShadow};"
 	onkeydown={(e) => e.key === 'Enter' && handleClick()}
 	in:scale={{ duration: 300, start: 0.8 }}
 	out:fade={{ duration: 200 }}
@@ -249,7 +253,7 @@
 	{#if room.person}
 		<div class="person-badge" title="Person: {room.person}">
 			<div class="badge-chain"></div>
-			<div class="badge-content">
+			<div class="badge-content" style="background: {currentTheme.personBadgeGradient}; border-color: {currentTheme.personBadgeBorder};">
 				<span class="person-icon">👤</span>
 				<span class="person-name">{room.person}</span>
 			</div>
@@ -257,6 +261,11 @@
 	{/if}
 
 </div>
+
+<!-- ✅ Zusätzliche Theme-Styles -->
+{#if currentTheme.additionalStyles}
+	{@html `<style>${currentTheme.additionalStyles}</style>`}
+{/if}
 
 <style>
 	.room-card {
@@ -276,7 +285,7 @@
 		min-height: 80px; /* ✅ Niedriger für kompaktere Kacheln */
 		display: flex;
 		flex-direction: column;
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		/* Border und box-shadow werden dynamisch per Theme gesetzt */
 		/* GPU-Beschleunigung + TV-Skalierung */
 		transform: scaleX(var(--card-scale-x, 1)) translateZ(0);
 		will-change: transform, box-shadow;
@@ -526,12 +535,9 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 14px;
-		background: linear-gradient(
-			135deg,
-			rgba(59, 130, 246, 0.98) 0%,
-			rgba(37, 99, 235, 0.98) 100%
-		);
-		border: 2px solid rgba(255, 255, 255, 0.4);
+		/* Background und Border werden dynamisch per Theme gesetzt */
+		border-width: 2px;
+		border-style: solid;
 		border-radius: 8px;
 		font-size: 12px;
 		font-weight: 700;
