@@ -11,6 +11,7 @@ export interface Room {
 	background_color: string;
 	image_url: string | null;
 	theme: string;
+	person: string | null; // Person, die in diesem Raum ist
 	created_at: string;
 }
 

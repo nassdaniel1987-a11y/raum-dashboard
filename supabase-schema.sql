@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   background_color TEXT DEFAULT '#4CAF50',
   image_url TEXT,
   theme TEXT DEFAULT 'space',
+  person TEXT, -- Person, die in diesem Raum ist
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

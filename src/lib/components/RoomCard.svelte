@@ -178,6 +178,14 @@
 		<img src={room.image_url} alt={room.name} class="card-bg-image" />
 	{/if}
 
+	<!-- ✅ Personen-Indikator links oben (immer sichtbar wenn Person gesetzt) -->
+	{#if room.person}
+		<div class="person-indicator" title="Person: {room.person}">
+			<span class="person-icon">👤</span>
+			<span class="person-name">{room.person}</span>
+		</div>
+	{/if}
+
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
 	{#if $isEditMode}
 		<div class="button-container">
@@ -412,6 +420,51 @@
 		object-fit: cover;
 		opacity: 0.2;
 		z-index: 0;
+	}
+
+	/* ✅ Personen-Indikator - links oben */
+	.person-indicator {
+		position: absolute;
+		top: 6px;
+		left: 6px;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 12px;
+		background: rgba(59, 130, 246, 0.95);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 8px;
+		font-size: 13px;
+		font-weight: 700;
+		color: white;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.4),
+			0 0 20px rgba(59, 130, 246, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+		backdrop-filter: blur(8px);
+		transition: all 0.3s;
+	}
+
+	.person-indicator:hover {
+		transform: scale(1.05);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.5),
+			0 0 30px rgba(59, 130, 246, 0.5),
+			inset 0 1px 0 rgba(255, 255, 255, 0.3);
+	}
+
+	.person-icon {
+		font-size: 16px;
+		line-height: 1;
+	}
+
+	.person-name {
+		max-width: 120px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	/* ✅ Button Container - kompakter */
