@@ -59,7 +59,7 @@
 			if (timeSinceLastClick < 300) {
 				// Double-click erkannt!
 				await toggleRoomStatus(room.id);
-				toasts.show(room.isOpen ? '🔴 Geschlossen' : '🟢 Geöffnet', 'success');
+				toasts.show(room.isOpen ? '🟢 Geöffnet' : '🔴 Geschlossen', 'success');
 			}
 		}
 	}
