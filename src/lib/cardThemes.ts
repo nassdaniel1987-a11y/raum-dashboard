@@ -327,44 +327,48 @@ export const cardThemes: Record<string, CardTheme> = {
 				);
 			}
 
-			/* Fallende Schneeflocken über der Karte - mehrere Flocken */
+			/* Viele fallende Schneeflocken */
 			.room-card::after {
-				content: '❄️';
+				content: '❄️ ❄️ ❄️';
 				position: absolute;
-				top: -10px;
-				left: 30%;
-				font-size: 14px;
+				top: -15px;
+				left: 0;
+				right: 0;
+				text-align: center;
+				font-size: 18px;
+				letter-spacing: 30px;
 				opacity: 0;
 				pointer-events: none;
 				z-index: 1;
-				animation: winter-snowfall-1 8s ease-in-out infinite;
-				filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.8));
+				animation: winter-snowfall-1 5s ease-in-out infinite;
+				filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.9));
 			}
 
 			.room-header::before {
-				content: '❄️';
+				content: '❄️ ❄️';
 				position: absolute;
 				top: -10px;
-				left: 60%;
-				font-size: 12px;
+				left: 10%;
+				font-size: 16px;
+				letter-spacing: 20px;
 				opacity: 0;
 				pointer-events: none;
 				z-index: 1;
-				animation: winter-snowfall-2 10s ease-in-out infinite 2s;
-				filter: drop-shadow(0 0 6px rgba(147, 197, 253, 0.6));
+				animation: winter-snowfall-2 6s ease-in-out infinite 1s;
+				filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.8));
 			}
 
 			.room-header::after {
 				content: '❄️';
 				position: absolute;
-				top: -10px;
-				left: 15%;
-				font-size: 16px;
+				top: 20%;
+				right: 10%;
+				font-size: 20px;
 				opacity: 0;
 				pointer-events: none;
 				z-index: 1;
-				animation: winter-snowfall-3 9s ease-in-out infinite 4s;
-				filter: drop-shadow(0 0 10px rgba(219, 234, 254, 0.7));
+				animation: winter-snowfall-3 4s ease-in-out infinite 2s;
+				filter: drop-shadow(0 0 12px rgba(219, 234, 254, 0.9));
 			}
 
 			/* Hängende Dekorationen - Eiszapfen */
@@ -399,22 +403,22 @@ export const cardThemes: Record<string, CardTheme> = {
 			}
 
 			@keyframes winter-snowfall-1 {
-				0% { top: -10px; left: 30%; opacity: 0; transform: rotate(0deg); }
-				10% { opacity: 0.7; }
-				90% { opacity: 0.3; }
-				100% { top: 100%; left: 35%; opacity: 0; transform: rotate(360deg); }
+				0% { top: -15px; opacity: 0; transform: translateY(0) rotate(0deg); }
+				15% { opacity: 0.8; }
+				85% { opacity: 0.6; }
+				100% { top: 110%; opacity: 0; transform: translateY(0) rotate(360deg); }
 			}
 			@keyframes winter-snowfall-2 {
-				0% { top: -10px; left: 60%; opacity: 0; transform: rotate(0deg); }
-				15% { opacity: 0.6; }
-				85% { opacity: 0.2; }
-				100% { top: 100%; left: 55%; opacity: 0; transform: rotate(-360deg); }
+				0% { top: -10px; opacity: 0; transform: translateX(0) rotate(0deg); }
+				20% { opacity: 0.7; }
+				80% { opacity: 0.5; }
+				100% { top: 110%; opacity: 0; transform: translateX(20px) rotate(-360deg); }
 			}
 			@keyframes winter-snowfall-3 {
-				0% { top: -10px; left: 15%; opacity: 0; transform: rotate(0deg); }
-				12% { opacity: 0.8; }
-				88% { opacity: 0.4; }
-				100% { top: 100%; left: 20%; opacity: 0; transform: rotate(540deg); }
+				0% { top: 20%; right: 10%; opacity: 0; transform: scale(0.5) rotate(0deg); }
+				15% { opacity: 0.9; }
+				85% { opacity: 0.6; }
+				100% { top: 110%; right: 15%; opacity: 0; transform: scale(1.2) rotate(540deg); }
 			}
 			@keyframes winter-icicle-left {
 				0%, 100% { transform: translateX(-50%) rotate(-1deg) scaleY(1); }
@@ -466,31 +470,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: christmas-sparkle 2s ease-in-out infinite;
 			}
 
-			/* Funkelnde Lichterketten */
+			/* Weihnachts-Lichterkette - obere Reihe */
 			.room-header::before {
-				content: '💡';
+				content: '💡💡💡💡💡';
 				position: absolute;
-				top: -3px;
-				left: 15%;
-				font-size: 10px;
-				opacity: 0.6;
+				top: 0px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 14px;
+				letter-spacing: 8px;
+				opacity: 0.9;
 				pointer-events: none;
 				z-index: 2;
-				animation: christmas-lights-1 1.5s ease-in-out infinite;
-				filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.8));
+				animation: christmas-lights-blink 2s ease-in-out infinite;
+				filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.9));
 			}
 
 			.room-header::after {
-				content: '💡';
+				content: '🔴🟢🟡🔴🟢';
 				position: absolute;
-				top: -3px;
-				right: 15%;
-				font-size: 10px;
-				opacity: 0.6;
+				top: -5px;
+				left: 0;
+				right: 0;
+				text-align: center;
+				font-size: 8px;
+				letter-spacing: 4px;
+				opacity: 0.8;
 				pointer-events: none;
 				z-index: 2;
-				animation: christmas-lights-2 1.5s ease-in-out infinite 0.5s;
-				filter: drop-shadow(0 0 4px rgba(220, 38, 38, 0.8));
+				animation: christmas-lights-twinkle 1.5s ease-in-out infinite;
 			}
 
 			/* Hängende Dekorationen - Zuckerstange links */
@@ -535,13 +543,29 @@ export const cardThemes: Record<string, CardTheme> = {
 				0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
 				50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
 			}
-			@keyframes christmas-lights-1 {
-				0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4)); }
-				50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1)); }
+			@keyframes christmas-lights-blink {
+				0%, 100% {
+					opacity: 0.6;
+					filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.6)) drop-shadow(0 0 8px rgba(220, 38, 38, 0.4));
+				}
+				50% {
+					opacity: 1;
+					filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1)) drop-shadow(0 0 16px rgba(220, 38, 38, 0.8));
+				}
 			}
-			@keyframes christmas-lights-2 {
-				0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(220, 38, 38, 0.4)); }
-				50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(220, 38, 38, 1)); }
+			@keyframes christmas-lights-twinkle {
+				0%, 100% {
+					opacity: 0.5;
+					transform: scaleY(1);
+				}
+				25% {
+					opacity: 0.9;
+					transform: scaleY(1.2);
+				}
+				75% {
+					opacity: 0.7;
+					transform: scaleY(0.9);
+				}
 			}
 			@keyframes hanging-swing-left {
 				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
