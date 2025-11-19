@@ -2,7 +2,8 @@
 
 Diese Prompts kannst du in einem KI-Bildgenerator (wie DALL-E, Midjourney, Stable Diffusion) verwenden, um passende Hintergrundbilder für die Themes zu erstellen.
 
-**Format:** 1920x1080px (16:9), dunkler Hintergrund, nicht zu ablenkend
+**Stil:** Cartoon/Illustration für Grundschulkinder - freundlich, verspielt, kindgerecht
+**Format:** 1920x1080px (16:9)
 
 ---
 
@@ -11,12 +12,12 @@ Diese Prompts kannst du in einem KI-Bildgenerator (wie DALL-E, Midjourney, Stabl
 
 **Prompt:**
 ```
-A dark atmospheric football/soccer stadium background at dusk, viewed from behind one goal looking across the pitch. The grass field has subtle stripe patterns in deep green shades (#0a1f0a, #166534). Gentle stadium lights create a soft glow in the distance. The scene is moody and dramatic with dark green (#14532d) shadows. Low contrast, subtle details, not too bright - designed as an app background. No players, no text. Photorealistic 3D style. Cinematic lighting. 1920x1080px.
+Cute cartoon soccer/football field illustration for kids, viewed from ground level. Bright green striped grass (#22c55e, #16a34a) with white field lines. A smiling cartoon soccer ball with big eyes sitting on the grass. Cute clouds in the sky, cartoon sun shining. Friendly goal posts in the background. Colorful cartoon style like a children's book illustration. Warm and inviting, not too dark. Simple shapes, bold outlines. Perfect for elementary school kids. Fun and playful atmosphere. 1920x1080px, digital illustration.
 ```
 
-**Alternative (Comic-Stil):**
+**Alternative:**
 ```
-Cartoon-style football field background, viewed from ground level with bright green grass stripes. A soccer ball in the foreground with a goal post in the background. Dark green atmospheric lighting (#0a1f0a), playful and energetic but not too distracting. Flat design illustration style for kids, clean and minimal. 1920x1080px.
+Whimsical cartoon soccer stadium scene for children. Green grass field with gentle hills in background. Cute animated soccer balls bouncing around. Friendly cartoon referee whistle and colorful soccer jerseys floating in the air. Bright green tones (#22c55e) with sunny yellow accents (#fbbf24). Kids illustration style, very friendly and welcoming. No scary elements. 1920x1080px.
 ```
 
 ---
@@ -26,12 +27,12 @@ Cartoon-style football field background, viewed from ground level with bright gr
 
 **Prompt:**
 ```
-A dramatic indoor handball court background with deep red and orange tones (#991b1b, #dc2626). View from behind the goal line looking across the wooden court floor. Subtle court markings visible. Dark atmospheric lighting with red spotlights creating dynamic shadows. The scene has high energy but dark ambiance (#1a0505, #450a0a). Photorealistic 3D rendering. No players, no text. Designed for app background. 1920x1080px.
+Playful cartoon handball court for kids. Indoor gym with red and orange tones (#ef4444, #fca5a5). Cute smiling handball with big friendly eyes in the center. Simple geometric court lines on wooden floor. Colorful banners and flags hanging from ceiling. Cheerful and energetic but not aggressive. Illustration style like a children's sports book. Bright, warm colors. Perfect for elementary school. No dark shadows. 1920x1080px, digital art.
 ```
 
-**Alternative (Dynamisch):**
+**Alternative:**
 ```
-Abstract handball-themed background with motion blur effects. Flying handball in mid-air, red and orange energy trails (#ef4444, #fca5a5). Dark background with court floor visible at bottom. Dynamic diagonal composition suggesting speed and power. Modern sports graphic design style. 1920x1080px.
+Fun cartoon handball scene with cute animated handball characters jumping and playing. Red and orange color scheme (#dc2626, #fb923c) with yellow accents. Simple gym background with happy faces on the walls. Kid-friendly illustration style with bold colors and simple shapes. Inviting and motivating for young children. 1920x1080px.
 ```
 
 ---
@@ -41,12 +42,12 @@ Abstract handball-themed background with motion blur effects. Flying handball in
 
 **Prompt:**
 ```
-A moody basketball court at night with orange and brown tones (#9a3412, #f97316). View from baseline looking toward the opposite basket. Polished wooden floor with subtle shine, dark stadium lighting. Basketball hoop silhouette visible in distance. Dramatic orange uplighting from below creating atmospheric shadows. Dark overall ambiance (#1a0905, #431407). Cinematic photorealistic style. No players, no text. 1920x1080px.
+Cheerful cartoon basketball court for kids. Wooden floor with orange and brown tones (#f97316, #fb923c). Cute smiling basketball with big friendly eyes. Cartoon basketball hoop with a net that looks happy. Stars and sparkles around the ball. Bright sunny atmosphere with warm orange glow. Children's book illustration style. Playful and welcoming, not intimidating. Bold outlines, simple shapes. Perfect for elementary school kids. 1920x1080px, digital illustration.
 ```
 
-**Alternative (Urban):**
+**Alternative:**
 ```
-Urban outdoor basketball court at golden hour with street lights. Orange sunset glow (#ea580c, #fb923c) reflecting on dark asphalt. Chain-link fence and city buildings silhouetted in background. Gritty street basketball aesthetic. Dark but warm atmosphere. Realistic photo style. 1920x1080px.
+Fun cartoon outdoor basketball playground. Orange sunset sky (#ea580c) with friendly clouds. Cute basketball characters playing. Colorful street art on walls in background. Urban but kid-friendly and safe-looking. Warm inviting colors. Simple illustration style for children. 1920x1080px.
 ```
 
 ---
@@ -56,12 +57,12 @@ Urban outdoor basketball court at golden hour with street lights. Orange sunset 
 
 **Prompt:**
 ```
-A magical Christmas scene with a snow-covered forest at twilight. Deep reds (#7f1d1d, #dc2626) and forest greens (#22c55e) with golden lights (#fbbf24). Decorated Christmas trees with twinkling string lights in the distance. Gentle snowfall, stars visible in dark sky. Cozy warm glow from fairy lights. Dark atmospheric background (#0a0f0a, #1a1f1a) with festive magical feeling. Perfect for children. Illustration style like a Christmas storybook. 1920x1080px.
+Magical cartoon Christmas scene for children. Cute decorated Christmas tree with smiling ornaments and twinkling lights. Friendly snowman and reindeer characters. Gentle snowflakes falling. Red (#dc2626), green (#22c55e), and gold (#fbbf24) color scheme. Cozy wooden cabin with warm glowing windows in background. Starry night sky. Whimsical children's book illustration style. Warm, inviting, and festive. No scary elements. Perfect for elementary school. 1920x1080px, digital art.
 ```
 
-**Alternative (Gemütlich):**
+**Alternative:**
 ```
-Cozy indoor Christmas living room scene from a wide angle. Large Christmas tree with colorful lights on the left, fireplace with stockings on the right. Dark room (#0a0f0a) with warm golden glow from tree lights and fire. Red and green color scheme with golden accents. Soft bokeh lights creating magical atmosphere. Viewed as if standing in the doorway. Photorealistic 3D render, Pixar-style warmth. 1920x1080px.
+Cute cartoon Santa's workshop interior. Friendly elves working on toys. Big Christmas tree in corner with presents underneath. Red and green decorations everywhere. Warm fireplace glowing. Colorful stockings hanging. Everything has a happy face - even the presents smile! Kid-friendly illustration style. Bright, cheerful, festive atmosphere. 1920x1080px.
 ```
 
 ---
@@ -71,12 +72,12 @@ Cozy indoor Christmas living room scene from a wide angle. Large Christmas tree 
 
 **Prompt:**
 ```
-A vibrant concert stage background with purple and pink lighting (#6b21a8, #a855f7, #c084fc). Empty stage with musical instruments silhouettes - keyboard, drum kit, guitars. Dramatic stage lights creating beams through dark atmospheric haze. Purple and magenta color scheme with glowing neon accents. Dark background (#0f0514, #2e1065) with energetic party atmosphere. No people. Modern concert photography style. 1920x1080px.
+Playful cartoon music scene for kids. Cute animated musical instruments with happy faces - smiling guitar, drums, keyboard. Musical notes floating in the air with big friendly eyes. Purple and pink color scheme (#a855f7, #c084fc) with sparkles and stars. Cartoon stage with colorful spotlights. Fun concert atmosphere but kid-friendly, not too dark or loud. Children's illustration style with bold colors and simple shapes. Cheerful and inviting. Perfect for elementary school. 1920x1080px, digital art.
 ```
 
-**Alternative (Abstract):**
+**Alternative:**
 ```
-Abstract music visualization with flowing sound waves and musical notes. Purple gradient background (#9333ea to #c084fc) with floating 3D music notes, treble clefs, and staff lines. Particles and energy trails suggesting rhythm and movement. Dark purple atmosphere (#0f0514) with bright neon purple highlights. Modern digital art style, dynamic composition. 1920x1080px.
+Whimsical music classroom illustration. Cute cartoon instruments dancing around - violin, trumpet, xylophone all with smiling faces. Musical staff lines with notes bouncing along. Purple gradient background (#9333ea to #c084fc) with stars. Bright and colorful. Simple cartoon style for children. Happy and encouraging atmosphere. 1920x1080px.
 ```
 
 ---
@@ -85,24 +86,26 @@ Abstract music visualization with flowing sound waves and musical notes. Purple 
 
 - **Auflösung:** 1920x1080px (Full HD)
 - **Format:** PNG (für Transparenz) oder JPG (kleinere Dateigröße)
-- **Dateiname:** Exakt wie oben angegeben
+- **Dateiname:** Exakt wie oben angegeben (z.B. `fussball-background.png`)
 - **Farbpalette:** Die genannten Hex-Codes sollten im Bild vorkommen
-- **Kontrast:** Dunkel genug, damit weißer Text gut lesbar ist
+- **Stil:** Cartoon/Illustration für Grundschulkinder
 - **Details:** Nicht zu ablenkend - dient als Hintergrund für eine App
 
-## 🎨 Stil-Empfehlungen
+## 🎨 Wichtige Stil-Merkmale
 
-**Für Schulkinder (Grundschule):**
-- Comic/Cartoon-Stil
-- Freundliche, einladende Farben
-- Klare, einfache Formen
-- Nicht zu dunkel oder düster
+**Passend zu existierenden Themes (Weltraum, Dino, Ozean, etc.):**
+- ✅ **Cartoon/Comic-Stil** - wie Kinderbuch-Illustrationen
+- ✅ **Freundliche Gesichter** - Objekte mit Augen und Lächeln
+- ✅ **Helle, fröhliche Farben** - nicht zu dunkel oder gruselig
+- ✅ **Einfache Formen** - klar erkennbare Objekte
+- ✅ **Verspielt und einladend** - motivierend für Kinder
+- ✅ **Keine realistischen/erwachsenen Elemente**
 
-**Für ältere Schüler (Weiterführende Schule):**
-- Realistischer/Photorealistischer Stil
-- Dramatische Beleuchtung
-- Cinematic Look
-- Moderne Sport-Fotografie Ästhetik
+**Vermeide:**
+- ❌ Photorealistische/düstere Darstellungen
+- ❌ Zu viele Details oder komplexe Szenen
+- ❌ Aggressive oder einschüchternde Elemente
+- ❌ Zu dunkle Atmosphäre
 
 ## 🚀 Nächste Schritte
 
