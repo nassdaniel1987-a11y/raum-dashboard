@@ -70,6 +70,19 @@ export const cardThemes: Record<string, CardTheme> = {
 				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.3));
 			}
 
+			/* Krabbelnder Marienkäfer */
+			.room-header::before {
+				content: '🐞';
+				position: absolute;
+				top: 50%;
+				left: -10px;
+				font-size: 16px;
+				z-index: 10;
+				pointer-events: none;
+				animation: spring-ladybug-crawl 15s linear infinite;
+				filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.4));
+			}
+
 			/* Hängende Dekorationen - Blumen */
 			.card-content::before {
 				content: '🌸';
@@ -106,6 +119,12 @@ export const cardThemes: Record<string, CardTheme> = {
 				15% { opacity: 0.6; }
 				85% { opacity: 0.3; }
 				100% { top: 90%; right: 30%; opacity: 0; transform: rotate(180deg) translateX(20px); }
+			}
+			@keyframes spring-ladybug-crawl {
+				0% { left: -10px; transform: translateY(-50%); opacity: 0; }
+				5% { opacity: 1; }
+				95% { opacity: 1; }
+				100% { left: calc(100% + 10px); transform: translateY(-50%); opacity: 0; }
 			}
 			@keyframes spring-hang-left {
 				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
@@ -236,18 +255,18 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: autumn-fall 8s ease-in-out infinite;
 			}
 
-			/* Hängende Dekorationen - Herbstblätter */
+			/* Hängende Dekorationen - Pilz */
 			.card-content::before {
-				content: '🍂';
+				content: '🍄';
 				position: absolute;
 				bottom: -35px;
 				left: 15%;
 				transform: translateX(-50%);
-				font-size: 22px;
+				font-size: 20px;
 				z-index: 16;
 				pointer-events: none;
 				animation: autumn-hang-left 3.2s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(249, 115, 22, 0.4));
+				filter: drop-shadow(0 3px 6px rgba(161, 98, 7, 0.4));
 				border-top: 2px solid rgba(161, 98, 7, 0.4);
 				padding-top: 8px;
 			}
@@ -308,7 +327,7 @@ export const cardThemes: Record<string, CardTheme> = {
 				);
 			}
 
-			/* Fallende Schneeflocken über der Karte */
+			/* Fallende Schneeflocken über der Karte - mehrere Flocken */
 			.room-card::after {
 				content: '❄️';
 				position: absolute;
@@ -318,8 +337,34 @@ export const cardThemes: Record<string, CardTheme> = {
 				opacity: 0;
 				pointer-events: none;
 				z-index: 1;
-				animation: winter-snowfall 8s ease-in-out infinite;
+				animation: winter-snowfall-1 8s ease-in-out infinite;
 				filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.8));
+			}
+
+			.room-header::before {
+				content: '❄️';
+				position: absolute;
+				top: -10px;
+				left: 60%;
+				font-size: 12px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: winter-snowfall-2 10s ease-in-out infinite 2s;
+				filter: drop-shadow(0 0 6px rgba(147, 197, 253, 0.6));
+			}
+
+			.room-header::after {
+				content: '❄️';
+				position: absolute;
+				top: -10px;
+				left: 15%;
+				font-size: 16px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: winter-snowfall-3 9s ease-in-out infinite 4s;
+				filter: drop-shadow(0 0 10px rgba(219, 234, 254, 0.7));
 			}
 
 			/* Hängende Dekorationen - Eiszapfen */
@@ -353,11 +398,23 @@ export const cardThemes: Record<string, CardTheme> = {
 				padding-top: 8px;
 			}
 
-			@keyframes winter-snowfall {
+			@keyframes winter-snowfall-1 {
 				0% { top: -10px; left: 30%; opacity: 0; transform: rotate(0deg); }
 				10% { opacity: 0.7; }
 				90% { opacity: 0.3; }
 				100% { top: 100%; left: 35%; opacity: 0; transform: rotate(360deg); }
+			}
+			@keyframes winter-snowfall-2 {
+				0% { top: -10px; left: 60%; opacity: 0; transform: rotate(0deg); }
+				15% { opacity: 0.6; }
+				85% { opacity: 0.2; }
+				100% { top: 100%; left: 55%; opacity: 0; transform: rotate(-360deg); }
+			}
+			@keyframes winter-snowfall-3 {
+				0% { top: -10px; left: 15%; opacity: 0; transform: rotate(0deg); }
+				12% { opacity: 0.8; }
+				88% { opacity: 0.4; }
+				100% { top: 100%; left: 20%; opacity: 0; transform: rotate(540deg); }
 			}
 			@keyframes winter-icicle-left {
 				0%, 100% { transform: translateX(-50%) rotate(-1deg) scaleY(1); }
@@ -409,6 +466,33 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: christmas-sparkle 2s ease-in-out infinite;
 			}
 
+			/* Funkelnde Lichterketten */
+			.room-header::before {
+				content: '💡';
+				position: absolute;
+				top: -3px;
+				left: 15%;
+				font-size: 10px;
+				opacity: 0.6;
+				pointer-events: none;
+				z-index: 2;
+				animation: christmas-lights-1 1.5s ease-in-out infinite;
+				filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.8));
+			}
+
+			.room-header::after {
+				content: '💡';
+				position: absolute;
+				top: -3px;
+				right: 15%;
+				font-size: 10px;
+				opacity: 0.6;
+				pointer-events: none;
+				z-index: 2;
+				animation: christmas-lights-2 1.5s ease-in-out infinite 0.5s;
+				filter: drop-shadow(0 0 4px rgba(220, 38, 38, 0.8));
+			}
+
 			/* Hängende Dekorationen - Zuckerstange links */
 			.card-content::before {
 				content: '🍬';
@@ -450,6 +534,14 @@ export const cardThemes: Record<string, CardTheme> = {
 			@keyframes christmas-sparkle {
 				0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
 				50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+			}
+			@keyframes christmas-lights-1 {
+				0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4)); }
+				50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1)); }
+			}
+			@keyframes christmas-lights-2 {
+				0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(220, 38, 38, 0.4)); }
+				50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(220, 38, 38, 1)); }
 			}
 			@keyframes hanging-swing-left {
 				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
@@ -857,6 +949,20 @@ export const cardThemes: Record<string, CardTheme> = {
 				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.5));
 			}
 
+			/* Brennende Kerze */
+			.room-header::before {
+				content: '🕯️';
+				position: absolute;
+				top: 50%;
+				right: 10px;
+				transform: translateY(-50%);
+				font-size: 18px;
+				z-index: 10;
+				pointer-events: none;
+				animation: birthday-candle-flicker 2s ease-in-out infinite;
+				filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+			}
+
 			/* Hängende Dekorationen - Luftballons */
 			.card-content::before {
 				content: '🎈';
@@ -897,6 +1003,18 @@ export const cardThemes: Record<string, CardTheme> = {
 				15% { opacity: 1; }
 				85% { opacity: 0.5; }
 				100% { top: 100%; left: 45%; opacity: 0; transform: rotate(720deg) scale(0.8); }
+			}
+			@keyframes birthday-candle-flicker {
+				0%, 100% {
+					opacity: 1;
+					transform: translateY(-50%) scale(1);
+					filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+				}
+				50% {
+					opacity: 0.8;
+					transform: translateY(-50%) scale(1.05);
+					filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1));
+				}
 			}
 			@keyframes birthday-balloon-left {
 				0%, 100% { transform: translateX(-50%) translateY(0) rotate(-3deg); }
@@ -1063,7 +1181,7 @@ export const cardThemes: Record<string, CardTheme> = {
 			}
 
 			.card-content::after {
-				content: '⭐';
+				content: '🐠';
 				position: absolute;
 				bottom: -35px;
 				right: 15%;
@@ -1071,7 +1189,7 @@ export const cardThemes: Record<string, CardTheme> = {
 				font-size: 22px;
 				z-index: 16;
 				pointer-events: none;
-				animation: meer-starfish 4.2s ease-in-out infinite;
+				animation: meer-fish-swim 4.2s ease-in-out infinite;
 				filter: drop-shadow(0 3px 6px rgba(251, 191, 36, 0.5));
 				border-top: 2px solid rgba(14, 165, 233, 0.5);
 				padding-top: 8px;
@@ -1085,9 +1203,429 @@ export const cardThemes: Record<string, CardTheme> = {
 				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
 				50% { transform: translateX(-50%) rotate(3deg); }
 			}
-			@keyframes meer-starfish {
-				0%, 100% { transform: translateX(50%) rotate(5deg); opacity: 0.9; }
-				50% { transform: translateX(50%) rotate(-5deg); opacity: 1; }
+			@keyframes meer-fish-swim {
+				0%, 100% { transform: translateX(50%) rotate(-5deg) scaleX(1); opacity: 0.9; }
+				50% { transform: translateX(50%) rotate(5deg) scaleX(-1); opacity: 1; }
+			}
+		`
+	},
+
+	valentinstag: {
+		name: 'valentinstag',
+		displayName: 'Valentinstag',
+		emoji: '💝',
+		borderColor: 'rgba(236, 72, 153, 0.7)',
+		borderWidth: '3px',
+		borderStyle: 'solid',
+		boxShadow: '0 8px 32px rgba(236, 72, 153, 0.6), 0 2px 16px rgba(244, 114, 182, 0.5), 0 0 70px rgba(251, 207, 232, 0.4)',
+		headerGradient: 'linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #fbcfe8 100%)',
+		personBadgeGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.98) 0%, rgba(244, 114, 182, 0.98) 100%)',
+		personBadgeBorder: 'rgba(236, 72, 153, 0.8)',
+		additionalStyles: `
+			.room-card {
+				background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(251, 207, 232, 0.08) 100%) !important;
+				animation: valentine-heartbeat 2.5s ease-in-out infinite;
+			}
+			.room-card::before {
+				background: radial-gradient(
+					circle at 30% 70%,
+					rgba(236, 72, 153, 0.2) 0%,
+					rgba(244, 114, 182, 0.15) 40%,
+					rgba(251, 207, 232, 0.1) 80%,
+					transparent 100%
+				);
+			}
+
+			/* Fliegende Herzen */
+			.room-card::after {
+				content: '💕';
+				position: absolute;
+				bottom: 10px;
+				left: 20%;
+				font-size: 14px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: valentine-heart-float 6s ease-in-out infinite;
+				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.4));
+			}
+
+			.room-header::before {
+				content: '💖';
+				position: absolute;
+				bottom: 15px;
+				right: 25%;
+				font-size: 16px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: valentine-heart-float 7s ease-in-out infinite 2s;
+				filter: drop-shadow(0 2px 4px rgba(244, 114, 182, 0.5));
+			}
+
+			/* Hängende Dekorationen - Rose und Herz */
+			.card-content::before {
+				content: '🌹';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: valentine-hang-left 3s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(220, 38, 38, 0.5));
+				border-top: 2px solid rgba(220, 38, 38, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '💝';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: valentine-gift-pulse 2.5s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.6));
+				border-top: 2px solid rgba(236, 72, 153, 0.5);
+				padding-top: 8px;
+			}
+
+			@keyframes valentine-heartbeat {
+				0%, 100% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.6), 0 0 60px rgba(251, 207, 232, 0.3); }
+				50% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.8), 0 0 80px rgba(244, 114, 182, 0.5); }
+			}
+			@keyframes valentine-heart-float {
+				0% { bottom: 10px; opacity: 0; transform: rotate(0deg) scale(0.8); }
+				15% { opacity: 1; }
+				85% { opacity: 0.7; }
+				100% { bottom: 100%; opacity: 0; transform: rotate(20deg) scale(1.2); }
+			}
+			@keyframes valentine-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes valentine-gift-pulse {
+				0%, 100% { transform: translateX(50%) scale(1); opacity: 1; }
+				50% { transform: translateX(50%) scale(1.15); opacity: 0.9; }
+			}
+		`
+	},
+
+	musik: {
+		name: 'musik',
+		displayName: 'Musik/Party',
+		emoji: '🎵',
+		borderColor: 'rgba(168, 85, 247, 0.7)',
+		borderWidth: '3px',
+		borderStyle: 'solid',
+		boxShadow: '0 8px 32px rgba(168, 85, 247, 0.6), 0 2px 16px rgba(139, 92, 246, 0.5), 0 0 70px rgba(196, 181, 253, 0.4)',
+		headerGradient: 'linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #c4b5fd 100%)',
+		personBadgeGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.98) 0%, rgba(139, 92, 246, 0.98) 100%)',
+		personBadgeBorder: 'rgba(168, 85, 247, 0.8)',
+		additionalStyles: `
+			.room-card {
+				background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(196, 181, 253, 0.06) 100%) !important;
+				animation: musik-pulse 1.5s ease-in-out infinite;
+			}
+			.room-card::before {
+				background: radial-gradient(
+					circle at 50% 50%,
+					rgba(168, 85, 247, 0.15) 0%,
+					rgba(139, 92, 246, 0.1) 50%,
+					transparent 100%
+				);
+			}
+
+			/* Tanzende Noten */
+			.room-card::after {
+				content: '🎵';
+				position: absolute;
+				top: 20%;
+				left: 10%;
+				font-size: 18px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: musik-note-dance-1 4s ease-in-out infinite;
+				filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
+			}
+
+			.room-header::before {
+				content: '🎶';
+				position: absolute;
+				top: 30%;
+				right: 15%;
+				font-size: 16px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: musik-note-dance-2 3.5s ease-in-out infinite 1s;
+				filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4));
+			}
+
+			/* Hängende Dekorationen - Kopfhörer und Mikrofon */
+			.card-content::before {
+				content: '🎧';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: musik-hang-left 3s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(168, 85, 247, 0.5));
+				border-top: 2px solid rgba(168, 85, 247, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🎤';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: musik-mic-bounce 2.5s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.5));
+				border-top: 2px solid rgba(139, 92, 246, 0.5);
+				padding-top: 8px;
+			}
+
+			@keyframes musik-pulse {
+				0%, 100% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.6), 0 0 60px rgba(196, 181, 253, 0.3); }
+				50% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.9), 0 0 80px rgba(139, 92, 246, 0.6); }
+			}
+			@keyframes musik-note-dance-1 {
+				0% { top: 20%; left: 10%; opacity: 0; transform: rotate(0deg) scale(0.8); }
+				15% { opacity: 1; }
+				50% { top: 40%; left: 15%; transform: rotate(15deg) scale(1.1); }
+				85% { opacity: 0.8; }
+				100% { top: 70%; left: 20%; opacity: 0; transform: rotate(-15deg) scale(0.9); }
+			}
+			@keyframes musik-note-dance-2 {
+				0% { top: 30%; right: 15%; opacity: 0; transform: rotate(0deg) scale(0.7); }
+				15% { opacity: 1; }
+				50% { top: 50%; right: 20%; transform: rotate(-20deg) scale(1); }
+				85% { opacity: 0.7; }
+				100% { top: 80%; right: 25%; opacity: 0; transform: rotate(20deg) scale(0.8); }
+			}
+			@keyframes musik-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+				50% { transform: translateX(-50%) rotate(3deg); }
+			}
+			@keyframes musik-mic-bounce {
+				0%, 100% { transform: translateX(50%) translateY(0) scale(1); }
+				50% { transform: translateX(50%) translateY(-5px) scale(1.1); }
+			}
+		`
+	},
+
+	sport: {
+		name: 'sport',
+		displayName: 'Sport',
+		emoji: '⚽',
+		borderColor: 'rgba(34, 197, 94, 0.7)',
+		borderWidth: '3px',
+		borderStyle: 'solid',
+		boxShadow: '0 8px 32px rgba(34, 197, 94, 0.6), 0 2px 16px rgba(22, 163, 74, 0.5), 0 0 70px rgba(74, 222, 128, 0.4)',
+		headerGradient: 'linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%)',
+		personBadgeGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.98) 0%, rgba(22, 163, 74, 0.98) 100%)',
+		personBadgeBorder: 'rgba(34, 197, 94, 0.8)',
+		additionalStyles: `
+			.room-card {
+				background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(74, 222, 128, 0.06) 100%) !important;
+				animation: sport-energy 2s ease-in-out infinite;
+			}
+			.room-card::before {
+				background: linear-gradient(
+					135deg,
+					rgba(34, 197, 94, 0.15) 0%,
+					rgba(22, 163, 74, 0.1) 50%,
+					rgba(74, 222, 128, 0.12) 100%
+				);
+			}
+
+			/* Fliegender Ball */
+			.room-card::after {
+				content: '⚽';
+				position: absolute;
+				top: 20px;
+				left: -20px;
+				font-size: 20px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: sport-ball-fly 5s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(34, 197, 94, 0.4));
+			}
+
+			/* Hängende Dekorationen - Medaille und Pokal */
+			.card-content::before {
+				content: '🥇';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: sport-medal-swing 3.5s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.6));
+				border-top: 2px solid rgba(251, 191, 36, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🏆';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: sport-trophy-shine 2.8s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.7));
+				border-top: 2px solid rgba(34, 197, 94, 0.5);
+				padding-top: 8px;
+			}
+
+			@keyframes sport-energy {
+				0%, 100% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6), 0 0 60px rgba(74, 222, 128, 0.3); }
+				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.9), 0 0 80px rgba(22, 163, 74, 0.6); }
+			}
+			@keyframes sport-ball-fly {
+				0% { top: 20px; left: -20px; opacity: 0; transform: rotate(0deg); }
+				10% { opacity: 1; }
+				50% { top: 50%; left: 50%; transform: rotate(360deg); }
+				90% { opacity: 0.8; }
+				100% { top: 80px; left: calc(100% + 20px); opacity: 0; transform: rotate(720deg); }
+			}
+			@keyframes sport-medal-swing {
+				0%, 100% { transform: translateX(-50%) rotate(-4deg); }
+				50% { transform: translateX(-50%) rotate(4deg); }
+			}
+			@keyframes sport-trophy-shine {
+				0%, 100% {
+					transform: translateX(50%) scale(1);
+					filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.6));
+				}
+				50% {
+					transform: translateX(50%) scale(1.1);
+					filter: drop-shadow(0 6px 12px rgba(251, 191, 36, 1)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+				}
+			}
+		`
+	},
+
+	cafe: {
+		name: 'cafe',
+		displayName: 'Café/Gemütlich',
+		emoji: '☕',
+		borderColor: 'rgba(161, 98, 7, 0.7)',
+		borderWidth: '3px',
+		borderStyle: 'solid',
+		boxShadow: '0 8px 32px rgba(161, 98, 7, 0.6), 0 2px 16px rgba(120, 53, 15, 0.5), 0 0 60px rgba(217, 119, 6, 0.4)',
+		headerGradient: 'linear-gradient(135deg, #78350f 0%, #a16207 50%, #d97706 100%)',
+		personBadgeGradient: 'linear-gradient(135deg, rgba(161, 98, 7, 0.98) 0%, rgba(120, 53, 15, 0.98) 100%)',
+		personBadgeBorder: 'rgba(161, 98, 7, 0.8)',
+		additionalStyles: `
+			.room-card {
+				background: linear-gradient(135deg, rgba(161, 98, 7, 0.08) 0%, rgba(217, 119, 6, 0.06) 100%) !important;
+			}
+			.room-card::before {
+				background: linear-gradient(
+					135deg,
+					rgba(161, 98, 7, 0.15) 0%,
+					rgba(120, 53, 15, 0.12) 50%,
+					rgba(217, 119, 6, 0.1) 100%
+				);
+			}
+
+			/* Dampf vom Kaffee */
+			.room-card::after {
+				content: '☁️';
+				position: absolute;
+				top: 30%;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 14px;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 1;
+				animation: cafe-steam 4s ease-in-out infinite;
+				filter: drop-shadow(0 2px 4px rgba(161, 98, 7, 0.3));
+			}
+
+			/* Hängende Dekorationen - Buch und Keks */
+			.card-content::before {
+				content: '📚';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: cafe-hang-left 3.5s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(120, 53, 15, 0.5));
+				border-top: 2px solid rgba(161, 98, 7, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🍪';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: cafe-hang-right 3s ease-in-out infinite;
+				filter: drop-shadow(0 4px 8px rgba(217, 119, 6, 0.5));
+				border-top: 2px solid rgba(217, 119, 6, 0.5);
+				padding-top: 8px;
+			}
+
+			/* Kaffeetasse im Header */
+			.room-header::before {
+				content: '☕';
+				position: absolute;
+				top: 50%;
+				right: 10px;
+				transform: translateY(-50%);
+				font-size: 18px;
+				z-index: 10;
+				pointer-events: none;
+				animation: cafe-cup-steam 3s ease-in-out infinite;
+				filter: drop-shadow(0 3px 6px rgba(161, 98, 7, 0.5));
+			}
+
+			@keyframes cafe-steam {
+				0% { top: 30%; opacity: 0; transform: translateX(-50%) scale(0.5); }
+				20% { opacity: 0.6; }
+				80% { opacity: 0.3; }
+				100% { top: -10%; opacity: 0; transform: translateX(-50%) scale(1.5); }
+			}
+			@keyframes cafe-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-1deg); }
+				50% { transform: translateX(-50%) rotate(1deg); }
+			}
+			@keyframes cafe-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(1deg); }
+				50% { transform: translateX(50%) rotate(-1deg); }
+			}
+			@keyframes cafe-cup-steam {
+				0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
+				50% { transform: translateY(-50%) scale(1.05); opacity: 0.9; }
 			}
 		`
 	}
