@@ -12,12 +12,12 @@ Diese Prompts kannst du in einem KI-Bildgenerator (wie DALL-E, Midjourney, Stabl
 
 **Prompt:**
 ```
-Cute cartoon soccer/football field illustration for kids, viewed from ground level. Bright green striped grass (#22c55e, #16a34a) with white field lines. A smiling cartoon soccer ball with big eyes sitting on the grass. Cute clouds in the sky, cartoon sun shining. Friendly goal posts in the background. Colorful cartoon style like a children's book illustration. Warm and inviting, not too dark. Simple shapes, bold outlines. Perfect for elementary school kids. Fun and playful atmosphere. 1920x1080px, digital illustration.
+Cartoon soccer/football field illustration, viewed from ground level. Bright green striped grass (#22c55e, #16a34a) with white field lines. Soccer ball in the foreground with goal posts in the background. Blue sky with fluffy clouds. Clean cartoon style with bold outlines and simple shapes. Colorful and inviting, good for elementary school. Playful sports atmosphere. Not too cute, more cool and sporty. 1920x1080px, digital illustration.
 ```
 
 **Alternative:**
 ```
-Whimsical cartoon soccer stadium scene for children. Green grass field with gentle hills in background. Cute animated soccer balls bouncing around. Friendly cartoon referee whistle and colorful soccer jerseys floating in the air. Bright green tones (#22c55e) with sunny yellow accents (#fbbf24). Kids illustration style, very friendly and welcoming. No scary elements. 1920x1080px.
+Stylized cartoon soccer stadium scene. Green grass field with stadium in background. Soccer balls and jerseys floating in dynamic composition. Bright green tones (#22c55e) with sunny yellow accents (#fbbf24). Modern kids illustration style, energetic and motivating. Bold colors, simple forms. 1920x1080px.
 ```
 
 ---
@@ -27,12 +27,12 @@ Whimsical cartoon soccer stadium scene for children. Green grass field with gent
 
 **Prompt:**
 ```
-Playful cartoon handball court for kids. Indoor gym with red and orange tones (#ef4444, #fca5a5). Cute smiling handball with big friendly eyes in the center. Simple geometric court lines on wooden floor. Colorful banners and flags hanging from ceiling. Cheerful and energetic but not aggressive. Illustration style like a children's sports book. Bright, warm colors. Perfect for elementary school. No dark shadows. 1920x1080px, digital art.
+Cartoon handball court illustration. Indoor gym with red and orange tones (#ef4444, #fca5a5). Handball in dynamic motion in the center. Simple geometric court lines on wooden floor. Banners and flags hanging from ceiling. Energetic sports atmosphere. Clean illustration style with bold colors and simple shapes. Good for elementary school. Bright, warm colors. Not too childish, more sporty and cool. 1920x1080px, digital art.
 ```
 
 **Alternative:**
 ```
-Fun cartoon handball scene with cute animated handball characters jumping and playing. Red and orange color scheme (#dc2626, #fb923c) with yellow accents. Simple gym background with happy faces on the walls. Kid-friendly illustration style with bold colors and simple shapes. Inviting and motivating for young children. 1920x1080px.
+Stylized cartoon handball scene. Red and orange color scheme (#dc2626, #fb923c) with yellow accents. Handballs in motion, jerseys, and gym equipment in dynamic composition. Modern kids illustration style with bold colors and simple forms. Energetic and motivating. 1920x1080px.
 ```
 
 ---
@@ -42,12 +42,12 @@ Fun cartoon handball scene with cute animated handball characters jumping and pl
 
 **Prompt:**
 ```
-Cheerful cartoon basketball court for kids. Wooden floor with orange and brown tones (#f97316, #fb923c). Cute smiling basketball with big friendly eyes. Cartoon basketball hoop with a net that looks happy. Stars and sparkles around the ball. Bright sunny atmosphere with warm orange glow. Children's book illustration style. Playful and welcoming, not intimidating. Bold outlines, simple shapes. Perfect for elementary school kids. 1920x1080px, digital illustration.
+Cartoon basketball court illustration. Wooden floor with orange and brown tones (#f97316, #fb923c). Basketball in motion toward the hoop. Stars and sparkles around the ball showing action. Bright sunny atmosphere with warm orange glow. Clean cartoon style with bold outlines and simple shapes. Sporty and cool vibe for elementary school. Not too childish. 1920x1080px, digital illustration.
 ```
 
 **Alternative:**
 ```
-Fun cartoon outdoor basketball playground. Orange sunset sky (#ea580c) with friendly clouds. Cute basketball characters playing. Colorful street art on walls in background. Urban but kid-friendly and safe-looking. Warm inviting colors. Simple illustration style for children. 1920x1080px.
+Stylized cartoon basketball playground. Orange sunset sky (#ea580c) with clouds. Basketball court with hoop, balls in dynamic composition. Urban style but kid-friendly. Warm inviting colors. Modern illustration style with bold colors and simple forms. 1920x1080px.
 ```
 
 ---
@@ -57,12 +57,12 @@ Fun cartoon outdoor basketball playground. Orange sunset sky (#ea580c) with frie
 
 **Prompt:**
 ```
-Magical cartoon Christmas scene for children. Cute decorated Christmas tree with smiling ornaments and twinkling lights. Friendly snowman and reindeer characters. Gentle snowflakes falling. Red (#dc2626), green (#22c55e), and gold (#fbbf24) color scheme. Cozy wooden cabin with warm glowing windows in background. Starry night sky. Whimsical children's book illustration style. Warm, inviting, and festive. No scary elements. Perfect for elementary school. 1920x1080px, digital art.
+Magical cartoon Christmas scene. Decorated Christmas tree with twinkling lights and ornaments. Snowman and reindeer in background. Gentle snowflakes falling. Red (#dc2626), green (#22c55e), and gold (#fbbf24) color scheme. Cozy wooden cabin with warm glowing windows. Starry night sky. Clean cartoon illustration style. Warm, inviting, and festive. Good for elementary school. Not overly childish, more magical and cozy. 1920x1080px, digital art.
 ```
 
 **Alternative:**
 ```
-Cute cartoon Santa's workshop interior. Friendly elves working on toys. Big Christmas tree in corner with presents underneath. Red and green decorations everywhere. Warm fireplace glowing. Colorful stockings hanging. Everything has a happy face - even the presents smile! Kid-friendly illustration style. Bright, cheerful, festive atmosphere. 1920x1080px.
+Stylized cartoon Christmas living room. Christmas tree with presents, fireplace glowing, stockings hanging. Red and green decorations with golden lights. Warm cozy atmosphere. Modern kids illustration style. Festive and cheerful but not too cute. Bold colors, simple forms. 1920x1080px.
 ```
 
 ---
@@ -72,12 +72,12 @@ Cute cartoon Santa's workshop interior. Friendly elves working on toys. Big Chri
 
 **Prompt:**
 ```
-Playful cartoon music scene for kids. Cute animated musical instruments with happy faces - smiling guitar, drums, keyboard. Musical notes floating in the air with big friendly eyes. Purple and pink color scheme (#a855f7, #c084fc) with sparkles and stars. Cartoon stage with colorful spotlights. Fun concert atmosphere but kid-friendly, not too dark or loud. Children's illustration style with bold colors and simple shapes. Cheerful and inviting. Perfect for elementary school. 1920x1080px, digital art.
+Cartoon music scene. Musical instruments - guitar, drums, keyboard in cool arrangement. Musical notes floating in the air with motion trails. Purple and pink color scheme (#a855f7, #c084fc) with sparkles and stars. Cartoon stage with colorful spotlights. Fun concert atmosphere. Clean illustration style with bold colors and simple shapes. Cool and energetic for elementary school. Not too childish, more like a music concert vibe. 1920x1080px, digital art.
 ```
 
 **Alternative:**
 ```
-Whimsical music classroom illustration. Cute cartoon instruments dancing around - violin, trumpet, xylophone all with smiling faces. Musical staff lines with notes bouncing along. Purple gradient background (#9333ea to #c084fc) with stars. Bright and colorful. Simple cartoon style for children. Happy and encouraging atmosphere. 1920x1080px.
+Stylized music illustration. Instruments in dynamic composition - violin, trumpet, xylophone. Musical staff lines with notes in motion. Purple gradient background (#9333ea to #c084fc) with stars. Modern kids illustration style. Cool and encouraging atmosphere. Bold colors, simple forms. 1920x1080px.
 ```
 
 ---
@@ -94,18 +94,19 @@ Whimsical music classroom illustration. Cute cartoon instruments dancing around 
 ## 🎨 Wichtige Stil-Merkmale
 
 **Passend zu existierenden Themes (Weltraum, Dino, Ozean, etc.):**
-- ✅ **Cartoon/Comic-Stil** - wie Kinderbuch-Illustrationen
-- ✅ **Freundliche Gesichter** - Objekte mit Augen und Lächeln
-- ✅ **Helle, fröhliche Farben** - nicht zu dunkel oder gruselig
-- ✅ **Einfache Formen** - klar erkennbare Objekte
-- ✅ **Verspielt und einladend** - motivierend für Kinder
-- ✅ **Keine realistischen/erwachsenen Elemente**
+- ✅ **Cartoon/Illustration-Stil** - modern und clean
+- ✅ **Cool und sporty** - nicht zu niedlich oder babyish
+- ✅ **Helle, lebendige Farben** - energiegeladen
+- ✅ **Einfache, klare Formen** - bold outlines
+- ✅ **Dynamisch und einladend** - motivierend für Grundschüler
+- ✅ **Kein Fotorealismus** - aber auch nicht zu comic-mäßig
 
 **Vermeide:**
+- ❌ Zu viele lächelnde Gesichter auf allen Objekten
+- ❌ Zu niedlich/babyish (kein "cute overload")
 - ❌ Photorealistische/düstere Darstellungen
-- ❌ Zu viele Details oder komplexe Szenen
+- ❌ Zu komplexe Details oder überladene Szenen
 - ❌ Aggressive oder einschüchternde Elemente
-- ❌ Zu dunkle Atmosphäre
 
 ## 🚀 Nächste Schritte
 
