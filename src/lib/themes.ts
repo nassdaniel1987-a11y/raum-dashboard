@@ -205,48 +205,6 @@ export const themes: Record<string, ThemeConfig> = {
 		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/candyland-background.png'
 	},
 
-	fussball: {
-		id: 'fussball',
-		name: '⚽ Fußball',
-		emoji: '⚽',
-		colors: {
-			primary: '#22c55e',
-			secondary: '#16a34a',
-			accent: '#86efac',
-			background: '#0a1f0a',
-			headerBg: '#14532d',
-			toolbarBg: '#14532d',
-			cardBg: '#166534',
-			textPrimary: '#ffffff',
-			textSecondary: 'rgba(255, 255, 255, 0.9)',
-			openBadge: 'rgba(34, 197, 94, 0.9)',
-			closedBadge: 'rgba(220, 38, 38, 0.9)',
-			timeBadge: 'rgba(251, 191, 36, 0.95)'
-		},
-		backgroundImageUrl: null
-	},
-
-	handball: {
-		id: 'handball',
-		name: '🤾 Handball',
-		emoji: '🤾',
-		colors: {
-			primary: '#ef4444',
-			secondary: '#dc2626',
-			accent: '#fca5a5',
-			background: '#1a0505',
-			headerBg: '#450a0a',
-			toolbarBg: '#450a0a',
-			cardBg: '#991b1b',
-			textPrimary: '#ffffff',
-			textSecondary: 'rgba(255, 255, 255, 0.9)',
-			openBadge: 'rgba(34, 197, 94, 0.9)',
-			closedBadge: 'rgba(127, 29, 29, 0.9)',
-			timeBadge: 'rgba(251, 191, 36, 0.95)'
-		},
-		backgroundImageUrl: null
-	},
-
 	basketball: {
 		id: 'basketball',
 		name: '🏀 Basketball',
@@ -265,7 +223,7 @@ export const themes: Record<string, ThemeConfig> = {
 			closedBadge: 'rgba(153, 27, 27, 0.9)',
 			timeBadge: 'rgba(251, 191, 36, 0.95)'
 		},
-		backgroundImageUrl: null
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/basketball-background.png'
 	},
 
 	weihnachten: {
@@ -286,7 +244,7 @@ export const themes: Record<string, ThemeConfig> = {
 			closedBadge: 'rgba(127, 29, 29, 0.9)',
 			timeBadge: 'rgba(251, 191, 36, 0.95)'
 		},
-		backgroundImageUrl: null
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/w.png'
 	},
 
 	musik: {
@@ -307,7 +265,7 @@ export const themes: Record<string, ThemeConfig> = {
 			closedBadge: 'rgba(107, 33, 168, 0.9)',
 			timeBadge: 'rgba(192, 132, 252, 0.95)'
 		},
-		backgroundImageUrl: null
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/musik-background.png'
 	}
 };
 
