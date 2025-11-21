@@ -5,6 +5,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import type { RoomWithConfig } from '$lib/types';
+	import '$lib/styles/performance.css';
 
 	// Svelte 5 Props Syntax
 	let { handleEditRoom } = $props<{
@@ -278,6 +279,7 @@
 
 <div
 	class="canvas-container"
+	class:scrolling={isScrolling}
 	bind:this={scrollContainer}
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}

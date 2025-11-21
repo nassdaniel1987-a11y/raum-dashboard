@@ -1,0 +1,26 @@
+/* Performance-Optimierungen für iPad/Mobile */
+
+/* Pausiere ALLE Animationen während des Scrollens */
+.scrolling * {
+	animation-play-state: paused !important;
+}
+
+/* GPU-Beschleunigung für bessere Performance */
+.room-card::before,
+.room-card::after,
+.room-header::before,
+.room-header::after,
+.card-content::before,
+.card-content::after {
+	will-change: transform, opacity;
+	transform: translateZ(0); /* Forciert GPU-Layer */
+}
+
+/* Reduziere Animationen auf Geräten mit reduceMotion-Einstellung */
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

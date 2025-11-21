@@ -67,7 +67,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: spring-petal-drift 10s ease-in-out infinite;
-				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.3));
 			}
 
 			/* Krabbelnder Marienkäfer */
@@ -80,7 +79,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 10;
 				pointer-events: none;
 				animation: spring-ladybug-crawl 15s linear infinite;
-				filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.4));
 			}
 
 			/* Hängende Dekorationen - Blumen */
@@ -94,7 +92,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: spring-hang-left 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.4));
 				border-top: 2px solid rgba(134, 239, 172, 0.5);
 				padding-top: 8px;
 			}
@@ -109,7 +106,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: spring-hang-right 3s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(251, 207, 232, 0.4));
 				border-top: 2px solid rgba(134, 239, 172, 0.5);
 				padding-top: 8px;
 			}
@@ -170,7 +166,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: summer-shine 4s ease-in-out infinite;
-				filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
 			}
 
 			/* Hängende Dekorationen - Sonnenblume und Eis */
@@ -184,7 +179,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: summer-hang-left 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));
 				border-top: 2px solid rgba(251, 191, 36, 0.5);
 				padding-top: 8px;
 			}
@@ -199,7 +193,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: summer-hang-right 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(249, 115, 22, 0.4));
 				border-top: 2px solid rgba(249, 115, 22, 0.4);
 				padding-top: 8px;
 			}
@@ -266,7 +259,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: autumn-hang-left 3.2s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(161, 98, 7, 0.4));
 				border-top: 2px solid rgba(161, 98, 7, 0.4);
 				padding-top: 8px;
 			}
@@ -281,7 +273,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: autumn-hang-right 2.8s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(217, 119, 6, 0.4));
 				border-top: 2px solid rgba(161, 98, 7, 0.4);
 				padding-top: 8px;
 			}
@@ -341,7 +332,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: winter-snowfall-1 5s ease-in-out infinite;
-				filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.9));
 			}
 
 			.room-header::before {
@@ -355,7 +345,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: winter-snowfall-2 6s ease-in-out infinite 1s;
-				filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.8));
 			}
 
 			.room-header::after {
@@ -368,7 +357,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: winter-snowfall-3 4s ease-in-out infinite 2s;
-				filter: drop-shadow(0 0 12px rgba(219, 234, 254, 0.9));
 			}
 
 			/* Hängende Dekorationen - Eiszapfen */
@@ -382,7 +370,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: winter-icicle-left 4s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(147, 197, 253, 0.6));
 				border-top: 2px solid rgba(219, 234, 254, 0.6);
 				padding-top: 8px;
 			}
@@ -397,7 +384,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: winter-icicle-right 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.9));
 				border-top: 2px solid rgba(219, 234, 254, 0.6);
 				padding-top: 8px;
 			}
@@ -483,7 +469,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 2;
 				animation: christmas-lights-blink 2s ease-in-out infinite;
-				filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.9));
 			}
 
 			.room-header::after {
@@ -512,7 +497,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: hanging-swing-left 3.2s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 				/* Kette/Schnur */
 				border-top: 2px solid rgba(255, 255, 255, 0.4);
 				padding-top: 8px;
@@ -529,7 +513,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: christmas-gift-pulse 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 				/* Kette/Schnur */
 				border-top: 2px solid rgba(255, 255, 255, 0.4);
 				padding-top: 8px;
@@ -546,11 +529,9 @@ export const cardThemes: Record<string, CardTheme> = {
 			@keyframes christmas-lights-blink {
 				0%, 100% {
 					opacity: 0.6;
-					filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.6)) drop-shadow(0 0 8px rgba(220, 38, 38, 0.4));
 				}
 				50% {
 					opacity: 1;
-					filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1)) drop-shadow(0 0 16px rgba(220, 38, 38, 0.8));
 				}
 			}
 			@keyframes christmas-lights-twinkle {
@@ -625,7 +606,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: easter-hang-left 3s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(196, 181, 253, 0.4));
 				border-top: 2px solid rgba(196, 181, 253, 0.5);
 				padding-top: 8px;
 			}
@@ -640,7 +620,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: easter-hang-right 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(251, 207, 232, 0.4));
 				border-top: 2px solid rgba(251, 207, 232, 0.5);
 				padding-top: 8px;
 			}
@@ -736,7 +715,6 @@ export const cardThemes: Record<string, CardTheme> = {
 			@keyframes halloween-glow-left {
 				0%, 100% {
 					transform: translateX(-50%) rotate(-5deg);
-					filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.6));
 				}
 				50% {
 					transform: translateX(-50%) rotate(5deg);
@@ -809,7 +787,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: rainbow-cloud-left 6s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(139, 92, 246, 0.3));
 				border-top: 2px solid rgba(167, 139, 250, 0.4);
 				padding-top: 8px;
 			}
@@ -824,7 +801,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: rainbow-cloud-right 5.5s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.3));
 				border-top: 2px solid rgba(167, 139, 250, 0.4);
 				padding-top: 8px;
 			}
@@ -896,7 +872,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: nature-hang-left 3.2s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(34, 197, 94, 0.4));
 				border-top: 2px solid rgba(34, 197, 94, 0.5);
 				padding-top: 8px;
 			}
@@ -911,7 +886,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: nature-butterfly 4s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(132, 204, 22, 0.4));
 				border-top: 2px solid rgba(132, 204, 22, 0.4);
 				padding-top: 8px;
 			}
@@ -970,7 +944,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: birthday-confetti 8s ease-in-out infinite;
-				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.5));
 			}
 
 			/* Brennende Kerze */
@@ -984,7 +957,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 10;
 				pointer-events: none;
 				animation: birthday-candle-flicker 2s ease-in-out infinite;
-				filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
 			}
 
 			/* Hängende Dekorationen - Luftballons */
@@ -998,7 +970,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: birthday-balloon-left 4s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.5));
 				border-top: 2px solid rgba(236, 72, 153, 0.4);
 				padding-top: 8px;
 			}
@@ -1013,7 +984,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: birthday-party-right 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));
 				border-top: 2px solid rgba(251, 191, 36, 0.4);
 				padding-top: 8px;
 			}
@@ -1088,7 +1058,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: newyear-sparkle 4s ease-in-out infinite;
-				filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.9));
 			}
 
 			/* Hängende Dekorationen - Sekt und Feuerwerk */
@@ -1102,7 +1071,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: newyear-bottle 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.6));
 				border-top: 2px solid rgba(251, 191, 36, 0.5);
 				padding-top: 8px;
 			}
@@ -1117,7 +1085,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: newyear-firework 2.5s ease-in-out infinite;
-				filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8));
 				border-top: 2px solid rgba(239, 68, 68, 0.5);
 				padding-top: 8px;
 			}
@@ -1199,7 +1166,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: meer-hang-left 3.8s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(6, 182, 212, 0.4));
 				border-top: 2px solid rgba(6, 182, 212, 0.5);
 				padding-top: 8px;
 			}
@@ -1214,7 +1180,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: meer-fish-swim 4.2s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(251, 191, 36, 0.5));
 				border-top: 2px solid rgba(14, 165, 233, 0.5);
 				padding-top: 8px;
 			}
@@ -1271,7 +1236,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: valentine-heart-float 6s ease-in-out infinite;
-				filter: drop-shadow(0 2px 4px rgba(236, 72, 153, 0.4));
 			}
 
 			.room-header::before {
@@ -1298,7 +1262,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: valentine-hang-left 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(220, 38, 38, 0.5));
 				border-top: 2px solid rgba(220, 38, 38, 0.5);
 				padding-top: 8px;
 			}
@@ -1313,7 +1276,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: valentine-gift-pulse 2.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.6));
 				border-top: 2px solid rgba(236, 72, 153, 0.5);
 				padding-top: 8px;
 			}
@@ -1375,7 +1337,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: musik-note-dance-1 4s ease-in-out infinite;
-				filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
 			}
 
 			.room-header::before {
@@ -1402,7 +1363,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: musik-hang-left 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(168, 85, 247, 0.5));
 				border-top: 2px solid rgba(168, 85, 247, 0.5);
 				padding-top: 8px;
 			}
@@ -1417,7 +1377,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: musik-mic-bounce 2.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.5));
 				border-top: 2px solid rgba(139, 92, 246, 0.5);
 				padding-top: 8px;
 			}
@@ -1487,7 +1446,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: sport-ball-fly 5s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(34, 197, 94, 0.4));
 			}
 
 			/* Hängende Dekorationen - Medaille und Pokal */
@@ -1501,7 +1459,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: sport-medal-swing 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.6));
 				border-top: 2px solid rgba(251, 191, 36, 0.5);
 				padding-top: 8px;
 			}
@@ -1516,7 +1473,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: sport-trophy-shine 2.8s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.7));
 				border-top: 2px solid rgba(34, 197, 94, 0.5);
 				padding-top: 8px;
 			}
@@ -1585,7 +1541,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				pointer-events: none;
 				z-index: 1;
 				animation: cafe-steam 4s ease-in-out infinite;
-				filter: drop-shadow(0 2px 4px rgba(161, 98, 7, 0.3));
 			}
 
 			/* Hängende Dekorationen - Buch und Keks */
@@ -1599,7 +1554,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: cafe-hang-left 3.5s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(120, 53, 15, 0.5));
 				border-top: 2px solid rgba(161, 98, 7, 0.5);
 				padding-top: 8px;
 			}
@@ -1614,7 +1568,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 16;
 				pointer-events: none;
 				animation: cafe-hang-right 3s ease-in-out infinite;
-				filter: drop-shadow(0 4px 8px rgba(217, 119, 6, 0.5));
 				border-top: 2px solid rgba(217, 119, 6, 0.5);
 				padding-top: 8px;
 			}
@@ -1630,7 +1583,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				z-index: 10;
 				pointer-events: none;
 				animation: cafe-cup-steam 3s ease-in-out infinite;
-				filter: drop-shadow(0 3px 6px rgba(161, 98, 7, 0.5));
 			}
 
 			@keyframes cafe-steam {
