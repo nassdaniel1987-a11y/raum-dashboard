@@ -18,7 +18,11 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 	let menuOpen = $state(false);
-	let activeTab = $state<'view' | 'scroll' | 'edit' | 'days'>('scroll'); // ✅ Start mit Scroll-Tab
+
+	// ✅ Collapsible Section States (Ansicht + Scroll standardmäßig offen)
+	let sectionViewExpanded = $state(false);
+	let sectionScrollExpanded = $state(true); // Auto-Scroll ist wichtig
+	let sectionAdvancedExpanded = $state(false);
 
 	let autoScrollActive = $state(false);
 
@@ -48,8 +52,6 @@
 		const savedScaleX = localStorage.getItem('displayScaleX');
 		const savedCardWidth = localStorage.getItem('cardWidth');
 		const savedCardHeight = localStorage.getItem('cardHeight');
-		const savedTitleSize = localStorage.getItem('globalTitleSize');
-		const savedActivitySize = localStorage.getItem('globalActivitySize');
 
 		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
 		if (savedPause) pauseDuration = parseInt(savedPause);
@@ -144,7 +146,6 @@
 
 	function applyDisplayScale(scale: number) {
 		// Setze CSS Variable für Kachel-Skalierung
-		// Der Container bleibt normal breit, nur die Kacheln werden schmaler
 		document.documentElement.style.setProperty('--card-scale-x', scale.toString());
 	}
 
@@ -279,331 +280,309 @@
 
 {#if menuOpen}
 	<div class="menu-panel" transition:slide={{ duration: 300, axis: 'y' }}>
-		<!-- ✅ Haupt-Buttons (immer sichtbar, außerhalb der Tabs) -->
-		<div class="main-buttons">
-			<button
-				class="big-button edit-toggle"
-				class:active={$isEditMode}
-				onclick={() => isEditMode.update(v => !v)}
-			>
-				<span class="big-icon">{$isEditMode ? '🔓' : '🔒'}</span>
-				<div class="big-label">
-					<span class="label-text">{$isEditMode ? 'Edit-Modus' : 'Ansicht-Modus'}</span>
-					<span class="label-hint">{$isEditMode ? 'Aktiv' : 'Inaktiv'}</span>
-				</div>
+		<!-- ✅ QUICK ACTIONS - Immer sichtbar oben -->
+		<div class="quick-actions">
+			<h3 class="section-title">🚀 Schnellzugriff</h3>
+
+			<!-- Vollbild & Edit-Mode -->
+			<div class="action-grid-2">
+				<button
+					class="quick-button"
+					class:active={isFullscreen}
+					onclick={toggleFullscreen}
+				>
+					<span class="quick-icon">🎬</span>
+					<span class="quick-label">Vollbild</span>
+				</button>
+
+				<button
+					class="quick-button"
+					class:active={$isEditMode}
+					onclick={() => isEditMode.update(v => !v)}
+				>
+					<span class="quick-icon">{$isEditMode ? '🔓' : '🔒'}</span>
+					<span class="quick-label">{$isEditMode ? 'Edit-Modus' : 'Ansicht'}</span>
+				</button>
+			</div>
+
+			<!-- Alle öffnen/schließen -->
+			<div class="action-grid-2">
+				<button class="quick-button success" onclick={bulkOpenAllRooms}>
+					<span class="quick-icon">✅</span>
+					<span class="quick-label">Alle öffnen</span>
+				</button>
+
+				<button class="quick-button danger" onclick={bulkCloseAllRooms}>
+					<span class="quick-icon">🔒</span>
+					<span class="quick-label">Alle schließen</span>
+				</button>
+			</div>
+
+			<!-- Einstellungen & Tagesplaner -->
+			<button class="action-button" onclick={onOpenSettings}>
+				<span class="btn-icon">⚙️</span>
+				<span class="btn-label">Einstellungen</span>
 			</button>
 
-			<button
-				class="big-button fullscreen-toggle"
-				class:active={isFullscreen}
-				onclick={toggleFullscreen}
-			>
-				<span class="big-icon">{isFullscreen ? '⛶' : '⛶'}</span>
-				<div class="big-label">
-					<span class="label-text">Vollbild</span>
-					<span class="label-hint">{isFullscreen ? 'Aktiv' : 'Inaktiv'}</span>
-				</div>
-			</button>
-		</div>
-
-		<!-- ✅ Tab Navigation -->
-		<div class="tab-navigation">
-			<button
-				class="tab-btn"
-				class:active={activeTab === 'view'}
-				onclick={() => activeTab = 'view'}
-			>
-				<span class="tab-icon">👁️</span>
-				<span class="tab-label">Ansicht</span>
-			</button>
-			<button
-				class="tab-btn"
-				class:active={activeTab === 'scroll'}
-				onclick={() => activeTab = 'scroll'}
-			>
-				<span class="tab-icon">↕️</span>
-				<span class="tab-label">Scroll</span>
-			</button>
-			<button
-				class="tab-btn"
-				class:active={activeTab === 'days'}
-				onclick={() => activeTab = 'days'}
-			>
-				<span class="tab-icon">📅</span>
-				<span class="tab-label">Tage</span>
-			</button>
-			<button
-				class="tab-btn"
-				class:active={activeTab === 'edit'}
-				onclick={() => activeTab = 'edit'}
-			>
-				<span class="tab-icon">⚙️</span>
-				<span class="tab-label">Aktionen</span>
+			<button class="action-button" onclick={onOpenScheduler}>
+				<span class="btn-icon">📅</span>
+				<span class="btn-label">Tagesplaner</span>
 			</button>
 		</div>
 
-		<!-- ✅ Tab Content -->
-		<div class="tab-content">
-			<!-- TAB 1: Ansicht -->
-			{#if activeTab === 'view'}
-				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<div class="scroll-controls">
-						<!-- Kachel-Breite -->
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">↔️</span>
-								<span class="control-label">Kachel-Breite</span>
-								<span class="control-value">{(cardWidth * 100).toFixed(0)}%</span>
-							</div>
-							<input
-								type="range"
-								min="0.6"
-								max="1.4"
-								step="0.05"
-								bind:value={cardWidth}
-								oninput={updateCardWidth}
-								class="slider"
-							/>
-						</div>
+		<!-- ✅ SCROLLABLE CONTENT -->
+		<div class="scrollable-sections">
+			<!-- 👁️ ANSICHT Section -->
+			<div class="collapsible-section">
+				<button
+					class="section-header"
+					class:expanded={sectionViewExpanded}
+					onclick={() => sectionViewExpanded = !sectionViewExpanded}
+				>
+					<span class="section-icon">👁️</span>
+					<span class="section-label">Ansicht</span>
+					<span class="section-arrow">{sectionViewExpanded ? '▲' : '▼'}</span>
+				</button>
 
-						<!-- Kachel-Höhe -->
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">↕️</span>
-								<span class="control-label">Kachel-Höhe</span>
-								<span class="control-value">{(cardHeight * 100).toFixed(0)}%</span>
-							</div>
-							<input
-								type="range"
-								min="0.6"
-								max="1.4"
-								step="0.05"
-								bind:value={cardHeight}
-								oninput={updateCardHeight}
-								class="slider"
-							/>
-						</div>
-
-						<!-- Display-Breite -->
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">📺</span>
-								<span class="control-label">Display-Breite (TV)</span>
-								<span class="control-value">{(displayScaleX * 100).toFixed(0)}%</span>
-							</div>
-							<input
-								type="range"
-								min="0.5"
-								max="1.0"
-								step="0.01"
-								bind:value={displayScaleX}
-								oninput={updateDisplayScale}
-								class="slider"
-							/>
-							<div class="scale-hints">
-								<span class="hint-label">← TV (4:3→16:9): ~75%</span>
-								<span class="hint-label">Normal: 100% →</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="info-box">
-						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Passe Kachelgröße und Display-Breite für optimale TV-Darstellung an</span>
-					</div>
-				</div>
-			{/if}
-
-			<!-- TAB 2: Scroll -->
-			{#if activeTab === 'scroll'}
-				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<button
-						class="action-button autoscroll-toggle"
-						class:active={autoScrollActive}
-						onclick={toggleAutoScroll}
-					>
-						<span class="btn-icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
-						<div class="btn-content">
-							<span class="btn-label">Auto-Scroll</span>
-							<span class="btn-hint">{autoScrollActive ? 'Läuft...' : 'Gestoppt'}</span>
-						</div>
-					</button>
-
-					<div class="scroll-controls">
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">🐌</span>
-								<span class="control-label">Geschwindigkeit</span>
-								<span class="control-value">{scrollSpeed.toFixed(1)} px</span>
-							</div>
-							<input
-								type="range"
-								min="0.1"
-								max="3.0"
-								step="0.1"
-								bind:value={scrollSpeed}
-								oninput={updateScrollSettings}
-								class="slider"
-							/>
-						</div>
-
-						<div class="control-group">
-							<div class="control-header">
-								<span class="control-icon">⏱️</span>
-								<span class="control-label">Pause am Ende</span>
-								<span class="control-value">{pauseDuration}s</span>
-							</div>
-							<input
-								type="range"
-								min="1"
-								max="10"
-								step="1"
-								bind:value={pauseDuration}
-								oninput={updateScrollSettings}
-								class="slider"
-							/>
-						</div>
-					</div>
-
-					<div class="info-box">
-						<span class="info-icon">ℹ️</span>
-						<span class="info-text">Einstellungen werden automatisch gespeichert</span>
-					</div>
-				</div>
-			{/if}
-
-			<!-- TAB 3: Tage -->
-			{#if activeTab === 'days'}
-				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<div class="day-info-banner">
-						<span class="day-icon">📅</span>
-						<div class="day-info-text">
-							<span class="day-info-label">Aktueller Tag:</span>
-							<span class="day-info-value">{weekdayNames[$viewWeekday]}</span>
-						</div>
-					</div>
-
-					<button
-						class="action-button copy-button"
-						onclick={copyCurrentDay}
-					>
-						<span class="btn-icon">📋</span>
-						<div class="btn-content">
-							<span class="btn-label">Tag kopieren</span>
-							<span class="btn-hint">Alle Raumkonfigurationen</span>
-						</div>
-					</button>
-
-					<button
-						class="action-button paste-button"
-						class:active={copiedDay !== null}
-						onclick={pasteToCurrentDay}
-						disabled={copiedDay === null}
-					>
-						<span class="btn-icon">📌</span>
-						<div class="btn-content">
-							<span class="btn-label">Tag einfügen</span>
-							<span class="btn-hint">
-								{copiedDay !== null ? `Von ${weekdayNames[copiedDay]}` : 'Zuerst Tag kopieren'}
-							</span>
-						</div>
-					</button>
-
-					<button
-						class="action-button delete-button"
-						onclick={deleteCurrentDay}
-					>
-						<span class="btn-icon">🗑️</span>
-						<div class="btn-content">
-							<span class="btn-label">Tag löschen</span>
-							<span class="btn-hint">Alle Konfigurationen entfernen</span>
-						</div>
-					</button>
-
-					<div class="info-box">
-						<span class="info-icon">💡</span>
-						<span class="info-text">Nutze die Pfeil-Buttons im Header um zwischen Tagen zu wechseln</span>
-					</div>
-				</div>
-			{/if}
-
-			<!-- TAB 4: Aktionen -->
-			{#if activeTab === 'edit'}
-				<div class="tab-panel" transition:fade={{ duration: 200 }}>
-					<!-- Tagesplaner & Einstellungen -->
-					<div class="action-grid">
-						<button class="grid-button info" onclick={onOpenScheduler}>
-							<span class="grid-icon">📅</span>
-							<span class="grid-label">Tagesplaner</span>
-						</button>
-
-						<button class="grid-button info" onclick={onOpenSettings}>
-							<span class="grid-icon">⚙️</span>
-							<span class="grid-label">Einstellungen</span>
-						</button>
-					</div>
-
-					<!-- Raum erstellen (nur im Edit-Mode) -->
-					{#if $isEditMode}
-						<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
-							<span class="btn-icon">➕</span>
-							<div class="btn-content">
-								<span class="btn-label">Raum erstellen</span>
-							</div>
-						</button>
-
-						{#if showCreateForm}
-							<div class="create-form" transition:slide={{ duration: 200 }}>
+				{#if sectionViewExpanded}
+					<div class="section-content" transition:slide={{ duration: 200 }}>
+						<div class="scroll-controls">
+							<!-- Kachel-Breite -->
+							<div class="control-group">
+								<div class="control-header">
+									<span class="control-icon">↔️</span>
+									<span class="control-label">Kachel-Breite</span>
+									<span class="control-value">{(cardWidth * 100).toFixed(0)}%</span>
+								</div>
 								<input
-									type="text"
-									bind:value={newRoomName}
-									placeholder="Raum-Name..."
-									onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
+									type="range"
+									min="0.6"
+									max="1.4"
+									step="0.05"
+									bind:value={cardWidth}
+									oninput={updateCardWidth}
+									class="slider"
 								/>
-								<select bind:value={newRoomFloor}>
-									<option value="extern">🏃 Außenbereich</option>
-									<option value="dach">🏠 Dachgeschoss</option>
-									<option value="og2">2️⃣ 2. OG</option>
-									<option value="og1">1️⃣ 1. OG</option>
-									<option value="eg">🚪 Erdgeschoss</option>
-									<option value="ug">⬇️ Untergeschoss</option>
-								</select>
-								<div class="form-actions">
-									<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
-									<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
+							</div>
+
+							<!-- Kachel-Höhe -->
+							<div class="control-group">
+								<div class="control-header">
+									<span class="control-icon">↕️</span>
+									<span class="control-label">Kachel-Höhe</span>
+									<span class="control-value">{(cardHeight * 100).toFixed(0)}%</span>
+								</div>
+								<input
+									type="range"
+									min="0.6"
+									max="1.4"
+									step="0.05"
+									bind:value={cardHeight}
+									oninput={updateCardHeight}
+									class="slider"
+								/>
+							</div>
+
+							<!-- Display-Breite -->
+							<div class="control-group">
+								<div class="control-header">
+									<span class="control-icon">📺</span>
+									<span class="control-label">Display-Breite (TV)</span>
+									<span class="control-value">{(displayScaleX * 100).toFixed(0)}%</span>
+								</div>
+								<input
+									type="range"
+									min="0.5"
+									max="1.0"
+									step="0.01"
+									bind:value={displayScaleX}
+									oninput={updateDisplayScale}
+									class="slider"
+								/>
+								<div class="scale-hints">
+									<span class="hint-label">← TV: ~75%</span>
+									<span class="hint-label">Normal: 100% →</span>
 								</div>
 							</div>
-						{/if}
+						</div>
+					</div>
+				{/if}
+			</div>
 
-						<!-- Räume tauschen -->
+			<!-- ↕️ AUTO-SCROLL Section -->
+			<div class="collapsible-section">
+				<button
+					class="section-header"
+					class:expanded={sectionScrollExpanded}
+					onclick={() => sectionScrollExpanded = !sectionScrollExpanded}
+				>
+					<span class="section-icon">↕️</span>
+					<span class="section-label">Auto-Scroll</span>
+					<span class="section-arrow">{sectionScrollExpanded ? '▲' : '▼'}</span>
+				</button>
+
+				{#if sectionScrollExpanded}
+					<div class="section-content" transition:slide={{ duration: 200 }}>
 						<button
-							class="action-button swap-button"
-							class:active={$swapSelection.length > 0}
-							onclick={handleSwap}
-							disabled={$swapSelection.length !== 2}
+							class="action-button autoscroll-toggle"
+							class:active={autoScrollActive}
+							onclick={toggleAutoScroll}
 						>
-							<span class="btn-icon">⮀</span>
+							<span class="btn-icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
 							<div class="btn-content">
-								<span class="btn-label">Räume tauschen</span>
-								<span class="btn-hint">{$swapSelection.length}/2 ausgewählt</span>
+								<span class="btn-label">Auto-Scroll</span>
+								<span class="btn-hint">{autoScrollActive ? 'Läuft...' : 'Gestoppt'}</span>
 							</div>
 						</button>
-					{/if}
 
-					<!-- Alle öffnen/schließen -->
-					<div class="action-grid">
-						<button class="grid-button success" onclick={bulkOpenAllRooms}>
-							<span class="grid-icon">✅</span>
-							<span class="grid-label">Alle öffnen</span>
-						</button>
+						<div class="scroll-controls">
+							<div class="control-group">
+								<div class="control-header">
+									<span class="control-icon">🐌</span>
+									<span class="control-label">Geschwindigkeit</span>
+									<span class="control-value">{scrollSpeed.toFixed(1)} px</span>
+								</div>
+								<input
+									type="range"
+									min="0.1"
+									max="3.0"
+									step="0.1"
+									bind:value={scrollSpeed}
+									oninput={updateScrollSettings}
+									class="slider"
+								/>
+							</div>
 
-						<button class="grid-button danger" onclick={bulkCloseAllRooms}>
-							<span class="grid-icon">🔒</span>
-							<span class="grid-label">Alle schließen</span>
-						</button>
+							<div class="control-group">
+								<div class="control-header">
+									<span class="control-icon">⏱️</span>
+									<span class="control-label">Pause am Ende</span>
+									<span class="control-value">{pauseDuration}s</span>
+								</div>
+								<input
+									type="range"
+									min="1"
+									max="10"
+									step="1"
+									bind:value={pauseDuration}
+									oninput={updateScrollSettings}
+									class="slider"
+								/>
+							</div>
+						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
+
+			<!-- 🛠️ ERWEITERT Section (Standardmäßig eingeklappt) -->
+			<div class="collapsible-section">
+				<button
+					class="section-header"
+					class:expanded={sectionAdvancedExpanded}
+					onclick={() => sectionAdvancedExpanded = !sectionAdvancedExpanded}
+				>
+					<span class="section-icon">🛠️</span>
+					<span class="section-label">Erweitert</span>
+					<span class="section-arrow">{sectionAdvancedExpanded ? '▲' : '▼'}</span>
+				</button>
+
+				{#if sectionAdvancedExpanded}
+					<div class="section-content" transition:slide={{ duration: 200 }}>
+						<!-- Tag-Verwaltung -->
+						<div class="day-info-banner">
+							<span class="day-icon">📅</span>
+							<div class="day-info-text">
+								<span class="day-info-label">Aktueller Tag:</span>
+								<span class="day-info-value">{weekdayNames[$viewWeekday]}</span>
+							</div>
+						</div>
+
+						<button
+							class="action-button copy-button"
+							onclick={copyCurrentDay}
+						>
+							<span class="btn-icon">📋</span>
+							<div class="btn-content">
+								<span class="btn-label">Tag kopieren</span>
+								<span class="btn-hint">Alle Raumkonfigurationen</span>
+							</div>
+						</button>
+
+						<button
+							class="action-button paste-button"
+							class:active={copiedDay !== null}
+							onclick={pasteToCurrentDay}
+							disabled={copiedDay === null}
+						>
+							<span class="btn-icon">📌</span>
+							<div class="btn-content">
+								<span class="btn-label">Tag einfügen</span>
+								<span class="btn-hint">
+									{copiedDay !== null ? `Von ${weekdayNames[copiedDay]}` : 'Zuerst Tag kopieren'}
+								</span>
+							</div>
+						</button>
+
+						<button
+							class="action-button delete-button"
+							onclick={deleteCurrentDay}
+						>
+							<span class="btn-icon">🗑️</span>
+							<div class="btn-content">
+								<span class="btn-label">Tag löschen</span>
+								<span class="btn-hint">Alle Konfigurationen entfernen</span>
+							</div>
+						</button>
+
+						<!-- Raum erstellen (nur im Edit-Mode) -->
+						{#if $isEditMode}
+							<button class="action-button" onclick={() => showCreateForm = !showCreateForm}>
+								<span class="btn-icon">➕</span>
+								<div class="btn-content">
+									<span class="btn-label">Raum erstellen</span>
+								</div>
+							</button>
+
+							{#if showCreateForm}
+								<div class="create-form" transition:slide={{ duration: 200 }}>
+									<input
+										type="text"
+										bind:value={newRoomName}
+										placeholder="Raum-Name..."
+										onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
+									/>
+									<select bind:value={newRoomFloor}>
+										<option value="extern">🏃 Außenbereich</option>
+										<option value="dach">🏠 Dachgeschoss</option>
+										<option value="og2">2️⃣ 2. OG</option>
+										<option value="og1">1️⃣ 1. OG</option>
+										<option value="eg">🚪 Erdgeschoss</option>
+										<option value="ug">⬇️ Untergeschoss</option>
+									</select>
+									<div class="form-actions">
+										<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
+										<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Räume tauschen -->
+							<button
+								class="action-button swap-button"
+								class:active={$swapSelection.length > 0}
+								onclick={handleSwap}
+								disabled={$swapSelection.length !== 2}
+							>
+								<span class="btn-icon">⮀</span>
+								<div class="btn-content">
+									<span class="btn-label">Räume tauschen</span>
+									<span class="btn-hint">{$swapSelection.length}/2 ausgewählt</span>
+								</div>
+							</button>
+						{/if}
+					</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 {/if}
@@ -613,7 +592,7 @@
 	.fab {
 		position: fixed;
 		bottom: 20px;
-		right: 50px; /* ✅ Weiter vom Rand als vorher (war 20px) */
+		right: 50px;
 		width: 68px;
 		height: 68px;
 		border-radius: 50%;
@@ -664,10 +643,10 @@
 	.menu-panel {
 		position: fixed;
 		bottom: 100px;
-		right: 50px; /* ✅ Weiter vom Rand als vorher (war 20px) */
+		right: 50px;
 		width: 360px;
-		max-width: calc(100vw - 100px); /* ✅ Nie breiter als Viewport minus Padding */
-		height: 550px; /* ✅ Etwas höher wegen main-buttons */
+		max-width: calc(100vw - 100px);
+		max-height: calc(100vh - 140px); /* Mehr Platz für Inhalt */
 		background: rgba(0, 0, 0, 0.96);
 		backdrop-filter: blur(24px);
 		border-radius: 16px;
@@ -682,157 +661,170 @@
 		flex-direction: column;
 	}
 
-	/* ✅ Haupt-Buttons oben */
-	.main-buttons {
-		display: flex;
-		gap: 8px;
-		padding: 12px;
+	/* ✅ QUICK ACTIONS Section */
+	.quick-actions {
 		background: rgba(0, 0, 0, 0.4);
 		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+		padding: 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 
-	.big-button {
-		flex: 1;
+	.section-title {
+		margin: 0 0 8px 0;
+		font-size: 14px;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.action-grid-2 {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+
+	.quick-button {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		gap: 12px;
-		padding: 14px;
+		justify-content: center;
+		gap: 6px;
+		padding: 12px 8px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		border-radius: 12px;
+		color: white;
 		cursor: pointer;
 		transition: all 0.3s;
-		color: white;
+		min-height: 70px;
+		touch-action: manipulation;
 	}
 
-	.big-button:hover {
-		background: rgba(255, 255, 255, 0.12);
-		border-color: rgba(255, 255, 255, 0.25);
+	.quick-button:hover {
+		background: rgba(255, 255, 255, 0.15);
 		transform: translateY(-2px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	}
 
-	.big-button.active {
+	.quick-button.active {
 		background: rgba(34, 197, 94, 0.2);
 		border-color: rgba(34, 197, 94, 0.5);
 		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
 	}
 
-	.big-icon {
+	.quick-button.success {
+		border-color: rgba(34, 197, 94, 0.3);
+	}
+	.quick-button.success:hover {
+		background: rgba(34, 197, 94, 0.15);
+		border-color: rgba(34, 197, 94, 0.5);
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+	}
+
+	.quick-button.danger {
+		border-color: rgba(239, 68, 68, 0.3);
+	}
+	.quick-button.danger:hover {
+		background: rgba(239, 68, 68, 0.15);
+		border-color: rgba(239, 68, 68, 0.5);
+		box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+	}
+
+	.quick-icon {
 		font-size: 28px;
 		line-height: 1;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 	}
 
-	.big-label {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		flex: 1;
-	}
-
-	.label-text {
-		font-size: 14px;
-		font-weight: 700;
-		color: white;
-	}
-
-	.label-hint {
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.6);
-		font-weight: 500;
-	}
-
-	/* ✅ Tab Navigation Bar */
-	.tab-navigation {
-		display: flex;
-		background: rgba(0, 0, 0, 0.6);
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-		padding: 8px;
-		gap: 6px;
-	}
-
-	.tab-btn {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4px;
-		padding: 12px 8px;
-		background: transparent;
-		border: 2px solid transparent;
-		border-radius: 12px;
-		color: rgba(255, 255, 255, 0.6);
-		cursor: pointer;
-		transition: all 0.3s;
-		min-height: 60px;
-		touch-action: manipulation;
-	}
-
-	.tab-btn:hover {
-		background: rgba(255, 255, 255, 0.08);
-		color: rgba(255, 255, 255, 0.9);
-	}
-
-	.tab-btn.active {
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
-		border-color: rgba(59, 130, 246, 0.5);
-		color: white;
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-	}
-
-	.tab-icon {
-		font-size: 24px;
-	}
-
-	.tab-label {
-		font-size: 11px;
+	.quick-label {
+		font-size: 12px;
 		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		text-align: center;
 	}
 
-	/* ✅ Tab Content Area */
-	.tab-content {
+	/* ✅ SCROLLABLE SECTIONS */
+	.scrollable-sections {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
+		padding: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 
-	.tab-panel {
-		padding: 16px;
+	.collapsible-section {
+		background: rgba(255, 255, 255, 0.05);
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.section-header {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px 16px;
+		background: rgba(255, 255, 255, 0.08);
+		border: none;
+		color: white;
+		cursor: pointer;
+		transition: all 0.3s;
+		text-align: left;
+		touch-action: manipulation;
+	}
+
+	.section-header:hover {
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.section-header.expanded {
+		background: rgba(59, 130, 246, 0.2);
+		border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+	}
+
+	.section-icon {
+		font-size: 24px;
+		line-height: 1;
+	}
+
+	.section-label {
+		flex: 1;
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0.3px;
+	}
+
+	.section-arrow {
+		font-size: 14px;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.section-content {
+		padding: 14px;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		animation: fadeIn 0.2s ease-in-out;
 	}
 
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	/* ✅ Action Buttons - Large Touch-Friendly */
+	/* ✅ Action Buttons */
 	.action-button {
 		display: flex;
 		align-items: center;
 		gap: 14px;
-		padding: 16px 18px;
+		padding: 14px 16px;
 		background: rgba(255, 255, 255, 0.08);
 		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 14px;
+		border-radius: 12px;
 		color: white;
 		cursor: pointer;
 		transition: all 0.3s;
 		text-align: left;
 		width: 100%;
-		min-height: 64px;
+		min-height: 60px;
 		box-shadow:
 			0 4px 12px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -858,8 +850,8 @@
 	}
 
 	.btn-icon {
-		font-size: 28px;
-		min-width: 32px;
+		font-size: 26px;
+		min-width: 30px;
 		text-align: center;
 		flex-shrink: 0;
 	}
@@ -878,7 +870,7 @@
 	}
 
 	.btn-hint {
-		font-size: 12px;
+		font-size: 11px;
 		color: rgba(255, 255, 255, 0.6);
 		font-weight: 500;
 	}
@@ -888,18 +880,18 @@
 		display: flex;
 		align-items: center;
 		gap: 14px;
-		padding: 16px 18px;
+		padding: 14px 16px;
 		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
 		border: 2px solid rgba(59, 130, 246, 0.4);
-		border-radius: 14px;
+		border-radius: 12px;
 		box-shadow:
 			0 4px 12px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	}
 
 	.day-icon {
-		font-size: 32px;
-		min-width: 36px;
+		font-size: 28px;
+		min-width: 32px;
 		text-align: center;
 	}
 
@@ -910,7 +902,7 @@
 	}
 
 	.day-info-label {
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
@@ -918,22 +910,13 @@
 	}
 
 	.day-info-value {
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 700;
 		color: white;
 		letter-spacing: 0.5px;
 	}
 
 	/* ✅ Color-Coded Buttons */
-	.mode-toggle.active {
-		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
-		border-color: rgba(34, 197, 94, 0.6);
-		box-shadow:
-			0 0 24px rgba(34, 197, 94, 0.4),
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
-	}
-
 	.copy-button:hover {
 		border-color: rgba(59, 130, 246, 0.5);
 		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
@@ -995,18 +978,18 @@
 	/* ✅ Scroll Controls */
 	.scroll-controls {
 		background: rgba(0, 0, 0, 0.3);
-		border-radius: 14px;
-		padding: 16px;
+		border-radius: 12px;
+		padding: 14px;
 		border: 2px solid rgba(255, 255, 255, 0.1);
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 14px;
 	}
 
 	.control-group {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.control-header {
@@ -1017,7 +1000,7 @@
 	}
 
 	.control-icon {
-		font-size: 20px;
+		font-size: 18px;
 	}
 
 	.control-label {
@@ -1028,7 +1011,7 @@
 	}
 
 	.control-value {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 700;
 		color: var(--color-accent);
 		min-width: 50px;
@@ -1055,8 +1038,8 @@
 	.slider::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 24px;
-		height: 24px;
+		width: 22px;
+		height: 22px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
@@ -1076,8 +1059,8 @@
 	}
 
 	.slider::-moz-range-thumb {
-		width: 24px;
-		height: 24px;
+		width: 22px;
+		height: 22px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
@@ -1097,101 +1080,6 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.4);
 	}
 
-	/* ✅ Info Box */
-	.info-box {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 12px 14px;
-		background: rgba(59, 130, 246, 0.15);
-		border-radius: 12px;
-		border: 2px solid rgba(59, 130, 246, 0.3);
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-	}
-
-	.info-icon {
-		font-size: 18px;
-	}
-
-	.info-text {
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.8);
-		font-weight: 500;
-	}
-
-	/* ✅ Action Grid - 2 Column Layout */
-	.action-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 10px;
-	}
-
-	.grid-button {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		padding: 18px 12px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 14px;
-		color: white;
-		cursor: pointer;
-		transition: all 0.3s;
-		min-height: 80px;
-		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		touch-action: manipulation;
-	}
-
-	.grid-button:hover {
-		background: rgba(255, 255, 255, 0.15);
-		transform: translateY(-2px);
-		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
-	}
-
-	.grid-icon {
-		font-size: 28px;
-	}
-
-	.grid-label {
-		font-size: 13px;
-		font-weight: 600;
-		text-align: center;
-	}
-
-	/* ✅ Color-Coded Grid Buttons */
-	.grid-button.success {
-		border-color: rgba(34, 197, 94, 0.3);
-	}
-	.grid-button.success:hover {
-		background: rgba(34, 197, 94, 0.15);
-		border-color: rgba(34, 197, 94, 0.5);
-		box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
-	}
-
-	.grid-button.danger {
-		border-color: rgba(239, 68, 68, 0.3);
-	}
-	.grid-button.danger:hover {
-		background: rgba(239, 68, 68, 0.15);
-		border-color: rgba(239, 68, 68, 0.5);
-		box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
-	}
-
-	.grid-button.info {
-		border-color: rgba(59, 130, 246, 0.3);
-	}
-	.grid-button.info:hover {
-		background: rgba(59, 130, 246, 0.15);
-		border-color: rgba(59, 130, 246, 0.5);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-	}
-
 	/* ✅ Create Form */
 	.create-form {
 		display: flex;
@@ -1199,7 +1087,7 @@
 		gap: 12px;
 		padding: 14px;
 		background: rgba(0, 0, 0, 0.4);
-		border-radius: 14px;
+		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
@@ -1244,14 +1132,14 @@
 
 	.form-btn {
 		flex: 1;
-		padding: 14px;
+		padding: 12px;
 		border-radius: 10px;
 		font-weight: 700;
 		font-size: 14px;
 		cursor: pointer;
 		transition: all 0.3s;
 		border: none;
-		min-height: 48px;
+		min-height: 44px;
 		box-shadow:
 			0 4px 12px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -1283,23 +1171,35 @@
 	}
 
 	/* ✅ Scrollbar Styling */
-	.tab-content::-webkit-scrollbar {
+	.scrollable-sections::-webkit-scrollbar {
 		width: 8px;
 	}
 
-	.tab-content::-webkit-scrollbar-track {
+	.scrollable-sections::-webkit-scrollbar-track {
 		background: rgba(0, 0, 0, 0.2);
 		border-radius: 4px;
 	}
 
-	.tab-content::-webkit-scrollbar-thumb {
+	.scrollable-sections::-webkit-scrollbar-thumb {
 		background: rgba(255, 255, 255, 0.3);
 		border-radius: 4px;
 		border: 2px solid rgba(0, 0, 0, 0.2);
 	}
 
-	.tab-content::-webkit-scrollbar-thumb:hover {
+	.scrollable-sections::-webkit-scrollbar-thumb:hover {
 		background: rgba(255, 255, 255, 0.4);
+	}
+
+	.scale-hints {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 4px;
+		font-size: 10px;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.hint-label {
+		font-size: 10px;
 	}
 
 	/* ✅ Responsive Styles */
@@ -1320,19 +1220,6 @@
 			bottom: 85px;
 			width: calc(100vw - 40px);
 			max-width: 380px;
-			height: 450px; /* ✅ Etwas kleiner auf Mobile */
-		}
-
-		.tab-btn {
-			min-height: 56px;
-		}
-
-		.tab-icon {
-			font-size: 20px;
-		}
-
-		.tab-label {
-			font-size: 10px;
 		}
 	}
 
@@ -1343,36 +1230,17 @@
 			height: 68px;
 		}
 
-		.tab-btn {
-			min-height: 60px;
-			padding: 14px 10px;
-		}
-
 		.action-button {
-			min-height: 68px;
-			padding: 18px 20px;
+			min-height: 64px;
+			padding: 16px 18px;
 		}
 
-		.grid-button {
-			min-height: 85px;
-			padding: 20px 14px;
+		.quick-button {
+			min-height: 74px;
 		}
 
 		.form-btn {
-			min-height: 52px;
-			padding: 16px;
+			min-height: 48px;
 		}
-	}
-
-	.scale-hints {
-		display: flex;
-		justify-content: space-between;
-		margin-top: 8px;
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.6);
-	}
-
-	.hint-label {
-		font-size: 10px;
 	}
 </style>
