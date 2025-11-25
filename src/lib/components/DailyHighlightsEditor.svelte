@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { dailyHighlights, viewWeekday, createHighlight, updateHighlight, deleteHighlight, reorderHighlights } from '$lib/stores/appState';
-	import { showToast } from '$lib/stores/toastStore';
+	import { toasts } from '$lib/stores/toastStore';
 	import { fade, fly } from 'svelte/transition';
 	import type { DailyHighlight } from '$lib/types';
 
@@ -69,7 +69,7 @@
 
 	async function saveHighlight() {
 		if (!formText.trim()) {
-			showToast('Bitte einen Text eingeben', 'error');
+			toasts.show('Bitte einen Text eingeben', 'error');
 			return;
 		}
 
@@ -81,15 +81,15 @@
 					text: formText.trim(),
 					color: formColor
 				});
-				showToast('Angebot aktualisiert', 'success');
+				toasts.show('Angebot aktualisiert', 'success');
 			} else {
 				// Create
 				await createHighlight($viewWeekday, formIcon, formText.trim(), formColor);
-				showToast('Angebot hinzugefügt', 'success');
+				toasts.show('Angebot hinzugefügt', 'success');
 			}
 			cancelForm();
 		} catch (err) {
-			showToast('Fehler beim Speichern', 'error');
+			toasts.show('Fehler beim Speichern', 'error');
 			console.error(err);
 		}
 	}
@@ -99,9 +99,9 @@
 
 		try {
 			await deleteHighlight(id);
-			showToast('Angebot gelöscht', 'success');
+			toasts.show('Angebot gelöscht', 'success');
 		} catch (err) {
-			showToast('Fehler beim Löschen', 'error');
+			toasts.show('Fehler beim Löschen', 'error');
 			console.error(err);
 		}
 	}
