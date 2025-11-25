@@ -300,8 +300,8 @@
 					class:active={$isEditMode}
 					onclick={() => isEditMode.update(v => !v)}
 				>
-					<span class="quick-icon">{$isEditMode ? '🔓' : '🔒'}</span>
-					<span class="quick-label">{$isEditMode ? 'Edit-Modus' : 'Ansicht'}</span>
+					<span class="quick-icon">{$isEditMode ? '✏️' : '🔒'}</span>
+					<span class="quick-label">Edit-Modus</span>
 				</button>
 			</div>
 

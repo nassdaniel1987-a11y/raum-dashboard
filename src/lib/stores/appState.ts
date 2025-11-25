@@ -1,5 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
-import type { Room, RoomStatus, DailyConfig, AppSettings, RoomWithConfig } from '$lib/types';
+import type { Room, RoomStatus, DailyConfig, AppSettings, RoomWithConfig, DailyHighlight } from '$lib/types';
 import { supabase } from '$lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { applyTheme } from '$lib/themes';
@@ -30,6 +30,7 @@ export const rooms = writable<Room[]>([]);
 export const roomStatuses = writable<Map<string, RoomStatus>>(new Map());
 export const dailyConfigs = writable<Map<string, DailyConfig>>(new Map());
 export const appSettings = writable<AppSettings | null>(null);
+export const dailyHighlights = writable<DailyHighlight[]>([]);
 
 // ===== THEME HANDLING (BENUTZERSPEZIFISCH) =====
 export const userTheme = writable<string>('default');
@@ -86,11 +87,22 @@ export const visibleRooms = derived(
 	}
 );
 
+// ✅ NEU: Nur Highlights für den aktuell angezeigten Tag
+export const visibleHighlights = derived(
+	[dailyHighlights, viewWeekday],
+	([$highlights, $weekday]) => {
+		return $highlights
+			.filter((h) => h.weekday === $weekday)
+			.sort((a, b) => a.sort_order - b.sort_order);
+	}
+);
+
 // ===== REALTIME SUBSCRIPTIONS =====
 let roomStatusChannel: RealtimeChannel | null = null;
 let roomsChannel: RealtimeChannel | null = null;
 let configsChannel: RealtimeChannel | null = null;
 let settingsChannel: RealtimeChannel | null = null;
+let highlightsChannel: RealtimeChannel | null = null;
 
 export function subscribeToRealtimeUpdates() {
 	console.log('🔌 Subscribing to realtime updates...');
@@ -176,6 +188,24 @@ export function subscribeToRealtimeUpdates() {
 		.subscribe((status) => {
 			console.log('Settings channel:', status);
 		});
+
+	highlightsChannel = supabase
+		.channel('highlights-changes')
+		.on('postgres_changes', { event: '*', schema: 'public', table: 'daily_highlights' }, (payload) => {
+			console.log('🎯 Highlight change:', payload);
+			if (payload.eventType === 'INSERT') {
+				dailyHighlights.update((list) => [...list, payload.new as DailyHighlight]);
+			} else if (payload.eventType === 'UPDATE') {
+				dailyHighlights.update((list) =>
+					list.map((h) => (h.id === payload.new.id ? (payload.new as DailyHighlight) : h))
+				);
+			} else if (payload.eventType === 'DELETE') {
+				dailyHighlights.update((list) => list.filter((h) => h.id !== payload.old.id));
+			}
+		})
+		.subscribe((status) => {
+			console.log('Highlights channel:', status);
+		});
 }
 
 export function unsubscribeFromRealtimeUpdates() {
@@ -183,6 +213,7 @@ export function unsubscribeFromRealtimeUpdates() {
 	roomsChannel?.unsubscribe();
 	configsChannel?.unsubscribe();
 	settingsChannel?.unsubscribe();
+	highlightsChannel?.unsubscribe();
 }
 
 // ===== DATA LOADING =====
@@ -211,6 +242,15 @@ export async function loadAllData() {
 		.single();
 	if (settingsData) {
 		appSettings.set(settingsData);
+	}
+
+	const { data: highlightsData } = await supabase
+		.from('daily_highlights')
+		.select('*')
+		.order('weekday')
+		.order('sort_order');
+	if (highlightsData) {
+		dailyHighlights.set(highlightsData);
 	}
 }
 
@@ -529,6 +569,73 @@ export async function deleteRoomConfigForDay(roomId: string, day: number) {
 		newMap.delete(`${roomId}-${day}`);
 		return newMap;
 	});
+}
+
+// ========== DAILY HIGHLIGHTS VERWALTUNG ==========
+
+export async function createHighlight(weekday: number, icon: string, text: string, color: string) {
+	// Ermittle die höchste sort_order für diesen Tag
+	const currentHighlights = get(dailyHighlights).filter(h => h.weekday === weekday);
+	const maxSortOrder = currentHighlights.length > 0
+		? Math.max(...currentHighlights.map(h => h.sort_order))
+		: 0;
+
+	const { data, error } = await supabase
+		.from('daily_highlights')
+		.insert({
+			weekday,
+			icon,
+			text,
+			color,
+			sort_order: maxSortOrder + 1
+		})
+		.select()
+		.single();
+
+	if (error) {
+		console.error('Error creating highlight:', error);
+		throw error;
+	}
+
+	return data;
+}
+
+export async function updateHighlight(id: string, updates: Partial<DailyHighlight>) {
+	const { error } = await supabase
+		.from('daily_highlights')
+		.update(updates)
+		.eq('id', id);
+
+	if (error) {
+		console.error('Error updating highlight:', error);
+		throw error;
+	}
+}
+
+export async function deleteHighlight(id: string) {
+	const { error } = await supabase
+		.from('daily_highlights')
+		.delete()
+		.eq('id', id);
+
+	if (error) {
+		console.error('Error deleting highlight:', error);
+		throw error;
+	}
+}
+
+export async function reorderHighlights(highlights: DailyHighlight[]) {
+	const updates = highlights.map((h, index) => ({
+		id: h.id,
+		sort_order: index + 1
+	}));
+
+	for (const update of updates) {
+		await supabase
+			.from('daily_highlights')
+			.update({ sort_order: update.sort_order })
+			.eq('id', update.id);
+	}
 }
 
 // ========== AUTOMATIK-SERVICE ==========

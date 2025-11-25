@@ -176,6 +176,39 @@
 				</div>
 			</section>
 
+			<!-- Tagesangebote -->
+			<section class="help-section">
+				<h3>🎯 Tagesangebote</h3>
+				<div class="help-item">
+					<div class="help-icon">📌</div>
+					<div class="help-text">
+						<strong>Aktuelle Themen anzeigen:</strong>
+						<p>Direkt unter dem Header werden besondere Angebote und Events des Tages angezeigt (z.B. "Basketball-Training 14:00", "Theater-AG 16:00")</p>
+					</div>
+				</div>
+				<div class="help-item">
+					<div class="help-icon">✏️</div>
+					<div class="help-text">
+						<strong>Angebote bearbeiten:</strong>
+						<p>Im Edit-Modus erscheint ein "Bearbeiten" Button bei den Tagesangeboten. Dort kannst du Angebote hinzufügen, ändern oder löschen</p>
+					</div>
+				</div>
+				<div class="help-item">
+					<div class="help-icon">🎨</div>
+					<div class="help-text">
+						<strong>Farben & Icons:</strong>
+						<p>Jedes Angebot kann mit einem Icon (🏀, 🎭, 📚 etc.) und einer Farbe (Blau, Grün, Gelb, Rot, Lila, Orange) versehen werden</p>
+					</div>
+				</div>
+				<div class="help-item">
+					<div class="help-icon">📅</div>
+					<div class="help-text">
+						<strong>Pro Wochentag:</strong>
+						<p>Angebote werden pro Wochentag gespeichert. Wechselst du den Tag (Pfeile im Header), siehst du die Angebote für diesen Tag</p>
+					</div>
+				</div>
+			</section>
+
 			<!-- Tipps & Tricks -->
 			<section class="help-section highlight">
 				<h3>💡 Tipps & Tricks</h3>
@@ -185,11 +218,15 @@
 					<li>Display-Breite auf 75% für optimale TV-Darstellung</li>
 					<li>Nachtmodus spart Energie und schließt automatisch alle Räume</li>
 					<li>Doppelklick ist die schnellste Methode zum Öffnen/Schließen</li>
+					<li>Nutze Tagesangebote um besondere Events prominent zu machen</li>
 				</ul>
 			</section>
 		</div>
 
 		<div class="modal-footer">
+			<div class="version-info">
+				Version 1.1.0 • 25.11.2025
+			</div>
 			<button class="primary-btn" onclick={onClose}>Verstanden</button>
 		</div>
 	</div>
@@ -369,8 +406,15 @@
 		padding: 20px 28px;
 		border-top: 2px solid rgba(255, 255, 255, 0.1);
 		display: flex;
-		justify-content: center;
+		justify-content: space-between;
+		align-items: center;
 		flex-shrink: 0;
+	}
+
+	.version-info {
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.5);
+		font-weight: 500;
 	}
 
 	.primary-btn {
@@ -452,6 +496,15 @@
 
 		.help-text p {
 			font-size: 13px;
+		}
+
+		.modal-footer {
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.version-info {
+			font-size: 12px;
 		}
 	}
 </style>

@@ -8,6 +8,8 @@
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import DailyHighlights from '$lib/components/DailyHighlights.svelte';
+	import DailyHighlightsEditor from '$lib/components/DailyHighlightsEditor.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -15,6 +17,7 @@
 	let showScheduler = $state(false);
 	let showSettings = $state(false);
 	let showHelp = $state(false);
+	let showHighlightsEditor = $state(false);
 	let canvasRef: any = $state(null); // Referenz zur Canvas-Komponente
 	let autoScrollActive = $state(false); // ✅ NEU: State für Auto-Scroll Status
 
@@ -48,6 +51,14 @@
 
 	function closeHelp() {
 		showHelp = false;
+	}
+
+	function openHighlightsEditor() {
+		showHighlightsEditor = true;
+	}
+
+	function closeHighlightsEditor() {
+		showHighlightsEditor = false;
 	}
 
 	// ✅ NEU: Auto-Scroll Toggle Handler
@@ -89,6 +100,7 @@
 		onToggleAutoScroll={handleToggleAutoScroll}
 		onOpenHelp={openHelp}
 	/>
+	<DailyHighlights onOpenEditor={openHighlightsEditor} />
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
 	<FloatingMenu
 		onOpenScheduler={openScheduler}
@@ -112,6 +124,10 @@
 
 	{#if showHelp}
 		<HelpModal onClose={closeHelp} />
+	{/if}
+
+	{#if showHighlightsEditor}
+		<DailyHighlightsEditor onClose={closeHighlightsEditor} />
 	{/if}
 </div>
 

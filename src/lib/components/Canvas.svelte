@@ -332,7 +332,7 @@
 	/* ✅ Container für autoscroll + iPad Swipe-Gesten optimiert */
 	.canvas-container {
 		position: fixed;
-		top: 50px;
+		top: 140px; /* Erhöht für DailyHighlights Komponente */
 		left: 0;
 		right: 0;
 		bottom: 0;

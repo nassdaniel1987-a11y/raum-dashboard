@@ -1,0 +1,254 @@
+<script lang="ts">
+	import { visibleHighlights, viewWeekday, isEditMode } from '$lib/stores/appState';
+	import { fade, fly } from 'svelte/transition';
+	import type { DailyHighlight } from '$lib/types';
+
+	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
+	// SVELTE 5 PROPS
+	let { onOpenEditor } = $props<{
+		onOpenEditor?: () => void;
+	}>();
+
+	// Color Map für die Highlight-Farben
+	const colorMap = {
+		blue: { bg: 'rgba(59, 130, 246, 0.25)', border: 'rgba(59, 130, 246, 0.5)' },
+		green: { bg: 'rgba(34, 197, 94, 0.25)', border: 'rgba(34, 197, 94, 0.5)' },
+		yellow: { bg: 'rgba(234, 179, 8, 0.25)', border: 'rgba(234, 179, 8, 0.5)' },
+		red: { bg: 'rgba(239, 68, 68, 0.25)', border: 'rgba(239, 68, 68, 0.5)' },
+		purple: { bg: 'rgba(168, 85, 247, 0.25)', border: 'rgba(168, 85, 247, 0.5)' },
+		orange: { bg: 'rgba(249, 115, 22, 0.25)', border: 'rgba(249, 115, 22, 0.5)' }
+	};
+
+	function getColorStyle(color: string) {
+		const colors = colorMap[color as keyof typeof colorMap] || colorMap.blue;
+		return `background: ${colors.bg}; border-color: ${colors.border};`;
+	}
+</script>
+
+{#if $visibleHighlights.length > 0 || $isEditMode}
+	<div class="highlights-container" transition:fade={{ duration: 200 }}>
+		<div class="highlights-header">
+			<div class="highlights-title">
+				<span class="icon">🎯</span>
+				<span class="text">Heute - {weekdayNames[$viewWeekday]}</span>
+			</div>
+			{#if $isEditMode && onOpenEditor}
+				<button
+					class="edit-btn"
+					onclick={onOpenEditor}
+					title="Tagesangebote bearbeiten"
+					transition:fly={{ x: 20, duration: 200 }}
+				>
+					<span class="icon">✏️</span>
+					<span class="label">Bearbeiten</span>
+				</button>
+			{/if}
+		</div>
+
+		<div class="highlights-list">
+			{#if $visibleHighlights.length > 0}
+				{#each $visibleHighlights as highlight (highlight.id)}
+					<div
+						class="highlight-item"
+						style={getColorStyle(highlight.color)}
+						transition:fly={{ y: -10, duration: 300 }}
+					>
+						<span class="highlight-icon">{highlight.icon}</span>
+						<span class="highlight-text">{highlight.text}</span>
+					</div>
+				{/each}
+			{:else}
+				<div class="no-highlights" transition:fade>
+					<span class="emoji">📌</span>
+					<span class="message">Keine besonderen Angebote für heute</span>
+					{#if $isEditMode}
+						<span class="hint">(Klicke "Bearbeiten" um welche hinzuzufügen)</span>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	</div>
+{/if}
+
+<style>
+	.highlights-container {
+		position: fixed;
+		top: 50px; /* Direkt unter dem Header */
+		left: 0;
+		right: 0;
+		background: linear-gradient(to bottom, rgba(30, 41, 59, 0.98), rgba(30, 41, 59, 0.95));
+		border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		backdrop-filter: blur(10px);
+		z-index: 90;
+		padding: 12px 20px;
+	}
+
+	.highlights-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 8px;
+	}
+
+	.highlights-title {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--color-text-primary);
+		font-size: 16px;
+		font-weight: 700;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+	}
+
+	.highlights-title .icon {
+		font-size: 20px;
+	}
+
+	.edit-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background: rgba(96, 165, 250, 0.2);
+		border: 2px solid rgba(96, 165, 250, 0.4);
+		color: var(--color-text-primary);
+		font-size: 14px;
+		font-weight: 600;
+		padding: 6px 12px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		backdrop-filter: blur(10px);
+	}
+
+	.edit-btn:hover {
+		background: rgba(96, 165, 250, 0.4);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 10px rgba(96, 165, 250, 0.5);
+	}
+
+	.edit-btn .icon {
+		font-size: 16px;
+	}
+
+	.edit-btn .label {
+		font-size: 13px;
+	}
+
+	.highlights-list {
+		display: flex;
+		gap: 12px;
+		overflow-x: auto;
+		overflow-y: hidden;
+		padding: 8px 0;
+		scroll-behavior: smooth;
+	}
+
+	/* Custom Scrollbar */
+	.highlights-list::-webkit-scrollbar {
+		height: 6px;
+	}
+
+	.highlights-list::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 3px;
+	}
+
+	.highlights-list::-webkit-scrollbar-thumb {
+		background: rgba(96, 165, 250, 0.5);
+		border-radius: 3px;
+	}
+
+	.highlights-list::-webkit-scrollbar-thumb:hover {
+		background: rgba(96, 165, 250, 0.7);
+	}
+
+	.highlight-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 16px;
+		border: 2px solid;
+		border-radius: 12px;
+		backdrop-filter: blur(10px);
+		white-space: nowrap;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		transition: all 0.3s;
+		flex-shrink: 0;
+	}
+
+	.highlight-item:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	}
+
+	.highlight-icon {
+		font-size: 20px;
+		line-height: 1;
+	}
+
+	.highlight-text {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	}
+
+	.no-highlights {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 20px;
+		background: rgba(148, 163, 184, 0.15);
+		border: 2px dashed rgba(148, 163, 184, 0.3);
+		border-radius: 12px;
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 14px;
+		font-weight: 500;
+		width: 100%;
+		justify-content: center;
+	}
+
+	.no-highlights .emoji {
+		font-size: 20px;
+	}
+
+	.no-highlights .hint {
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 12px;
+		font-style: italic;
+	}
+
+	/* Responsive */
+	@media (max-width: 768px) {
+		.highlights-container {
+			padding: 10px 15px;
+		}
+
+		.highlights-title {
+			font-size: 14px;
+		}
+
+		.edit-btn .label {
+			display: none;
+		}
+
+		.edit-btn {
+			padding: 6px 10px;
+		}
+
+		.highlight-item {
+			padding: 8px 12px;
+			gap: 6px;
+		}
+
+		.highlight-icon {
+			font-size: 18px;
+		}
+
+		.highlight-text {
+			font-size: 13px;
+		}
+	}
+</style>
