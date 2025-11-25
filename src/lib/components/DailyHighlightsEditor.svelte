@@ -19,6 +19,8 @@
 	let formIcon = $state('📌');
 	let formText = $state('');
 	let formColor = $state<'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'orange'>('blue');
+	let formRoom = $state('');
+	let formPerson = $state('');
 
 	// Häufig verwendete Icons
 	const iconOptions = [
@@ -47,6 +49,8 @@
 		formIcon = '📌';
 		formText = '';
 		formColor = 'blue';
+		formRoom = '';
+		formPerson = '';
 		editingHighlight = null;
 		showAddForm = true;
 	}
@@ -55,6 +59,8 @@
 		formIcon = highlight.icon;
 		formText = highlight.text;
 		formColor = highlight.color;
+		formRoom = highlight.room || '';
+		formPerson = highlight.person || '';
 		editingHighlight = highlight;
 		showAddForm = true;
 	}
@@ -65,6 +71,8 @@
 		formIcon = '📌';
 		formText = '';
 		formColor = 'blue';
+		formRoom = '';
+		formPerson = '';
 	}
 
 	async function saveHighlight() {
@@ -79,12 +87,21 @@
 				await updateHighlight(editingHighlight.id, {
 					icon: formIcon,
 					text: formText.trim(),
-					color: formColor
+					color: formColor,
+					room: formRoom.trim() || null,
+					person: formPerson.trim() || null
 				});
 				toasts.show('Angebot aktualisiert', 'success');
 			} else {
 				// Create
-				await createHighlight($viewWeekday, formIcon, formText.trim(), formColor);
+				await createHighlight(
+					$viewWeekday,
+					formIcon,
+					formText.trim(),
+					formColor,
+					formRoom.trim() || null,
+					formPerson.trim() || null
+				);
 				toasts.show('Angebot hinzugefügt', 'success');
 			}
 			cancelForm();
@@ -151,7 +168,15 @@
 							<div class="highlight-row" transition:fly={{ x: -20, duration: 200 }}>
 								<div class="highlight-preview">
 									<span class="icon">{highlight.icon}</span>
-									<span class="text">{highlight.text}</span>
+									<div class="preview-content">
+										<span class="text">{highlight.text}</span>
+										{#if highlight.room || highlight.person}
+											<span class="preview-details">
+												{#if highlight.room}<span class="preview-room">📍 {highlight.room}</span>{/if}
+												{#if highlight.person}<span class="preview-person">👤 {highlight.person}</span>{/if}
+											</span>
+										{/if}
+									</div>
 									<span class="color-badge" style="background: {colorOptions.find(c => c.value === highlight.color)?.bg}">
 										{colorOptions.find(c => c.value === highlight.color)?.name}
 									</span>
@@ -225,8 +250,30 @@
 							id="highlight-text"
 							type="text"
 							bind:value={formText}
-							placeholder="z.B. Basketball-Training 14:00 Turnhalle 1"
+							placeholder="z.B. Basketball-Training 14:00"
 							maxlength="100"
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="highlight-room">Raum (optional):</label>
+						<input
+							id="highlight-room"
+							type="text"
+							bind:value={formRoom}
+							placeholder="z.B. Turnhalle 1"
+							maxlength="50"
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="highlight-person">Person (optional):</label>
+						<input
+							id="highlight-person"
+							type="text"
+							bind:value={formPerson}
+							placeholder="z.B. Herr Schmidt"
+							maxlength="50"
 						/>
 					</div>
 
@@ -392,14 +439,33 @@
 		flex-shrink: 0;
 	}
 
+	.preview-content {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex: 1;
+		min-width: 0;
+	}
+
 	.highlight-preview .text {
 		font-size: 14px;
 		color: var(--color-text-primary);
 		font-weight: 500;
-		flex: 1;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+	}
+
+	.preview-details {
+		display: flex;
+		gap: 10px;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.7);
+		font-weight: 500;
+	}
+
+	.preview-room,
+	.preview-person {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.color-badge {

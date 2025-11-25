@@ -55,7 +55,15 @@
 						transition:fly={{ y: -10, duration: 300 }}
 					>
 						<span class="highlight-icon">{highlight.icon}</span>
-						<span class="highlight-text">{highlight.text}</span>
+						<div class="highlight-content">
+							<span class="highlight-text">{highlight.text}</span>
+							{#if highlight.room || highlight.person}
+								<span class="highlight-details">
+									{#if highlight.room}<span class="detail-room">📍 {highlight.room}</span>{/if}
+									{#if highlight.person}<span class="detail-person">👤 {highlight.person}</span>{/if}
+								</span>
+							{/if}
+						</div>
 					</div>
 				{/each}
 			{:else}
@@ -186,6 +194,15 @@
 	.highlight-icon {
 		font-size: 20px;
 		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	.highlight-content {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.highlight-text {
@@ -193,6 +210,21 @@
 		font-weight: 600;
 		color: var(--color-text-primary);
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	}
+
+	.highlight-details {
+		display: flex;
+		gap: 10px;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.8);
+		font-weight: 500;
+	}
+
+	.detail-room,
+	.detail-person {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.no-highlights {
