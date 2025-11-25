@@ -573,7 +573,14 @@ export async function deleteRoomConfigForDay(roomId: string, day: number) {
 
 // ========== DAILY HIGHLIGHTS VERWALTUNG ==========
 
-export async function createHighlight(weekday: number, icon: string, text: string, color: string) {
+export async function createHighlight(
+	weekday: number,
+	icon: string,
+	text: string,
+	color: string,
+	room: string | null = null,
+	person: string | null = null
+) {
 	// Ermittle die höchste sort_order für diesen Tag
 	const currentHighlights = get(dailyHighlights).filter(h => h.weekday === weekday);
 	const maxSortOrder = currentHighlights.length > 0
@@ -587,6 +594,8 @@ export async function createHighlight(weekday: number, icon: string, text: strin
 			icon,
 			text,
 			color,
+			room,
+			person,
 			sort_order: maxSortOrder + 1
 		})
 		.select()
@@ -595,6 +604,11 @@ export async function createHighlight(weekday: number, icon: string, text: strin
 	if (error) {
 		console.error('Error creating highlight:', error);
 		throw error;
+	}
+
+	// ✅ Sofort lokale State aktualisieren
+	if (data) {
+		dailyHighlights.update(list => [...list, data as DailyHighlight]);
 	}
 
 	return data;
@@ -610,6 +624,11 @@ export async function updateHighlight(id: string, updates: Partial<DailyHighligh
 		console.error('Error updating highlight:', error);
 		throw error;
 	}
+
+	// ✅ Sofort lokale State aktualisieren
+	dailyHighlights.update(list =>
+		list.map(h => (h.id === id ? { ...h, ...updates } : h))
+	);
 }
 
 export async function deleteHighlight(id: string) {
@@ -622,6 +641,9 @@ export async function deleteHighlight(id: string) {
 		console.error('Error deleting highlight:', error);
 		throw error;
 	}
+
+	// ✅ Sofort lokale State aktualisieren
+	dailyHighlights.update(list => list.filter(h => h.id !== id));
 }
 
 export async function reorderHighlights(highlights: DailyHighlight[]) {

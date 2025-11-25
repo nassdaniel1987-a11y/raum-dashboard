@@ -69,6 +69,8 @@ export interface DailyHighlight {
 	icon: string;
 	text: string;
 	color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'orange';
+	room: string | null; // Raum, in dem das Angebot stattfindet
+	person: string | null; // Person, die das Angebot macht
 	sort_order: number;
 	created_at: string;
 }
