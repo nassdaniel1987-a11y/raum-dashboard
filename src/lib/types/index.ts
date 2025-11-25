@@ -62,3 +62,13 @@ export interface Size {
 	width: number;
 	height: number;
 }
+
+export interface DailyHighlight {
+	id: string;
+	weekday: number; // 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa
+	icon: string;
+	text: string;
+	color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'orange';
+	sort_order: number;
+	created_at: string;
+}
