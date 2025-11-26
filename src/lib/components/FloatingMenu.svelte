@@ -753,6 +753,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+		min-height: 0; /* ✅ Wichtig für Flex-Scrolling */
+		/* ✅ Scrollbar immer sichtbar machen für bessere UX */
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
 	}
 
 	.collapsible-section {
@@ -1220,6 +1224,23 @@
 			bottom: 85px;
 			width: calc(100vw - 40px);
 			max-width: 380px;
+			max-height: calc(100vh - 110px); /* ✅ Mehr Platz auf Mobile */
+		}
+
+		/* ✅ Schnellzugriff kompakter auf Mobile */
+		.quick-actions {
+			padding: 12px;
+		}
+
+		.section-title {
+			font-size: 13px;
+		}
+	}
+
+	/* ✅ Extra kleine Displays */
+	@media (max-width: 480px) {
+		.menu-panel {
+			max-height: calc(100vh - 100px); /* ✅ Noch mehr Platz auf sehr kleinen Displays */
 		}
 	}
 
