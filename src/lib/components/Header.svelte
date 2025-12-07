@@ -1,15 +1,13 @@
 <script lang="ts">
-	import { currentTime, currentWeekday, viewWeekday, cardTheme } from '$lib/stores/appState';
-	import { getAllThemes } from '$lib/cardThemes';
+	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
-	// SVELTE 5 PROPS - Auto-Scroll Controls & Help
-	let { autoScrollActive = false, onToggleAutoScroll, onOpenHelp } = $props<{
-		autoScrollActive?: boolean;
-		onToggleAutoScroll?: () => void;
+	// SVELTE 5 PROPS - Burger Menu & Help
+	let { onOpenMenu, onOpenHelp } = $props<{
+		onOpenMenu?: () => void;
 		onOpenHelp?: () => void;
 	}>();
 
@@ -32,19 +30,6 @@
 
 	// SVELTE 5 STATE für Vollbild
 	let isFullscreen = $state(false);
-
-	// SVELTE 5 STATE für Theme-Switcher
-	let showThemeMenu = $state(false);
-	const allThemes = getAllThemes();
-
-	function selectTheme(themeName: string) {
-		cardTheme.set(themeName);
-		showThemeMenu = false;
-	}
-
-	function toggleThemeMenu() {
-		showThemeMenu = !showThemeMenu;
-	}
 
 	// ✅ NEU: Tag-Navigation
 	function previousDay() {
@@ -129,6 +114,18 @@
 
 <header class="dashboard-header" transition:fade>
 	<div class="header-left">
+		<!-- Burger Menu Button -->
+		{#if onOpenMenu}
+			<button
+				class="burger-btn"
+				onclick={onOpenMenu}
+				title="Menü öffnen"
+				aria-label="Menü öffnen"
+			>
+				<span class="icon">☰</span>
+			</button>
+		{/if}
+
 		<div class="logo">
 			<span class="logo-icon">🏫</span>
 			<span class="logo-text">Raum-Dashboard</span>
@@ -170,65 +167,6 @@
 	</div>
 
 	<div class="header-right">
-		<!-- ✅ NEU: Auto-Scroll Toggle Button -->
-		{#if onToggleAutoScroll}
-			<button 
-				class="autoscroll-btn" 
-				class:active={autoScrollActive}
-				onclick={onToggleAutoScroll}
-				title={autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}
-				aria-label={autoScrollActive ? 'Auto-Scroll pausieren' : 'Auto-Scroll starten'}
-			>
-				{#if autoScrollActive}
-					<span class="icon">⏸️</span>
-					<span class="label">Auto-Scroll</span>
-				{:else}
-					<span class="icon">▶️</span>
-					<span class="label">Auto-Scroll</span>
-				{/if}
-			</button>
-		{/if}
-
-		<!-- ✅ NEU: Theme-Switcher -->
-		<div class="theme-switcher">
-			<button
-				class="theme-btn"
-				onclick={toggleThemeMenu}
-				title="Theme wechseln"
-				aria-label="Theme wechseln"
-			>
-				<span class="icon">🎨</span>
-			</button>
-
-			{#if showThemeMenu}
-				<div class="theme-menu" transition:fade={{ duration: 200 }}>
-					{#each allThemes as theme}
-						<button
-							class="theme-option"
-							class:active={$cardTheme === theme.name}
-							onclick={() => selectTheme(theme.name)}
-						>
-							<span class="theme-emoji">{theme.emoji}</span>
-							<span class="theme-label">{theme.displayName}</span>
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-
-		<button
-			class="fullscreen-btn"
-			onclick={toggleFullscreen}
-			title={isFullscreen ? 'Vollbild verlassen (ESC)' : 'Vollbild aktivieren'}
-			aria-label={isFullscreen ? 'Vollbild verlassen' : 'Vollbild aktivieren'}
-		>
-			{#if isFullscreen}
-				<span class="icon">⛶</span>
-			{:else}
-				<span class="icon">⛶</span>
-			{/if}
-		</button>
-		
 		<div class="clock">
 			<span class="time">{formattedTime}</span>
 		</div>
@@ -292,6 +230,39 @@
 		font-weight: 700;
 		letter-spacing: 0.5px;
 		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Burger Menu Button */
+	.burger-btn {
+		background: rgba(59, 130, 246, 0.2);
+		border: 2px solid rgba(59, 130, 246, 0.4);
+		color: var(--color-text-primary);
+		font-size: 24px;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	}
+
+	.burger-btn:hover {
+		background: rgba(59, 130, 246, 0.4);
+		transform: scale(1.1);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+	}
+
+	.burger-btn:active {
+		transform: scale(0.95);
+	}
+
+	.burger-btn .icon {
+		font-size: 26px;
+		line-height: 1;
 	}
 
 	/* ✅ Hilfe-Button */
@@ -414,184 +385,6 @@
 		margin: 0 8px;
 	}
 
-	/* ✅ NEU: Auto-Scroll Button Styles */
-	.autoscroll-btn {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		background: rgba(255, 255, 255, 0.2);
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		color: var(--color-text-primary);
-		font-size: 14px;
-		font-weight: 600;
-		padding: 8px 14px;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.3s;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-
-	.autoscroll-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-	}
-
-	.autoscroll-btn:active {
-		transform: translateY(0);
-	}
-
-	.autoscroll-btn.active {
-		background: rgba(34, 197, 94, 0.3);
-		border-color: rgba(34, 197, 94, 0.6);
-		box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-		animation: pulse-glow 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse-glow {
-		0%, 100% {
-			box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-		}
-		50% {
-			box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
-		}
-	}
-
-	.autoscroll-btn .icon {
-		font-size: 16px;
-	}
-
-	.autoscroll-btn .label {
-		font-size: 13px;
-	}
-
-	/* ✅ NEU: Theme-Switcher Styles */
-	.theme-switcher {
-		position: relative;
-	}
-
-	.theme-btn {
-		background: rgba(255, 255, 255, 0.2);
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		color: var(--color-text-primary);
-		font-size: 20px;
-		width: 44px;
-		height: 44px;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.3s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-
-	.theme-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
-		transform: scale(1.05);
-		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-	}
-
-	.theme-btn:active {
-		transform: scale(0.95);
-	}
-
-	.theme-btn .icon {
-		font-size: 22px;
-		line-height: 1;
-	}
-
-	.theme-menu {
-		position: absolute;
-		top: calc(100% + 8px);
-		right: 0;
-		background: rgba(30, 41, 59, 0.98);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 12px;
-		padding: 8px;
-		min-width: 200px;
-		max-height: 400px;
-		overflow-y: auto;
-		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.6),
-			0 2px 16px rgba(0, 0, 0, 0.4);
-		backdrop-filter: blur(20px);
-		z-index: 1000;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.theme-option {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 10px 14px;
-		background: rgba(255, 255, 255, 0.05);
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		color: rgba(255, 255, 255, 0.9);
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-		text-align: left;
-	}
-
-	.theme-option:hover {
-		background: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateX(4px);
-	}
-
-	.theme-option.active {
-		background: rgba(59, 130, 246, 0.3);
-		border-color: rgba(59, 130, 246, 0.6);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-	}
-
-	.theme-emoji {
-		font-size: 20px;
-		line-height: 1;
-	}
-
-	.theme-label {
-		flex: 1;
-	}
-
-	.fullscreen-btn {
-		background: rgba(255, 255, 255, 0.2);
-		border: none;
-		color: var(--color-text-primary);
-		font-size: 20px;
-		width: 40px;
-		height: 40px;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.3s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-
-	.fullscreen-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
-		transform: scale(1.05);
-	}
-
-	.fullscreen-btn:active {
-		transform: scale(0.95);
-	}
-
-	.fullscreen-btn .icon {
-		font-size: 22px;
-		line-height: 1;
-	}
-
 	.clock {
 		background: rgba(255, 255, 255, 0.2);
 		padding: 6px 12px;
@@ -618,6 +411,7 @@
 			font-size: 16px;
 		}
 
+		.burger-btn,
 		.help-btn {
 			width: 40px;
 			height: 40px;
@@ -630,22 +424,6 @@
 		.time {
 			font-size: 18px;
 		}
-
-		.autoscroll-btn .label {
-			display: none;
-		}
-
-		.autoscroll-btn {
-			min-width: 40px;
-			padding: 8px;
-			justify-content: center;
-		}
-
-		.fullscreen-btn {
-			width: 36px;
-			height: 36px;
-			font-size: 18px;
-		}
 	}
 
 	@media (max-width: 768px) {
@@ -653,14 +431,9 @@
 			gap: 8px;
 		}
 
+		.burger-btn,
 		.help-btn {
 			width: 36px;
-			height: 36px;
-		}
-
-		.autoscroll-btn,
-		.fullscreen-btn {
-			min-width: 36px;
 			height: 36px;
 		}
 	}
