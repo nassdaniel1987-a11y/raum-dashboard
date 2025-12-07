@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
-	import FloatingMenu from '$lib/components/FloatingMenu.svelte';
+	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -18,8 +18,8 @@
 	let showSettings = $state(false);
 	let showHelp = $state(false);
 	let showHighlightsEditor = $state(false);
+	let showMenu = $state(false); // ✅ NEU: Sidebar Menu
 	let canvasRef: any = $state(null); // Referenz zur Canvas-Komponente
-	let autoScrollActive = $state(false); // ✅ NEU: State für Auto-Scroll Status
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -61,48 +61,25 @@
 		showHighlightsEditor = false;
 	}
 
-	// ✅ NEU: Auto-Scroll Toggle Handler
-	function handleToggleAutoScroll() {
-		console.log('🔘 Header Button geklickt');
-		if (!canvasRef) {
-			console.warn('❌ canvasRef ist null');
-			return;
-		}
-		if (typeof canvasRef.toggleAutoScroll !== 'function') {
-			console.warn('❌ toggleAutoScroll ist keine Funktion:', typeof canvasRef.toggleAutoScroll);
-			return;
-		}
-		const newStatus = canvasRef.toggleAutoScroll();
-		autoScrollActive = newStatus;
-		console.log('✅ Status aktualisiert auf:', newStatus);
+	function openMenu() {
+		showMenu = true;
 	}
 
-	// ✅ Status kontinuierlich synchronisieren
-	$effect(() => {
-		// Regelmäßig Status synchronisieren
-		const interval = setInterval(() => {
-			if (canvasRef?.getAutoScrollStatus) {
-				const currentStatus = canvasRef.getAutoScrollStatus();
-				if (currentStatus !== autoScrollActive) {
-					autoScrollActive = currentStatus;
-					console.log('🔄 Status synchronisiert:', currentStatus);
-				}
-			}
-		}, 500); // Alle 500ms checken
-
-		return () => clearInterval(interval);
-	});
+	function closeMenu() {
+		showMenu = false;
+	}
 </script>
 
 <div class="dashboard">
 	<Header
-		autoScrollActive={autoScrollActive}
-		onToggleAutoScroll={handleToggleAutoScroll}
+		onOpenMenu={openMenu}
 		onOpenHelp={openHelp}
 	/>
 	<DailyHighlights onOpenEditor={openHighlightsEditor} />
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
-	<FloatingMenu
+	<SidebarMenu
+		isOpen={showMenu}
+		onClose={closeMenu}
 		onOpenScheduler={openScheduler}
 		onOpenSettings={openSettings}
 		{canvasRef}
