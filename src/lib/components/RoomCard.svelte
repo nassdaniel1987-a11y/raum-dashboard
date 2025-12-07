@@ -246,7 +246,7 @@
 			<div class="badge-chain"></div>
 			<div class="badge-tape">
 				<span class="badge-icon">⏰</span>
-				<span class="badge-text">Öffnet {timeUntilOpen()}</span>
+				<span class="badge-text">Öffnet {displayTime}</span>
 			</div>
 		</div>
 	{/if}
