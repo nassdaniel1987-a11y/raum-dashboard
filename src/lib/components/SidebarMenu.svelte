@@ -1,20 +1,22 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
+	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
+	import { supabase } from '$lib/supabase/client';
 	import { fade, slide } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-	const allThemes = getAllThemes();
+	const allCardThemes = getAllThemes();
+	const allUIThemes = Object.values(uiThemes);
 
 	// Props
-	let { isOpen = false, onClose, onOpenScheduler, onOpenSettings, canvasRef } = $props<{
+	let { isOpen = false, onClose, onOpenScheduler, canvasRef } = $props<{
 		isOpen?: boolean;
 		onClose: () => void;
 		onOpenScheduler: () => void;
-		onOpenSettings: () => void;
 		canvasRef?: any;
 	}>();
 
@@ -31,6 +33,14 @@
 	let newRoomName = $state('');
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
+
+	// Nachtruhe-Modus State
+	let nightModeEnabled = $state($appSettings?.night_mode_enabled ?? true);
+	let nightStart = $state($appSettings?.night_start || '17:00');
+	let nightEnd = $state($appSettings?.night_end || '07:00');
+
+	// UI-Theme State
+	let currentUITheme = $state($userTheme);
 
 	onMount(() => {
 		// Lade gespeicherte Werte
@@ -150,8 +160,14 @@
 		applyCardSize();
 	}
 
-	function selectTheme(themeName: string) {
+	function selectCardTheme(themeName: string) {
 		cardTheme.set(themeName);
+	}
+
+	function selectUITheme(themeId: string) {
+		currentUITheme = themeId;
+		userTheme.set(themeId);
+		applyTheme(themeId);
 	}
 
 	function copyCurrentDay() {
@@ -228,6 +244,24 @@
 			swapSelection.set([]);
 		}
 	}
+
+	async function saveNightModeSettings() {
+		try {
+			await supabase
+				.from('app_settings')
+				.update({
+					night_mode_enabled: nightModeEnabled,
+					night_start: nightStart,
+					night_end: nightEnd
+				})
+				.eq('id', 1);
+
+			toasts.show('✓ Nachtruhe-Einstellungen gespeichert!', 'success');
+		} catch (error) {
+			console.error('Error saving night mode settings:', error);
+			toasts.show('✕ Fehler beim Speichern!', 'error');
+		}
+	}
 </script>
 
 {#if isOpen}
@@ -265,15 +299,13 @@
 			>
 				👁️ Ansicht
 			</button>
-			{#if $isEditMode}
-				<button
-					class="tab"
-					class:active={activeTab === 'advanced'}
-					onclick={() => activeTab = 'advanced'}
-				>
-					🛠️ Erweitert
-				</button>
-			{/if}
+			<button
+				class="tab"
+				class:active={activeTab === 'advanced'}
+				onclick={() => activeTab = 'advanced'}
+			>
+				🛠️ Erweitert
+			</button>
 		</div>
 
 		<!-- Content -->
@@ -290,7 +322,7 @@
 					>
 						<span class="icon">{$isEditMode ? '🔓' : '🔒'}</span>
 						<div class="btn-text">
-							<span class="label">{$isEditMode ? 'Edit-Modus' : 'Ansicht-Modus'}</span>
+							<span class="label">Edit-Modus</span>
 							<span class="hint">{$isEditMode ? 'Bearbeitung aktiv' : 'Nur ansehen'}</span>
 						</div>
 					</button>
@@ -397,16 +429,17 @@
 				<div class="tab-content" transition:fade={{ duration: 200 }}>
 					<h3>Ansicht</h3>
 
-					<!-- Theme-Auswahl -->
+					<!-- Kachel-Theme-Auswahl -->
+					<h4>🎨 Kachel-Themes</h4>
 					<div class="theme-grid">
-						{#each allThemes as theme}
+						{#each allCardThemes as theme}
 							<button
 								class="theme-btn"
 								class:active={$cardTheme === theme.name}
-								onclick={() => selectTheme(theme.name)}
+								onclick={() => selectCardTheme(theme.name)}
+								title={theme.displayName}
 							>
 								<span class="theme-emoji">{theme.emoji}</span>
-								<span class="theme-label">{theme.displayName}</span>
 							</button>
 						{/each}
 					</div>
@@ -504,12 +537,70 @@
 						/>
 					</div>
 				</div>
-			{:else if activeTab === 'advanced' && $isEditMode}
+			{:else if activeTab === 'advanced'}
 				<div class="tab-content" transition:fade={{ duration: 200 }}>
 					<h3>Erweitert</h3>
 
-					<!-- Raum erstellen -->
-					<button class="action-btn" onclick={() => showCreateForm = !showCreateForm}>
+					<!-- UI-Theme-Auswahl -->
+					<h4>🎨 Hintergrund-Theme</h4>
+					<p class="hint">Ändert das Erscheinungsbild der App</p>
+					<div class="theme-grid">
+						{#each allUIThemes as theme}
+							<button
+								class="theme-btn ui-theme-btn"
+								class:active={currentUITheme === theme.id}
+								onclick={() => selectUITheme(theme.id)}
+								style="background: {theme.colors.cardBg};"
+								title={theme.name}
+							>
+								<span class="theme-emoji">{theme.emoji}</span>
+							</button>
+						{/each}
+					</div>
+
+					<div class="divider"></div>
+
+					<!-- Nachtruhe-Modus -->
+					<h4>🌙 Nachtruhe-Modus</h4>
+					<div class="night-mode-section">
+						<label class="toggle-switch">
+							<input type="checkbox" bind:checked={nightModeEnabled} onchange={saveNightModeSettings} />
+							<span class="slider"></span>
+							<span class="toggle-label">{nightModeEnabled ? 'Aktiviert' : 'Deaktiviert'}</span>
+						</label>
+
+						{#if nightModeEnabled}
+							<div class="time-inputs" transition:slide={{ duration: 200 }}>
+								<div class="time-input-group">
+									<label for="night-start">Beginnt</label>
+									<input
+										id="night-start"
+										type="time"
+										bind:value={nightStart}
+										onchange={saveNightModeSettings}
+									/>
+								</div>
+								<div class="time-input-group">
+									<label for="night-end">Endet</label>
+									<input
+										id="night-end"
+										type="time"
+										bind:value={nightEnd}
+										onchange={saveNightModeSettings}
+									/>
+								</div>
+							</div>
+							<p class="hint">
+								Alle Räume schließen automatisch zwischen {nightStart} und {nightEnd} Uhr
+							</p>
+						{/if}
+					</div>
+
+					{#if $isEditMode}
+						<div class="divider"></div>
+
+						<!-- Raum erstellen -->
+						<button class="action-btn" onclick={() => showCreateForm = !showCreateForm}>
 						<span class="icon">➕</span>
 						<div class="btn-text">
 							<span class="label">Raum erstellen</span>
@@ -540,30 +631,20 @@
 						</div>
 					{/if}
 
-					<!-- Räume tauschen -->
-					<button
-						class="action-btn"
-						class:active={$swapSelection.length > 0}
-						onclick={handleSwap}
-						disabled={$swapSelection.length !== 2}
-					>
-						<span class="icon">⮀</span>
-						<div class="btn-text">
-							<span class="label">Räume tauschen</span>
-							<span class="hint">{$swapSelection.length}/2 ausgewählt</span>
-						</div>
-					</button>
-
-					<div class="divider"></div>
-
-					<!-- Einstellungen -->
-					<button class="action-btn" onclick={() => { onOpenSettings(); onClose(); }}>
-						<span class="icon">⚙️</span>
-						<div class="btn-text">
-							<span class="label">Einstellungen</span>
-							<span class="hint">Weitere Optionen</span>
-						</div>
-					</button>
+						<!-- Räume tauschen -->
+						<button
+							class="action-btn"
+							class:active={$swapSelection.length > 0}
+							onclick={handleSwap}
+							disabled={$swapSelection.length !== 2}
+						>
+							<span class="icon">⮀</span>
+							<div class="btn-text">
+								<span class="label">Räume tauschen</span>
+								<span class="hint">{$swapSelection.length}/2 ausgewählt</span>
+							</div>
+						</button>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -834,22 +915,22 @@
 
 	.theme-btn {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: 8px;
-		padding: 16px 12px;
+		justify-content: center;
+		padding: 20px;
 		background: rgba(255, 255, 255, 0.05);
 		border: 2px solid rgba(255, 255, 255, 0.1);
 		border-radius: 12px;
 		color: white;
 		cursor: pointer;
 		transition: all 0.3s;
+		min-height: 80px;
 	}
 
 	.theme-btn:hover {
 		background: rgba(255, 255, 255, 0.15);
 		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-2px);
+		transform: scale(1.05);
 	}
 
 	.theme-btn.active {
@@ -859,14 +940,8 @@
 	}
 
 	.theme-emoji {
-		font-size: 32px;
+		font-size: 40px;
 		line-height: 1;
-	}
-
-	.theme-label {
-		font-size: 13px;
-		font-weight: 600;
-		text-align: center;
 	}
 
 	.control-group {
@@ -1016,6 +1091,114 @@
 
 	.form-btn.cancel:hover {
 		background: rgba(239, 68, 68, 0.4);
+	}
+
+	/* Nachtruhe-Modus */
+	.night-mode-section {
+		background: rgba(0, 0, 0, 0.3);
+		border-radius: 12px;
+		padding: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		margin-bottom: 12px;
+	}
+
+	.toggle-switch {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		cursor: pointer;
+		margin-bottom: 16px;
+	}
+
+	.toggle-switch input {
+		opacity: 0;
+		position: absolute;
+		width: 0;
+		height: 0;
+	}
+
+	.slider {
+		width: 50px;
+		height: 26px;
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 13px;
+		position: relative;
+		transition: all 0.3s;
+	}
+
+	.slider::after {
+		content: '';
+		position: absolute;
+		width: 20px;
+		height: 20px;
+		background: white;
+		border-radius: 50%;
+		top: 3px;
+		left: 3px;
+		transition: all 0.3s;
+	}
+
+	.toggle-switch input:checked + .slider {
+		background: #22c55e;
+	}
+
+	.toggle-switch input:checked + .slider::after {
+		left: 27px;
+	}
+
+	.toggle-label {
+		font-weight: 600;
+		font-size: 14px;
+		color: white;
+	}
+
+	.time-inputs {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+
+	.time-input-group label {
+		display: block;
+		margin-bottom: 6px;
+		font-size: 12px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.time-input-group input {
+		width: 100%;
+		padding: 10px 12px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.time-input-group input:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.hint {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.6);
+		font-style: italic;
+		margin-top: 8px;
+		line-height: 1.4;
+	}
+
+	.ui-theme-btn {
+		border: 3px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.ui-theme-btn.active {
+		border-color: var(--color-accent);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 	}
 
 	/* Scrollbar */

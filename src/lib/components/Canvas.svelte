@@ -331,11 +331,9 @@
 <style>
 	/* ✅ Container für autoscroll + iPad Swipe-Gesten optimiert */
 	.canvas-container {
-		position: fixed;
-		top: 140px; /* Erhöht für DailyHighlights Komponente */
-		left: 0;
-		right: 0;
-		bottom: 0;
+		position: relative;
+		width: 100%;
+		min-height: calc(100vh - 50px); /* Volle Höhe minus Header */
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
