@@ -4,7 +4,6 @@
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
-	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -15,7 +14,6 @@
 	// SVELTE 5 STATE SYNTAX
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
-	let showSettings = $state(false);
 	let showHelp = $state(false);
 	let showHighlightsEditor = $state(false);
 	let showMenu = $state(false); // ✅ NEU: Sidebar Menu
@@ -35,14 +33,6 @@
 
 	function closeScheduler() {
 		showScheduler = false;
-	}
-
-	function openSettings() {
-		showSettings = true;
-	}
-
-	function closeSettings() {
-		showSettings = false;
 	}
 
 	function openHelp() {
@@ -81,7 +71,6 @@
 		isOpen={showMenu}
 		onClose={closeMenu}
 		onOpenScheduler={openScheduler}
-		onOpenSettings={openSettings}
 		{canvasRef}
 	/>
 	<ToastContainer />
@@ -93,10 +82,6 @@
 
 	{#if showScheduler}
 		<DailySchedulerModal onClose={closeScheduler} />
-	{/if}
-
-	{#if showSettings}
-		<SettingsModal onClose={closeSettings} />
 	{/if}
 
 	{#if showHelp}

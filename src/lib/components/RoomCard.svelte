@@ -210,25 +210,6 @@
 				🗑️
 			</button>
 		</div>
-	{:else}
-		<!-- ✅ Status-Badges hängend in der Mitte (Absperrband-Stil) -->
-		{#if !room.isOpen && !shouldShowOpenTime()}
-			<div class="status-badge-hanging closed-badge-hanging" in:scale={{ duration: 300 }}>
-				<div class="badge-chain"></div>
-				<div class="badge-tape">
-					GESCHLOSSEN
-				</div>
-			</div>
-		{/if}
-
-		{#if shouldShowOpenTime() && !room.isOpen}
-			<div class="status-badge-hanging opens-badge-hanging" in:scale={{ duration: 300 }}>
-				<div class="badge-chain"></div>
-				<div class="badge-tape">
-					Öffnet {displayTime}
-				</div>
-			</div>
-		{/if}
 	{/if}
 
 	<div

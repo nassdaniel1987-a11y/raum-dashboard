@@ -81,16 +81,14 @@
 
 <style>
 	.highlights-container {
-		position: fixed;
-		top: 50px; /* Direkt unter dem Header */
-		left: 0;
-		right: 0;
+		position: relative;
+		width: 100%;
 		background: linear-gradient(to bottom, rgba(30, 41, 59, 0.98), rgba(30, 41, 59, 0.95));
 		border-bottom: 2px solid rgba(59, 130, 246, 0.3);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		backdrop-filter: blur(10px);
-		z-index: 90;
 		padding: 12px 20px;
+		margin-top: 50px; /* Platz für Header */
 	}
 
 	.highlights-header {
