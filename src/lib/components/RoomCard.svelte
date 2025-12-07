@@ -230,6 +230,27 @@
 		{/if}
 	</div>
 
+	<!-- ✅ Status-Badges hängend in der Mitte (Absperrband-Stil) -->
+	{#if !room.isOpen && !shouldShowOpenTime()}
+		<div class="status-badge-hanging closed-badge-hanging">
+			<div class="badge-chain"></div>
+			<div class="badge-tape">
+				<span class="badge-icon">⛔</span>
+				<span class="badge-text">GESCHLOSSEN</span>
+			</div>
+		</div>
+	{/if}
+
+	{#if shouldShowOpenTime() && !room.isOpen}
+		<div class="status-badge-hanging opens-badge-hanging">
+			<div class="badge-chain"></div>
+			<div class="badge-tape">
+				<span class="badge-icon">⏰</span>
+				<span class="badge-text">Öffnet {timeUntilOpen()}</span>
+			</div>
+		</div>
+	{/if}
+
 	<!-- ✅ Personen-Indikator - Hängendes Schild unten (immer sichtbar wenn Person gesetzt) -->
 	{#if room.person}
 		<div class="person-badge" title="Person: {room.person}">
