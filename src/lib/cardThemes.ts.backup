@@ -81,6 +81,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: spring-ladybug-crawl 15s linear infinite;
 			}
 
+			/* Hängende Dekorationen - Blumen */
+			.card-content::before {
+				content: '🌸';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: spring-hang-left 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(134, 239, 172, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🌼';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: spring-hang-right 3s ease-in-out infinite;
+				border-top: 2px solid rgba(134, 239, 172, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes spring-petal-drift {
 				0% { top: 10px; right: 20%; opacity: 0; transform: rotate(0deg); }
 				15% { opacity: 0.6; }
@@ -92,6 +121,14 @@ export const cardThemes: Record<string, CardTheme> = {
 				5% { opacity: 1; }
 				95% { opacity: 1; }
 				100% { left: calc(100% + 10px); transform: translateY(-50%); opacity: 0; }
+			}
+			@keyframes spring-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes spring-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(2deg); }
+				50% { transform: translateX(50%) rotate(-2deg); }
 			}
 		`
 	},
@@ -131,9 +168,46 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: summer-shine 4s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Sonnenblume und Eis */
+			.card-content::before {
+				content: '🌻';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: summer-hang-left 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(251, 191, 36, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🍦';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: summer-hang-right 3s ease-in-out infinite;
+				border-top: 2px solid rgba(249, 115, 22, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes summer-shine {
 				0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.4; }
 				50% { transform: rotate(15deg) scale(1.15); opacity: 0.6; }
+			}
+			@keyframes summer-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes summer-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(2deg); }
+				50% { transform: translateX(50%) rotate(-2deg); }
 			}
 		`
 	},
@@ -174,11 +248,48 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: autumn-fall 8s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Pilz */
+			.card-content::before {
+				content: '🍄';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: autumn-hang-left 3.2s ease-in-out infinite;
+				border-top: 2px solid rgba(161, 98, 7, 0.4);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🍁';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: autumn-hang-right 2.8s ease-in-out infinite;
+				border-top: 2px solid rgba(161, 98, 7, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes autumn-fall {
 				0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
 				25% { transform: translateY(3px) rotate(-5deg); opacity: 0.5; }
 				50% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
 				75% { transform: translateY(3px) rotate(5deg); opacity: 0.5; }
+			}
+			@keyframes autumn-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-4deg); }
+				50% { transform: translateX(-50%) rotate(4deg); }
+			}
+			@keyframes autumn-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(4deg); }
+				50% { transform: translateX(50%) rotate(-4deg); }
 			}
 		`
 	},
@@ -248,6 +359,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: winter-snowfall-3 4s ease-in-out infinite 2s;
 			}
 
+			/* Hängende Dekorationen - Eiszapfen */
+			.card-content::before {
+				content: '🧊';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: winter-icicle-left 4s ease-in-out infinite;
+				border-top: 2px solid rgba(219, 234, 254, 0.6);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '❄️';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: winter-icicle-right 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(219, 234, 254, 0.6);
+				padding-top: 8px;
+			}
+
 			@keyframes winter-snowfall-1 {
 				0% { top: -15px; opacity: 0; transform: translateY(0) rotate(0deg); }
 				15% { opacity: 0.8; }
@@ -265,6 +405,14 @@ export const cardThemes: Record<string, CardTheme> = {
 				15% { opacity: 0.9; }
 				85% { opacity: 0.6; }
 				100% { top: 110%; right: 15%; opacity: 0; transform: scale(1.2) rotate(540deg); }
+			}
+			@keyframes winter-icicle-left {
+				0%, 100% { transform: translateX(-50%) rotate(-1deg) scaleY(1); }
+				50% { transform: translateX(-50%) rotate(1deg) scaleY(1.05); }
+			}
+			@keyframes winter-icicle-right {
+				0%, 100% { transform: translateX(50%) rotate(1deg); opacity: 0.8; }
+				50% { transform: translateX(50%) rotate(-1deg); opacity: 1; }
 			}
 		`
 	},
@@ -338,6 +486,38 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: christmas-lights-twinkle 1.5s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Zuckerstange links */
+			.card-content::before {
+				content: '🍬';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: hanging-swing-left 3.2s ease-in-out infinite;
+				/* Kette/Schnur */
+				border-top: 2px solid rgba(255, 255, 255, 0.4);
+				padding-top: 8px;
+			}
+
+			/* Hängende Dekorationen - Geschenk rechts mit Pulsieren */
+			.card-content::after {
+				content: '🎁';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: christmas-gift-pulse 3s ease-in-out infinite;
+				/* Kette/Schnur */
+				border-top: 2px solid rgba(255, 255, 255, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes christmas-glow {
 				0%, 100% { box-shadow: 0 8px 32px rgba(220, 38, 38, 0.5), 0 0 60px rgba(34, 197, 94, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.5), 0 0 60px rgba(251, 191, 36, 0.4); }
@@ -367,6 +547,14 @@ export const cardThemes: Record<string, CardTheme> = {
 					opacity: 0.7;
 					transform: scaleY(0.9);
 				}
+			}
+			@keyframes hanging-swing-left {
+				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+				50% { transform: translateX(-50%) rotate(3deg); }
+			}
+			@keyframes christmas-gift-pulse {
+				0%, 100% { transform: translateX(50%) rotate(3deg) scale(1); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4)); }
+				50% { transform: translateX(50%) rotate(-3deg) scale(1.1); filter: drop-shadow(0 6px 12px rgba(251, 191, 36, 0.8)); }
 			}
 		`
 	},
@@ -407,9 +595,46 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: easter-hop 3s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Ostereier */
+			.card-content::before {
+				content: '🥚';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: easter-hang-left 3s ease-in-out infinite;
+				border-top: 2px solid rgba(196, 181, 253, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🐰';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: easter-hang-right 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(251, 207, 232, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes easter-hop {
 				0%, 100% { transform: translateX(-50%) translateY(0); }
 				50% { transform: translateX(-50%) translateY(-5px); }
+			}
+			@keyframes easter-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg) translateY(0); }
+				50% { transform: translateX(-50%) rotate(2deg) translateY(-3px); }
+			}
+			@keyframes easter-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(2deg) translateY(0); }
+				50% { transform: translateX(50%) rotate(-2deg) translateY(-3px); }
 			}
 		`
 	},
@@ -451,9 +676,60 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: halloween-spook 4s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Glühender Kürbis links */
+			.card-content::before {
+				content: '🎃';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: halloween-glow-left 2.8s ease-in-out infinite;
+				/* Spinnenfaden */
+				border-top: 2px dashed rgba(124, 58, 237, 0.5);
+				padding-top: 8px;
+			}
+
+			/* Hängende Dekorationen - Glühender Kürbis rechts */
+			.card-content::after {
+				content: '🎃';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: halloween-glow-right 3.2s ease-in-out infinite;
+				/* Spinnenfaden */
+				border-top: 2px dashed rgba(124, 58, 237, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes halloween-spook {
 				0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
 				50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.05); }
+			}
+			@keyframes halloween-glow-left {
+				0%, 100% {
+					transform: translateX(-50%) rotate(-5deg);
+				}
+				50% {
+					transform: translateX(-50%) rotate(5deg);
+					filter: drop-shadow(0 0 20px rgba(249, 115, 22, 1)) drop-shadow(0 0 30px rgba(249, 115, 22, 0.8));
+				}
+			}
+			@keyframes halloween-glow-right {
+				0%, 100% {
+					transform: translateX(50%) rotate(5deg);
+					filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.6));
+				}
+				50% {
+					transform: translateX(50%) rotate(-5deg);
+					filter: drop-shadow(0 0 20px rgba(249, 115, 22, 1)) drop-shadow(0 0 30px rgba(249, 115, 22, 0.8));
+				}
 			}
 		`
 	},
@@ -500,6 +776,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: rainbow-float 5s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Wolken */
+			.card-content::before {
+				content: '☁️';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: rainbow-cloud-left 6s ease-in-out infinite;
+				border-top: 2px solid rgba(167, 139, 250, 0.4);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '☁️';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: rainbow-cloud-right 5.5s ease-in-out infinite;
+				border-top: 2px solid rgba(167, 139, 250, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes rainbow-shift {
 				0% { filter: hue-rotate(0deg); }
 				100% { filter: hue-rotate(360deg); }
@@ -507,6 +812,14 @@ export const cardThemes: Record<string, CardTheme> = {
 			@keyframes rainbow-float {
 				0%, 100% { transform: translate(-50%, -50%) scale(1); }
 				50% { transform: translate(-50%, -48%) scale(1.05); }
+			}
+			@keyframes rainbow-cloud-left {
+				0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.8; }
+				50% { transform: translateX(-50%) translateY(-5px); opacity: 1; }
+			}
+			@keyframes rainbow-cloud-right {
+				0%, 100% { transform: translateX(50%) translateY(0); opacity: 0.8; }
+				50% { transform: translateX(50%) translateY(-5px); opacity: 1; }
 			}
 		`
 	},
@@ -548,9 +861,48 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: nature-grow 4s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Früchte und Schmetterling */
+			.card-content::before {
+				content: '🍎';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: nature-hang-left 3.2s ease-in-out infinite;
+				border-top: 2px solid rgba(34, 197, 94, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🦋';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: nature-butterfly 4s ease-in-out infinite;
+				border-top: 2px solid rgba(132, 204, 22, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes nature-grow {
 				0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
 				50% { transform: translateY(-3px) scale(1.05); opacity: 0.6; }
+			}
+			@keyframes nature-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes nature-butterfly {
+				0%, 100% { transform: translateX(50%) rotate(2deg) translateY(0); }
+				25% { transform: translateX(50%) rotate(-3deg) translateY(-2px); }
+				50% { transform: translateX(50%) rotate(2deg) translateY(-4px); }
+				75% { transform: translateX(50%) rotate(-3deg) translateY(-2px); }
 			}
 		`
 	},
@@ -607,6 +959,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: birthday-candle-flicker 2s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Luftballons */
+			.card-content::before {
+				content: '🎈';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: birthday-balloon-left 4s ease-in-out infinite;
+				border-top: 2px solid rgba(236, 72, 153, 0.4);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🎉';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: birthday-party-right 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(251, 191, 36, 0.4);
+				padding-top: 8px;
+			}
+
 			@keyframes birthday-sparkle {
 				0%, 100% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.6), 0 0 60px rgba(168, 85, 247, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(251, 191, 36, 0.6), 0 0 80px rgba(236, 72, 153, 0.5); }
@@ -628,6 +1009,14 @@ export const cardThemes: Record<string, CardTheme> = {
 					transform: translateY(-50%) scale(1.05);
 					filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1));
 				}
+			}
+			@keyframes birthday-balloon-left {
+				0%, 100% { transform: translateX(-50%) translateY(0) rotate(-3deg); }
+				50% { transform: translateX(-50%) translateY(-8px) rotate(3deg); }
+			}
+			@keyframes birthday-party-right {
+				0%, 100% { transform: translateX(50%) rotate(3deg) scale(1); }
+				50% { transform: translateX(50%) rotate(-3deg) scale(1.1); }
 			}
 		`
 	},
@@ -671,6 +1060,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: newyear-sparkle 4s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Sekt und Feuerwerk */
+			.card-content::before {
+				content: '🍾';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: newyear-bottle 3s ease-in-out infinite;
+				border-top: 2px solid rgba(251, 191, 36, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🎆';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: newyear-firework 2.5s ease-in-out infinite;
+				border-top: 2px solid rgba(239, 68, 68, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes newyear-glow {
 				0%, 100% { box-shadow: 0 8px 32px rgba(251, 191, 36, 0.7), 0 0 60px rgba(147, 51, 234, 0.4); }
 				50% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.7), 0 0 100px rgba(251, 191, 36, 0.6); }
@@ -680,6 +1098,20 @@ export const cardThemes: Record<string, CardTheme> = {
 				10% { opacity: 1; transform: scale(1.2); }
 				30% { opacity: 0.8; transform: scale(0.8) rotate(180deg); }
 				100% { top: 80%; right: 10%; opacity: 0; transform: scale(0.5) rotate(360deg); }
+			}
+			@keyframes newyear-bottle {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes newyear-firework {
+				0%, 100% {
+					transform: translateX(50%) scale(1);
+					filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+				}
+				50% {
+					transform: translateX(50%) scale(1.2);
+					filter: drop-shadow(0 0 25px rgba(239, 68, 68, 1)) drop-shadow(0 0 35px rgba(251, 191, 36, 0.9));
+				}
 			}
 		`
 	},
@@ -723,9 +1155,46 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: meer-wave 6s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Muschel und Seestern */
+			.card-content::before {
+				content: '🐚';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: meer-hang-left 3.8s ease-in-out infinite;
+				border-top: 2px solid rgba(6, 182, 212, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🐠';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: meer-fish-swim 4.2s ease-in-out infinite;
+				border-top: 2px solid rgba(14, 165, 233, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes meer-wave {
 				0%, 100% { transform: translateX(0) scaleX(1); opacity: 0.3; }
 				50% { transform: translateX(5px) scaleX(1.05); opacity: 0.5; }
+			}
+			@keyframes meer-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+				50% { transform: translateX(-50%) rotate(3deg); }
+			}
+			@keyframes meer-fish-swim {
+				0%, 100% { transform: translateX(50%) rotate(-5deg) scaleX(1); opacity: 0.9; }
+				50% { transform: translateX(50%) rotate(5deg) scaleX(-1); opacity: 1; }
 			}
 		`
 	},
@@ -782,6 +1251,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				filter: drop-shadow(0 2px 4px rgba(244, 114, 182, 0.5));
 			}
 
+			/* Hängende Dekorationen - Rose und Herz */
+			.card-content::before {
+				content: '🌹';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: valentine-hang-left 3s ease-in-out infinite;
+				border-top: 2px solid rgba(220, 38, 38, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '💝';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: valentine-gift-pulse 2.5s ease-in-out infinite;
+				border-top: 2px solid rgba(236, 72, 153, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes valentine-heartbeat {
 				0%, 100% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.6), 0 0 60px rgba(251, 207, 232, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.8), 0 0 80px rgba(244, 114, 182, 0.5); }
@@ -791,6 +1289,14 @@ export const cardThemes: Record<string, CardTheme> = {
 				15% { opacity: 1; }
 				85% { opacity: 0.7; }
 				100% { bottom: 100%; opacity: 0; transform: rotate(20deg) scale(1.2); }
+			}
+			@keyframes valentine-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+				50% { transform: translateX(-50%) rotate(2deg); }
+			}
+			@keyframes valentine-gift-pulse {
+				0%, 100% { transform: translateX(50%) scale(1); opacity: 1; }
+				50% { transform: translateX(50%) scale(1.15); opacity: 0.9; }
 			}
 		`
 	},
@@ -846,6 +1352,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4));
 			}
 
+			/* Hängende Dekorationen - Kopfhörer und Mikrofon */
+			.card-content::before {
+				content: '🎧';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: musik-hang-left 3s ease-in-out infinite;
+				border-top: 2px solid rgba(168, 85, 247, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🎤';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: musik-mic-bounce 2.5s ease-in-out infinite;
+				border-top: 2px solid rgba(139, 92, 246, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes musik-pulse {
 				0%, 100% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.6), 0 0 60px rgba(196, 181, 253, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.9), 0 0 80px rgba(139, 92, 246, 0.6); }
@@ -863,6 +1398,14 @@ export const cardThemes: Record<string, CardTheme> = {
 				50% { top: 50%; right: 20%; transform: rotate(-20deg) scale(1); }
 				85% { opacity: 0.7; }
 				100% { top: 80%; right: 25%; opacity: 0; transform: rotate(20deg) scale(0.8); }
+			}
+			@keyframes musik-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+				50% { transform: translateX(-50%) rotate(3deg); }
+			}
+			@keyframes musik-mic-bounce {
+				0%, 100% { transform: translateX(50%) translateY(0) scale(1); }
+				50% { transform: translateX(50%) translateY(-5px) scale(1.1); }
 			}
 		`
 	},
@@ -905,6 +1448,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: sport-ball-fly 5s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Medaille und Pokal */
+			.card-content::before {
+				content: '🥇';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 24px;
+				z-index: 16;
+				pointer-events: none;
+				animation: sport-medal-swing 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(251, 191, 36, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🏆';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: sport-trophy-shine 2.8s ease-in-out infinite;
+				border-top: 2px solid rgba(34, 197, 94, 0.5);
+				padding-top: 8px;
+			}
+
 			@keyframes sport-energy {
 				0%, 100% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6), 0 0 60px rgba(74, 222, 128, 0.3); }
 				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.9), 0 0 80px rgba(22, 163, 74, 0.6); }
@@ -915,6 +1487,20 @@ export const cardThemes: Record<string, CardTheme> = {
 				50% { top: 50%; left: 50%; transform: rotate(360deg); }
 				90% { opacity: 0.8; }
 				100% { top: 80px; left: calc(100% + 20px); opacity: 0; transform: rotate(720deg); }
+			}
+			@keyframes sport-medal-swing {
+				0%, 100% { transform: translateX(-50%) rotate(-4deg); }
+				50% { transform: translateX(-50%) rotate(4deg); }
+			}
+			@keyframes sport-trophy-shine {
+				0%, 100% {
+					transform: translateX(50%) scale(1);
+					filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.6));
+				}
+				50% {
+					transform: translateX(50%) scale(1.1);
+					filter: drop-shadow(0 6px 12px rgba(251, 191, 36, 1)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+				}
 			}
 		`
 	},
@@ -957,6 +1543,35 @@ export const cardThemes: Record<string, CardTheme> = {
 				animation: cafe-steam 4s ease-in-out infinite;
 			}
 
+			/* Hängende Dekorationen - Buch und Keks */
+			.card-content::before {
+				content: '📚';
+				position: absolute;
+				bottom: -35px;
+				left: 15%;
+				transform: translateX(-50%);
+				font-size: 20px;
+				z-index: 16;
+				pointer-events: none;
+				animation: cafe-hang-left 3.5s ease-in-out infinite;
+				border-top: 2px solid rgba(161, 98, 7, 0.5);
+				padding-top: 8px;
+			}
+
+			.card-content::after {
+				content: '🍪';
+				position: absolute;
+				bottom: -35px;
+				right: 15%;
+				transform: translateX(50%);
+				font-size: 22px;
+				z-index: 16;
+				pointer-events: none;
+				animation: cafe-hang-right 3s ease-in-out infinite;
+				border-top: 2px solid rgba(217, 119, 6, 0.5);
+				padding-top: 8px;
+			}
+
 			/* Kaffeetasse im Header */
 			.room-header::before {
 				content: '☕';
@@ -975,6 +1590,14 @@ export const cardThemes: Record<string, CardTheme> = {
 				20% { opacity: 0.6; }
 				80% { opacity: 0.3; }
 				100% { top: -10%; opacity: 0; transform: translateX(-50%) scale(1.5); }
+			}
+			@keyframes cafe-hang-left {
+				0%, 100% { transform: translateX(-50%) rotate(-1deg); }
+				50% { transform: translateX(-50%) rotate(1deg); }
+			}
+			@keyframes cafe-hang-right {
+				0%, 100% { transform: translateX(50%) rotate(1deg); }
+				50% { transform: translateX(50%) rotate(-1deg); }
 			}
 			@keyframes cafe-cup-steam {
 				0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
