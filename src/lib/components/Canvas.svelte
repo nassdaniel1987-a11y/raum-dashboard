@@ -65,13 +65,13 @@
 	let scrollSpeed = $state(0.6); // Pixel pro Schritt (sehr langsam & geschmeidig)
 	let pauseDurationSeconds = $state(4); // Pause in Sekunden
 
-	// ✅ Scroll-Engine Variablen
-	let scrollIntervalId: ReturnType<typeof setInterval> | undefined;
+	// ✅ Scroll-Engine Variablen (iPad-optimiert mit requestAnimationFrame)
+	let scrollIntervalId: number | undefined;
 	let scrollDirection = $state<'down' | 'up' | 'paused'>('down');
 	let pauseTimeoutId: ReturnType<typeof setTimeout> | undefined;
 	let scrollAccumulator = 0; // Sammelt Sub-Pixel-Werte
 
-	// ✅ KERN-FUNKTION: Ein Scroll-Schritt
+	// ✅ KERN-FUNKTION: Ein Scroll-Schritt (iPad-optimiert)
 	function scrollStep() {
 		if (!scrollContainer || !isScrolling) return;
 
@@ -106,8 +106,20 @@
 		// Nur scrollen wenn mindestens 1 ganzer Pixel erreicht wurde
 		if (Math.abs(scrollAccumulator) >= 1) {
 			const pixelsToScroll = Math.floor(Math.abs(scrollAccumulator)) * Math.sign(scrollAccumulator);
-			scrollContainer.scrollTop += pixelsToScroll;
+
+			// ✅ iPad/iOS Fix: Verwende scrollTo statt direkter scrollTop Manipulation
+			const newScrollTop = currentScroll + pixelsToScroll;
+			scrollContainer.scrollTo({
+				top: newScrollTop,
+				behavior: 'auto'
+			});
+
 			scrollAccumulator -= pixelsToScroll; // Rest behalten
+		}
+
+		// ✅ requestAnimationFrame für nächsten Frame (iPad-kompatibel)
+		if (isScrolling) {
+			scrollIntervalId = requestAnimationFrame(scrollStep) as any;
 		}
 	}
 
@@ -120,14 +132,18 @@
 		const edge = nextDirection === 'up' ? 'unten' : 'oben';
 		console.log(`⏸️ Pause am ${edge}en Ende für ${pauseDurationSeconds}s`);
 
-		// Nach Pause: Richtung wechseln
+		// Nach Pause: Richtung wechseln und Scrolling fortsetzen
 		pauseTimeoutId = setTimeout(() => {
 			scrollDirection = nextDirection;
 			console.log(`▶️ Weiter nach ${nextDirection === 'up' ? 'oben' : 'unten'}`);
+			// ✅ requestAnimationFrame Loop fortsetzen nach Pause
+			if (isScrolling) {
+				scrollIntervalId = requestAnimationFrame(scrollStep);
+			}
 		}, pauseDurationSeconds * 1000);
 	}
 
-	// ✅ Start Auto-Scroll
+	// ✅ Start Auto-Scroll (iPad-optimiert)
 	function startScrolling() {
 		if (!scrollContainer) {
 			console.warn('❌ Kein scrollContainer vorhanden');
@@ -149,16 +165,16 @@
 		isScrolling = true;
 		scrollDirection = 'down';
 		scrollAccumulator = 0; // Reset für sauberen Start
-		console.log('▶️ Auto-Scroll gestartet (Speed: ' + scrollSpeed + ', Pause: ' + pauseDurationSeconds + 's)');
+		console.log('▶️ Auto-Scroll gestartet (iPad-kompatibel mit requestAnimationFrame)');
 
-		// 60 FPS = ~16ms Intervall
-		scrollIntervalId = setInterval(scrollStep, 16);
+		// ✅ Starte mit requestAnimationFrame für iPad-Kompatibilität
+		scrollIntervalId = requestAnimationFrame(scrollStep);
 	}
 
-	// ✅ Stop Auto-Scroll
+	// ✅ Stop Auto-Scroll (iPad-optimiert)
 	function stopScrolling() {
-		if (scrollIntervalId) {
-			clearInterval(scrollIntervalId);
+		if (scrollIntervalId !== undefined) {
+			cancelAnimationFrame(scrollIntervalId);
 			scrollIntervalId = undefined;
 		}
 		if (pauseTimeoutId) {
@@ -337,9 +353,12 @@
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
+		/* ✅ iPad/iOS: 'auto' erlaubt programmatisches Scrollen mit scrollTo() */
 		scroll-behavior: auto;
 		-webkit-overflow-scrolling: auto;
+		/* ✅ GPU-Beschleunigung für flüssiges Scrollen auf iPad */
 		transform: translateZ(0);
+		-webkit-transform: translateZ(0);
 		will-change: scroll-position;
 		/* ✅ iPad Swipe-Gesten: Verhindert Gummiband-Effekt */
 		overscroll-behavior: contain;
