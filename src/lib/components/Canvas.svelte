@@ -147,7 +147,18 @@
 			return;
 		}
 
-		const needsScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+		// ✅ Debug: Zeige Scroll-Dimensionen
+		const scrollHeight = scrollContainer.scrollHeight;
+		const clientHeight = scrollContainer.clientHeight;
+		const needsScroll = scrollHeight > clientHeight;
+
+		console.log('📊 Scroll-Check:', {
+			scrollHeight,
+			clientHeight,
+			difference: scrollHeight - clientHeight,
+			needsScroll
+		});
+
 		if (!needsScroll) {
 			console.log('📺 Kein Auto-Scroll nötig - alles sichtbar');
 			autoScrollEnabled = false;
