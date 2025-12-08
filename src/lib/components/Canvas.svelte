@@ -357,7 +357,9 @@
 	.canvas-container {
 		position: relative;
 		width: 100%;
-		min-height: calc(100vh - 50px); /* Volle Höhe minus Header */
+		/* ✅ FIX: Feste Höhe damit Scrollen funktioniert */
+		height: calc(100vh - 50px);
+		max-height: calc(100vh - 50px);
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: transparent;
