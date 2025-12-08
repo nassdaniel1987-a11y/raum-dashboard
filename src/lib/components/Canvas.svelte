@@ -85,41 +85,42 @@
 			return;
 		}
 
-		// ✅ Am Ende angekommen? Pause einlegen
+		// ✅ Am Ende angekommen? Pause einlegen (aber Loop weiterlaufen lassen)
 		if (scrollDirection === 'down' && currentScroll >= maxScroll - 2) {
 			pauseAtEdge('up');
-			return;
 		}
 
 		if (scrollDirection === 'up' && currentScroll <= 2) {
 			pauseAtEdge('down');
-			return;
 		}
 
-		// ✅ Scrollen mit Akkumulator für Sub-Pixel-Werte
-		if (scrollDirection === 'down') {
-			scrollAccumulator += scrollSpeed;
-		} else if (scrollDirection === 'up') {
-			scrollAccumulator -= scrollSpeed;
+		// ✅ Nur scrollen wenn nicht pausiert
+		if (scrollDirection !== 'paused') {
+			// Scrollen mit Akkumulator für Sub-Pixel-Werte
+			if (scrollDirection === 'down') {
+				scrollAccumulator += scrollSpeed;
+			} else if (scrollDirection === 'up') {
+				scrollAccumulator -= scrollSpeed;
+			}
+
+			// Nur scrollen wenn mindestens 1 ganzer Pixel erreicht wurde
+			if (Math.abs(scrollAccumulator) >= 1) {
+				const pixelsToScroll = Math.floor(Math.abs(scrollAccumulator)) * Math.sign(scrollAccumulator);
+
+				// ✅ iPad/iOS Fix: Verwende scrollTo statt direkter scrollTop Manipulation
+				const newScrollTop = currentScroll + pixelsToScroll;
+				scrollContainer.scrollTo({
+					top: newScrollTop,
+					behavior: 'auto'
+				});
+
+				scrollAccumulator -= pixelsToScroll; // Rest behalten
+			}
 		}
 
-		// Nur scrollen wenn mindestens 1 ganzer Pixel erreicht wurde
-		if (Math.abs(scrollAccumulator) >= 1) {
-			const pixelsToScroll = Math.floor(Math.abs(scrollAccumulator)) * Math.sign(scrollAccumulator);
-
-			// ✅ iPad/iOS Fix: Verwende scrollTo statt direkter scrollTop Manipulation
-			const newScrollTop = currentScroll + pixelsToScroll;
-			scrollContainer.scrollTo({
-				top: newScrollTop,
-				behavior: 'auto'
-			});
-
-			scrollAccumulator -= pixelsToScroll; // Rest behalten
-		}
-
-		// ✅ requestAnimationFrame für nächsten Frame (iPad-kompatibel)
+		// ✅ requestAnimationFrame Loop immer weiterlaufen lassen
 		if (isScrolling) {
-			scrollIntervalId = requestAnimationFrame(scrollStep) as any;
+			scrollIntervalId = requestAnimationFrame(scrollStep);
 		}
 	}
 
@@ -132,14 +133,10 @@
 		const edge = nextDirection === 'up' ? 'unten' : 'oben';
 		console.log(`⏸️ Pause am ${edge}en Ende für ${pauseDurationSeconds}s`);
 
-		// Nach Pause: Richtung wechseln und Scrolling fortsetzen
+		// Nach Pause: Richtung wechseln (Loop läuft weiter)
 		pauseTimeoutId = setTimeout(() => {
 			scrollDirection = nextDirection;
 			console.log(`▶️ Weiter nach ${nextDirection === 'up' ? 'oben' : 'unten'}`);
-			// ✅ requestAnimationFrame Loop fortsetzen nach Pause
-			if (isScrolling) {
-				scrollIntervalId = requestAnimationFrame(scrollStep);
-			}
 		}, pauseDurationSeconds * 1000);
 	}
 
