@@ -268,387 +268,187 @@
 	<!-- Overlay -->
 	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 200 }}></div>
 
-	<!-- Sidebar -->
-	<aside class="sidebar" transition:slide={{ duration: 300, axis: 'x' }}>
-		<!-- Header -->
-		<div class="sidebar-header">
-			<h2>Menü</h2>
-			<button class="close-btn" onclick={onClose} aria-label="Menü schließen">✕</button>
+	<!-- Admin Modal -->
+	<div class="admin-modal" transition:fade={{ duration: 200 }}>
+		<div class="modal-header">
+			<h2>Admin</h2>
+			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
 
-		<!-- Tabs -->
-		<div class="tabs">
-			<button
-				class="tab"
-				class:active={activeTab === 'control'}
-				onclick={() => activeTab = 'control'}
-			>
-				⚡ Steuerung
-			</button>
-			<button
-				class="tab"
-				class:active={activeTab === 'planning'}
-				onclick={() => activeTab = 'planning'}
-			>
-				📅 Planung
-			</button>
-			<button
-				class="tab"
-				class:active={activeTab === 'view'}
-				onclick={() => activeTab = 'view'}
-			>
-				👁️ Ansicht
-			</button>
-			<button
-				class="tab"
-				class:active={activeTab === 'advanced'}
-				onclick={() => activeTab = 'advanced'}
-			>
-				🛠️ Erweitert
-			</button>
-		</div>
-
-		<!-- Content -->
-		<div class="content">
-			{#if activeTab === 'control'}
-				<div class="tab-content" transition:fade={{ duration: 200 }}>
-					<h3>Steuerung</h3>
-
-					<!-- Edit-Modus -->
-					<button
-						class="action-btn"
-						class:active={$isEditMode}
-						onclick={() => isEditMode.update(v => !v)}
-					>
-						<span class="icon">{$isEditMode ? '🔓' : '🔒'}</span>
-						<div class="btn-text">
-							<span class="label">Edit-Modus</span>
-							<span class="hint">{$isEditMode ? 'Bearbeitung aktiv' : 'Nur ansehen'}</span>
-						</div>
+		<div class="modal-content">
+			<!-- Schnellaktionen -->
+			<section class="section">
+				<h3>Schnellaktionen</h3>
+				<div class="action-grid">
+					<button class="action-card" class:active={$isEditMode} onclick={() => isEditMode.update(v => !v)}>
+						<div class="card-label">Edit-Modus</div>
+						<div class="card-value">{$isEditMode ? 'An' : 'Aus'}</div>
 					</button>
-
-					<!-- Vollbild -->
-					<button
-						class="action-btn"
-						class:active={isFullscreen}
-						onclick={toggleFullscreen}
-					>
-						<span class="icon">🎬</span>
-						<div class="btn-text">
-							<span class="label">Vollbild</span>
-							<span class="hint">{isFullscreen ? 'Aktiv (ESC zum Beenden)' : 'Klicken zum Aktivieren'}</span>
-						</div>
+					<button class="action-card" class:active={autoScrollActive} onclick={toggleAutoScroll}>
+						<div class="card-label">Auto-Scroll</div>
+						<div class="card-value">{autoScrollActive ? 'An' : 'Aus'}</div>
 					</button>
-
-					<div class="divider"></div>
-
-					<!-- Alle Räume öffnen/schließen -->
-					<div class="button-group">
-						<button class="action-btn success" onclick={bulkOpenAllRooms}>
-							<span class="icon">✅</span>
-							<span class="label">Alle öffnen</span>
-						</button>
-						<button class="action-btn danger" onclick={bulkCloseAllRooms}>
-							<span class="icon">🔒</span>
-							<span class="label">Alle schließen</span>
-						</button>
-					</div>
-
-					<div class="divider"></div>
-
-					<!-- Auto-Scroll -->
-					<button
-						class="action-btn"
-						class:active={autoScrollActive}
-						onclick={toggleAutoScroll}
-					>
-						<span class="icon">{autoScrollActive ? '⏸️' : '▶️'}</span>
-						<div class="btn-text">
-							<span class="label">Auto-Scroll</span>
-							<span class="hint">{autoScrollActive ? 'Läuft...' : 'Gestoppt'}</span>
-						</div>
+					<button class="action-card" class:active={isFullscreen} onclick={toggleFullscreen}>
+						<div class="card-label">Vollbild</div>
+						<div class="card-value">{isFullscreen ? 'An' : 'Aus'}</div>
+					</button>
+					<button class="action-card" onclick={() => { onOpenScheduler(); onClose(); }}>
+						<div class="card-label">Tagesplaner</div>
+						<div class="card-value">Öffnen</div>
 					</button>
 				</div>
-			{:else if activeTab === 'planning'}
-				<div class="tab-content" transition:fade={{ duration: 200 }}>
-					<h3>Planung</h3>
-
-					<!-- Tagesplaner -->
-					<button class="action-btn" onclick={() => { onOpenScheduler(); onClose(); }}>
-						<span class="icon">📅</span>
-						<div class="btn-text">
-							<span class="label">Tagesplaner</span>
-							<span class="hint">Wochenplan verwalten</span>
-						</div>
-					</button>
-
-					<div class="divider"></div>
-
-					<!-- Aktueller Tag -->
-					<div class="info-banner">
-						<span class="icon">📍</span>
-						<div class="info-text">
-							<span class="info-label">Aktueller Tag:</span>
-							<span class="info-value">{weekdayNames[$viewWeekday]}</span>
-						</div>
-					</div>
-
-					<!-- Tag-Verwaltung -->
-					<button class="action-btn" onclick={copyCurrentDay}>
-						<span class="icon">📋</span>
-						<div class="btn-text">
-							<span class="label">Tag kopieren</span>
-							<span class="hint">Alle Raumkonfigurationen</span>
-						</div>
-					</button>
-
-					<button
-						class="action-btn"
-						class:active={copiedDay !== null}
-						onclick={pasteToCurrentDay}
-						disabled={copiedDay === null}
-					>
-						<span class="icon">📌</span>
-						<div class="btn-text">
-							<span class="label">Tag einfügen</span>
-							<span class="hint">
-								{copiedDay !== null ? `Von ${weekdayNames[copiedDay]}` : 'Zuerst Tag kopieren'}
-							</span>
-						</div>
-					</button>
-
-					<button class="action-btn danger" onclick={deleteCurrentDay}>
-						<span class="icon">🗑️</span>
-						<div class="btn-text">
-							<span class="label">Tag löschen</span>
-							<span class="hint">Alle Konfigurationen entfernen</span>
-						</div>
-					</button>
+				<div class="button-row">
+					<button class="btn btn-success" onclick={bulkOpenAllRooms}>Alle Räume öffnen</button>
+					<button class="btn btn-danger" onclick={bulkCloseAllRooms}>Alle Räume schließen</button>
 				</div>
-			{:else if activeTab === 'view'}
-				<div class="tab-content" transition:fade={{ duration: 200 }}>
-					<h3>Ansicht</h3>
+			</section>
 
-					<!-- Kachel-Theme-Auswahl -->
-					<h4>🎨 Kachel-Themes</h4>
-					<div class="theme-grid">
-						{#each allCardThemes as theme}
+			<!-- Tagesverwaltung -->
+			<section class="section">
+				<h3>Tag: {weekdayNames[$viewWeekday]}</h3>
+				<div class="button-row">
+					<button class="btn" onclick={copyCurrentDay}>Kopieren</button>
+					<button class="btn" onclick={pasteToCurrentDay} disabled={copiedDay === null}>
+						{copiedDay !== null ? `Einfügen (${weekdayNames[copiedDay]})` : 'Einfügen'}
+					</button>
+					<button class="btn btn-danger" onclick={deleteCurrentDay}>Löschen</button>
+				</div>
+			</section>
+
+			<!-- Darstellung -->
+			<section class="section">
+				<h3>Darstellung</h3>
+
+				<div class="setting-row">
+					<label>Kachel-Theme</label>
+					<div class="theme-selector">
+						{#each allCardThemes.slice(0, 8) as theme}
 							<button
-								class="theme-btn"
+								class="theme-item"
 								class:active={$cardTheme === theme.name}
 								onclick={() => selectCardTheme(theme.name)}
 								title={theme.displayName}
 							>
-								<span class="theme-emoji">{theme.emoji}</span>
+								{theme.emoji}
 							</button>
 						{/each}
 					</div>
-
-					<div class="divider"></div>
-
-					<!-- Kachelgröße -->
-					<div class="control-group">
-						<div class="control-header">
-							<span class="icon">↔️</span>
-							<span class="label">Kachel-Breite</span>
-							<span class="value">{(cardWidth * 100).toFixed(0)}%</span>
-						</div>
-						<input
-							type="range"
-							min="0.6"
-							max="1.4"
-							step="0.05"
-							bind:value={cardWidth}
-							oninput={updateCardWidth}
-							class="slider"
-						/>
-					</div>
-
-					<div class="control-group">
-						<div class="control-header">
-							<span class="icon">↕️</span>
-							<span class="label">Kachel-Höhe</span>
-							<span class="value">{(cardHeight * 100).toFixed(0)}%</span>
-						</div>
-						<input
-							type="range"
-							min="0.6"
-							max="1.4"
-							step="0.05"
-							bind:value={cardHeight}
-							oninput={updateCardHeight}
-							class="slider"
-						/>
-					</div>
-
-					<div class="control-group">
-						<div class="control-header">
-							<span class="icon">📺</span>
-							<span class="label">Display-Breite (TV)</span>
-							<span class="value">{(displayScaleX * 100).toFixed(0)}%</span>
-						</div>
-						<input
-							type="range"
-							min="0.5"
-							max="1.0"
-							step="0.01"
-							bind:value={displayScaleX}
-							oninput={updateDisplayScale}
-							class="slider"
-						/>
-					</div>
-
-					<div class="divider"></div>
-
-					<!-- Auto-Scroll Einstellungen -->
-					<h4>Auto-Scroll Einstellungen</h4>
-
-					<div class="control-group">
-						<div class="control-header">
-							<span class="icon">🐌</span>
-							<span class="label">Geschwindigkeit</span>
-							<span class="value">{scrollSpeed.toFixed(1)} px</span>
-						</div>
-						<input
-							type="range"
-							min="0.1"
-							max="3.0"
-							step="0.1"
-							bind:value={scrollSpeed}
-							oninput={updateScrollSettings}
-							class="slider"
-						/>
-					</div>
-
-					<div class="control-group">
-						<div class="control-header">
-							<span class="icon">⏱️</span>
-							<span class="label">Pause am Ende</span>
-							<span class="value">{pauseDuration}s</span>
-						</div>
-						<input
-							type="range"
-							min="1"
-							max="10"
-							step="1"
-							bind:value={pauseDuration}
-							oninput={updateScrollSettings}
-							class="slider"
-						/>
-					</div>
 				</div>
-			{:else if activeTab === 'advanced'}
-				<div class="tab-content" transition:fade={{ duration: 200 }}>
-					<h3>Erweitert</h3>
 
-					<!-- UI-Theme-Auswahl -->
-					<h4>🎨 Hintergrund-Theme</h4>
-					<p class="hint">Ändert das Erscheinungsbild der App</p>
-					<div class="theme-grid">
-						{#each allUIThemes as theme}
+				<div class="setting-row">
+					<label>Hintergrund-Theme</label>
+					<div class="theme-selector">
+						{#each allUIThemes.slice(0, 6) as theme}
 							<button
-								class="theme-btn ui-theme-btn"
+								class="theme-item"
 								class:active={currentUITheme === theme.id}
 								onclick={() => selectUITheme(theme.id)}
-								style="background: {theme.colors.cardBg};"
 								title={theme.name}
+								style="background: {theme.colors.cardBg};"
 							>
-								<span class="theme-emoji">{theme.emoji}</span>
+								{theme.emoji}
 							</button>
 						{/each}
 					</div>
-
-					<div class="divider"></div>
-
-					<!-- Nachtruhe-Modus -->
-					<h4>🌙 Nachtruhe-Modus</h4>
-					<div class="night-mode-section">
-						<label class="toggle-switch">
-							<input type="checkbox" bind:checked={nightModeEnabled} onchange={saveNightModeSettings} />
-							<span class="slider"></span>
-							<span class="toggle-label">{nightModeEnabled ? 'Aktiviert' : 'Deaktiviert'}</span>
-						</label>
-
-						{#if nightModeEnabled}
-							<div class="time-inputs" transition:slide={{ duration: 200 }}>
-								<div class="time-input-group">
-									<label for="night-start">Beginnt</label>
-									<input
-										id="night-start"
-										type="time"
-										bind:value={nightStart}
-										onchange={saveNightModeSettings}
-									/>
-								</div>
-								<div class="time-input-group">
-									<label for="night-end">Endet</label>
-									<input
-										id="night-end"
-										type="time"
-										bind:value={nightEnd}
-										onchange={saveNightModeSettings}
-									/>
-								</div>
-							</div>
-							<p class="hint">
-								Alle Räume schließen automatisch zwischen {nightStart} und {nightEnd} Uhr
-							</p>
-						{/if}
-					</div>
-
-					{#if $isEditMode}
-						<div class="divider"></div>
-
-						<!-- Raum erstellen -->
-						<button class="action-btn" onclick={() => showCreateForm = !showCreateForm}>
-						<span class="icon">➕</span>
-						<div class="btn-text">
-							<span class="label">Raum erstellen</span>
-							<span class="hint">Neuen Raum anlegen</span>
-						</div>
-					</button>
-
-					{#if showCreateForm}
-						<div class="create-form" transition:slide={{ duration: 200 }}>
-							<input
-								type="text"
-								bind:value={newRoomName}
-								placeholder="Raum-Name..."
-								onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
-							/>
-							<select bind:value={newRoomFloor}>
-								<option value="extern">🏃 Außenbereich</option>
-								<option value="dach">🏠 Dachgeschoss</option>
-								<option value="og2">2️⃣ 2. OG</option>
-								<option value="og1">1️⃣ 1. OG</option>
-								<option value="eg">🚪 Erdgeschoss</option>
-								<option value="ug">⬇️ Untergeschoss</option>
-							</select>
-							<div class="form-actions">
-								<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
-								<button class="form-btn cancel" onclick={() => showCreateForm = false}>Abbrechen</button>
-							</div>
-						</div>
-					{/if}
-
-						<!-- Räume tauschen -->
-						<button
-							class="action-btn"
-							class:active={$swapSelection.length > 0}
-							onclick={handleSwap}
-							disabled={$swapSelection.length !== 2}
-						>
-							<span class="icon">⮀</span>
-							<div class="btn-text">
-								<span class="label">Räume tauschen</span>
-								<span class="hint">{$swapSelection.length}/2 ausgewählt</span>
-							</div>
-						</button>
-					{/if}
 				</div>
+
+				<div class="setting-row">
+					<label>Kachel-Breite</label>
+					<div class="slider-group">
+						<input type="range" min="0.6" max="1.4" step="0.05" bind:value={cardWidth} oninput={updateCardWidth} />
+						<span class="slider-value">{(cardWidth * 100).toFixed(0)}%</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<label>Kachel-Höhe</label>
+					<div class="slider-group">
+						<input type="range" min="0.6" max="1.4" step="0.05" bind:value={cardHeight} oninput={updateCardHeight} />
+						<span class="slider-value">{(cardHeight * 100).toFixed(0)}%</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<label>Display-Breite</label>
+					<div class="slider-group">
+						<input type="range" min="0.5" max="1.0" step="0.01" bind:value={displayScaleX} oninput={updateDisplayScale} />
+						<span class="slider-value">{(displayScaleX * 100).toFixed(0)}%</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<label>Scroll-Geschwindigkeit</label>
+					<div class="slider-group">
+						<input type="range" min="0.1" max="3.0" step="0.1" bind:value={scrollSpeed} oninput={updateScrollSettings} />
+						<span class="slider-value">{scrollSpeed.toFixed(1)} px</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<label>Scroll-Pause</label>
+					<div class="slider-group">
+						<input type="range" min="1" max="10" step="1" bind:value={pauseDuration} oninput={updateScrollSettings} />
+						<span class="slider-value">{pauseDuration}s</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- Nachtruhe -->
+			<section class="section">
+				<h3>Nachtruhe</h3>
+				<div class="setting-row">
+					<label>Aktiviert</label>
+					<label class="switch">
+						<input type="checkbox" bind:checked={nightModeEnabled} onchange={saveNightModeSettings} />
+						<span class="switch-slider"></span>
+					</label>
+				</div>
+				{#if nightModeEnabled}
+					<div class="time-row" transition:slide={{ duration: 200 }}>
+						<div class="time-field">
+							<label>Beginnt</label>
+							<input type="time" bind:value={nightStart} onchange={saveNightModeSettings} />
+						</div>
+						<div class="time-field">
+							<label>Endet</label>
+							<input type="time" bind:value={nightEnd} onchange={saveNightModeSettings} />
+						</div>
+					</div>
+				{/if}
+			</section>
+
+			<!-- Raumverwaltung (nur im Edit-Modus) -->
+			{#if $isEditMode}
+				<section class="section">
+					<h3>Raumverwaltung</h3>
+
+					{#if !showCreateForm}
+						<button class="btn" onclick={() => showCreateForm = true}>Neuen Raum erstellen</button>
+					{:else}
+						<div class="create-form" transition:slide={{ duration: 200 }}>
+							<input type="text" bind:value={newRoomName} placeholder="Raum-Name" onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()} />
+							<select bind:value={newRoomFloor}>
+								<option value="extern">Außenbereich</option>
+								<option value="dach">Dachgeschoss</option>
+								<option value="og2">2. OG</option>
+								<option value="og1">1. OG</option>
+								<option value="eg">Erdgeschoss</option>
+								<option value="ug">Untergeschoss</option>
+							</select>
+							<div class="button-row">
+								<button class="btn btn-success" onclick={handleCreateRoom}>Erstellen</button>
+								<button class="btn" onclick={() => showCreateForm = false}>Abbrechen</button>
+							</div>
+						</div>
+					{/if}
+
+					<button class="btn" onclick={handleSwap} disabled={$swapSelection.length !== 2}>
+						Räume tauschen ({$swapSelection.length}/2)
+					</button>
+				</section>
 			{/if}
 		</div>
-	</aside>
+	</div>
 {/if}
 
 <style>
@@ -658,364 +458,358 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.6);
+		background: rgba(0, 0, 0, 0.4);
 		backdrop-filter: blur(4px);
 		z-index: 9998;
 	}
 
-	.sidebar {
+	.admin-modal {
 		position: fixed;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		width: 400px;
-		max-width: 90vw;
-		background: rgba(15, 23, 42, 0.98);
-		backdrop-filter: blur(20px);
-		box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 90%;
+		max-width: 900px;
+		max-height: 90vh;
+		background: white;
+		border-radius: 12px;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 		z-index: 9999;
 		display: flex;
 		flex-direction: column;
-		border-right: 2px solid rgba(255, 255, 255, 0.1);
+		overflow: hidden;
 	}
 
-	.sidebar-header {
+	.modal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 20px 24px;
-		background: rgba(0, 0, 0, 0.3);
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 	}
 
-	.sidebar-header h2 {
+	.modal-header h2 {
 		margin: 0;
-		font-size: 24px;
-		font-weight: 700;
-		color: white;
-		letter-spacing: 0.5px;
+		font-size: 20px;
+		font-weight: 600;
+		color: #1a1a1a;
+		letter-spacing: -0.01em;
 	}
 
 	.close-btn {
-		width: 40px;
-		height: 40px;
-		border-radius: 8px;
-		background: rgba(239, 68, 68, 0.2);
-		border: 2px solid rgba(239, 68, 68, 0.4);
-		color: white;
-		font-size: 24px;
+		width: 32px;
+		height: 32px;
+		border-radius: 6px;
+		background: transparent;
+		border: none;
+		color: #6b7280;
+		font-size: 20px;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.close-btn:hover {
-		background: rgba(239, 68, 68, 0.4);
-		transform: scale(1.1);
+		background: rgba(0, 0, 0, 0.04);
+		color: #1a1a1a;
 	}
 
-	.tabs {
-		display: flex;
-		gap: 8px;
-		padding: 16px 24px;
-		background: rgba(0, 0, 0, 0.2);
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-		overflow-x: auto;
-	}
-
-	.tab {
-		padding: 10px 16px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 8px;
-		color: rgba(255, 255, 255, 0.7);
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s;
-		white-space: nowrap;
-	}
-
-	.tab:hover {
-		background: rgba(255, 255, 255, 0.15);
-		color: white;
-	}
-
-	.tab.active {
-		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-		border-color: transparent;
-		color: white;
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-	}
-
-	.content {
+	.modal-content {
 		flex: 1;
 		overflow-y: auto;
 		padding: 24px;
 	}
 
-	.tab-content h3 {
-		margin: 0 0 20px 0;
-		font-size: 20px;
-		font-weight: 700;
-		color: white;
-		letter-spacing: 0.5px;
+	.section {
+		margin-bottom: 32px;
 	}
 
-	.tab-content h4 {
-		margin: 16px 0 12px 0;
-		font-size: 15px;
+	.section:last-child {
+		margin-bottom: 0;
+	}
+
+	.section h3 {
+		margin: 0 0 16px 0;
+		font-size: 14px;
 		font-weight: 600;
-		color: rgba(255, 255, 255, 0.8);
+		color: #1a1a1a;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.05em;
 	}
 
-	.action-btn {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		padding: 16px 20px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 12px;
-		color: white;
+	.action-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	.action-card {
+		background: #f9fafb;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		border-radius: 8px;
+		padding: 16px;
 		cursor: pointer;
-		transition: all 0.3s;
-		margin-bottom: 12px;
+		transition: all 0.2s;
 		text-align: left;
 	}
 
-	.action-btn:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.15);
-		transform: translateX(4px);
-		border-color: rgba(255, 255, 255, 0.25);
+	.action-card:hover {
+		background: #f3f4f6;
+		border-color: rgba(0, 0, 0, 0.12);
 	}
 
-	.action-btn:disabled {
+	.action-card.active {
+		background: #1a1a1a;
+		border-color: #1a1a1a;
+	}
+
+	.action-card.active .card-label,
+	.action-card.active .card-value {
+		color: white;
+	}
+
+	.card-label {
+		font-size: 12px;
+		font-weight: 500;
+		color: #6b7280;
+		margin-bottom: 4px;
+	}
+
+	.card-value {
+		font-size: 15px;
+		font-weight: 600;
+		color: #1a1a1a;
+	}
+
+	.button-row {
+		display: flex;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+
+	.btn {
+		background: #f9fafb;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		color: #1a1a1a;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 10px 16px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn:hover:not(:disabled) {
+		background: #f3f4f6;
+		border-color: rgba(0, 0, 0, 0.12);
+	}
+
+	.btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
 	}
 
-	.action-btn.active {
-		background: rgba(59, 130, 246, 0.2);
-		border-color: rgba(59, 130, 246, 0.5);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	.btn-success {
+		background: #059669;
+		border-color: #059669;
+		color: white;
 	}
 
-	.action-btn.success {
-		border-color: rgba(34, 197, 94, 0.3);
+	.btn-success:hover {
+		background: #047857;
+		border-color: #047857;
 	}
 
-	.action-btn.success:hover {
-		background: rgba(34, 197, 94, 0.15);
-		border-color: rgba(34, 197, 94, 0.5);
+	.btn-danger {
+		background: #dc2626;
+		border-color: #dc2626;
+		color: white;
 	}
 
-	.action-btn.danger {
-		border-color: rgba(239, 68, 68, 0.3);
+	.btn-danger:hover {
+		background: #b91c1c;
+		border-color: #b91c1c;
 	}
 
-	.action-btn.danger:hover {
-		background: rgba(239, 68, 68, 0.15);
-		border-color: rgba(239, 68, 68, 0.5);
-	}
-
-	.action-btn .icon {
-		font-size: 28px;
-		min-width: 32px;
-		text-align: center;
-		flex-shrink: 0;
-	}
-
-	.btn-text {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.btn-text .label {
-		font-size: 16px;
-		font-weight: 700;
-		letter-spacing: 0.3px;
-	}
-
-	.btn-text .hint {
-		font-size: 12px;
-		color: rgba(255, 255, 255, 0.6);
-		font-weight: 500;
-	}
-
-	.button-group {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-
-	.button-group .action-btn {
-		margin-bottom: 0;
-	}
-
-	.divider {
-		height: 2px;
-		background: rgba(255, 255, 255, 0.1);
-		margin: 20px 0;
-		border-radius: 1px;
-	}
-
-	.info-banner {
+	.setting-row {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 16px;
-		padding: 16px 20px;
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
-		border: 2px solid rgba(59, 130, 246, 0.4);
-		border-radius: 12px;
 		margin-bottom: 16px;
 	}
 
-	.info-banner .icon {
-		font-size: 28px;
-		min-width: 32px;
-		text-align: center;
+	.setting-row label {
+		font-size: 13px;
+		font-weight: 500;
+		color: #1a1a1a;
+		min-width: 140px;
 	}
 
-	.info-text {
+	.theme-selector {
 		display: flex;
-		flex-direction: column;
-		gap: 2px;
+		gap: 8px;
+		flex-wrap: wrap;
 	}
 
-	.info-label {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		color: rgba(255, 255, 255, 0.7);
-	}
-
-	.info-value {
-		font-size: 18px;
-		font-weight: 700;
-		color: white;
-		letter-spacing: 0.5px;
-	}
-
-	.theme-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-
-	.theme-btn {
+	.theme-item {
+		width: 44px;
+		height: 44px;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		border-radius: 6px;
+		background: #f9fafb;
+		font-size: 20px;
+		cursor: pointer;
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 20px;
-		background: rgba(255, 255, 255, 0.05);
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		border-radius: 12px;
-		color: white;
-		cursor: pointer;
-		transition: all 0.3s;
-		min-height: 80px;
 	}
 
-	.theme-btn:hover {
-		background: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.3);
-		transform: scale(1.05);
+	.theme-item:hover {
+		border-color: rgba(0, 0, 0, 0.2);
 	}
 
-	.theme-btn.active {
-		background: rgba(59, 130, 246, 0.3);
-		border-color: rgba(59, 130, 246, 0.6);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	.theme-item.active {
+		border-color: #1a1a1a;
+		border-width: 2px;
 	}
 
-	.theme-emoji {
-		font-size: 40px;
-		line-height: 1;
-	}
-
-	.control-group {
-		margin-bottom: 20px;
-	}
-
-	.control-header {
+	.slider-group {
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		margin-bottom: 10px;
-	}
-
-	.control-header .icon {
-		font-size: 20px;
-	}
-
-	.control-header .label {
 		flex: 1;
-		font-size: 14px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
 	}
 
-	.control-header .value {
-		font-size: 14px;
-		font-weight: 700;
-		color: var(--color-accent);
-		min-width: 50px;
+	.slider-group input[type="range"] {
+		flex: 1;
+		-webkit-appearance: none;
+		appearance: none;
+		height: 6px;
+		border-radius: 3px;
+		background: #e5e7eb;
+		outline: none;
+	}
+
+	.slider-group input[type="range"]::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: #1a1a1a;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.slider-group input[type="range"]::-webkit-slider-thumb:hover {
+		transform: scale(1.2);
+	}
+
+	.slider-group input[type="range"]::-moz-range-thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: #1a1a1a;
+		cursor: pointer;
+		border: none;
+		transition: all 0.2s;
+	}
+
+	.slider-group input[type="range"]::-moz-range-thumb:hover {
+		transform: scale(1.2);
+	}
+
+	.slider-value {
+		font-size: 13px;
+		font-weight: 500;
+		color: #6b7280;
+		min-width: 60px;
 		text-align: right;
 	}
 
-	.slider {
-		-webkit-appearance: none;
-		appearance: none;
+	.switch {
+		position: relative;
+		display: inline-block;
+		width: 48px;
+		height: 26px;
+	}
+
+	.switch input {
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+
+	.switch-slider {
+		position: absolute;
+		cursor: pointer;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: #e5e7eb;
+		border-radius: 13px;
+		transition: all 0.2s;
+	}
+
+	.switch-slider:before {
+		position: absolute;
+		content: "";
+		height: 20px;
+		width: 20px;
+		left: 3px;
+		bottom: 3px;
+		background: white;
+		border-radius: 50%;
+		transition: all 0.2s;
+	}
+
+	.switch input:checked + .switch-slider {
+		background: #1a1a1a;
+	}
+
+	.switch input:checked + .switch-slider:before {
+		transform: translateX(22px);
+	}
+
+	.time-row {
+		display: flex;
+		gap: 12px;
+		margin-top: 12px;
+	}
+
+	.time-field {
+		flex: 1;
+	}
+
+	.time-field label {
+		display: block;
+		font-size: 12px;
+		font-weight: 500;
+		color: #6b7280;
+		margin-bottom: 6px;
+	}
+
+	.time-field input[type="time"] {
 		width: 100%;
-		height: 8px;
-		border-radius: 4px;
-		background: rgba(255, 255, 255, 0.2);
+		padding: 10px 12px;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		border-radius: 6px;
+		background: #f9fafb;
+		color: #1a1a1a;
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.time-field input[type="time"]:focus {
 		outline: none;
-		transition: all 0.2s;
-	}
-
-	.slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-		cursor: pointer;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-		transition: all 0.2s;
-	}
-
-	.slider::-webkit-slider-thumb:hover {
-		transform: scale(1.2);
-		box-shadow: 0 4px 16px rgba(59, 130, 246, 0.6);
-	}
-
-	.slider::-moz-range-thumb {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-		cursor: pointer;
-		border: none;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-		transition: all 0.2s;
-	}
-
-	.slider::-moz-range-thumb:hover {
-		transform: scale(1.2);
-		box-shadow: 0 4px 16px rgba(59, 130, 246, 0.6);
+		border-color: #1a1a1a;
+		background: white;
 	}
 
 	.create-form {
@@ -1023,219 +817,75 @@
 		flex-direction: column;
 		gap: 12px;
 		padding: 16px;
-		background: rgba(0, 0, 0, 0.4);
-		border-radius: 12px;
-		border: 2px solid rgba(255, 255, 255, 0.15);
+		background: #f9fafb;
+		border-radius: 8px;
 		margin-bottom: 12px;
 	}
 
-	.create-form input,
+	.create-form input[type="text"],
 	.create-form select {
-		padding: 12px 16px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 10px;
-		background: rgba(255, 255, 255, 0.1);
-		color: var(--color-text-primary);
-		font-size: 14px;
+		padding: 10px 12px;
+		border: 1px solid rgba(0, 0, 0, 0.08);
+		border-radius: 6px;
+		background: white;
+		color: #1a1a1a;
+		font-size: 13px;
 		font-weight: 500;
-		width: 100%;
 	}
 
-	.create-form input:focus,
+	.create-form input[type="text"]:focus,
 	.create-form select:focus {
 		outline: none;
-		border-color: var(--color-accent);
-		background: rgba(255, 255, 255, 0.15);
+		border-color: #1a1a1a;
 	}
 
 	.create-form input::placeholder {
-		color: rgba(255, 255, 255, 0.5);
+		color: #9ca3af;
 	}
 
-	.create-form select option {
-		background: #1e3a8a;
-		color: white;
+	.modal-content::-webkit-scrollbar {
+		width: 8px;
 	}
 
-	.form-actions {
-		display: flex;
-		gap: 10px;
+	.modal-content::-webkit-scrollbar-track {
+		background: #f9fafb;
 	}
 
-	.form-btn {
-		flex: 1;
-		padding: 12px;
-		border-radius: 10px;
-		font-weight: 700;
-		font-size: 14px;
-		cursor: pointer;
-		transition: all 0.3s;
-		border: none;
+	.modal-content::-webkit-scrollbar-thumb {
+		background: #d1d5db;
+		border-radius: 4px;
 	}
 
-	.form-btn.create {
-		background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
-		color: white;
-	}
-
-	.form-btn.create:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-	}
-
-	.form-btn.cancel {
-		background: rgba(239, 68, 68, 0.2);
-		color: white;
-		border: 2px solid rgba(239, 68, 68, 0.5);
-	}
-
-	.form-btn.cancel:hover {
-		background: rgba(239, 68, 68, 0.4);
-	}
-
-	/* Nachtruhe-Modus */
-	.night-mode-section {
-		background: rgba(0, 0, 0, 0.3);
-		border-radius: 12px;
-		padding: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		margin-bottom: 12px;
-	}
-
-	.toggle-switch {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		cursor: pointer;
-		margin-bottom: 16px;
-	}
-
-	.toggle-switch input {
-		opacity: 0;
-		position: absolute;
-		width: 0;
-		height: 0;
-	}
-
-	.slider {
-		width: 50px;
-		height: 26px;
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 13px;
-		position: relative;
-		transition: all 0.3s;
-	}
-
-	.slider::after {
-		content: '';
-		position: absolute;
-		width: 20px;
-		height: 20px;
-		background: white;
-		border-radius: 50%;
-		top: 3px;
-		left: 3px;
-		transition: all 0.3s;
-	}
-
-	.toggle-switch input:checked + .slider {
-		background: #22c55e;
-	}
-
-	.toggle-switch input:checked + .slider::after {
-		left: 27px;
-	}
-
-	.toggle-label {
-		font-weight: 600;
-		font-size: 14px;
-		color: white;
-	}
-
-	.time-inputs {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-
-	.time-input-group label {
-		display: block;
-		margin-bottom: 6px;
-		font-size: 12px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.8);
-	}
-
-	.time-input-group input {
-		width: 100%;
-		padding: 10px 12px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 10px;
-		background: rgba(255, 255, 255, 0.1);
-		color: white;
-		font-size: 14px;
-		font-weight: 500;
-	}
-
-	.time-input-group input:focus {
-		outline: none;
-		border-color: var(--color-accent);
-		background: rgba(255, 255, 255, 0.15);
-	}
-
-	.hint {
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.6);
-		font-style: italic;
-		margin-top: 8px;
-		line-height: 1.4;
-	}
-
-	.ui-theme-btn {
-		border: 3px solid rgba(255, 255, 255, 0.2);
-	}
-
-	.ui-theme-btn.active {
-		border-color: var(--color-accent);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-	}
-
-	/* Scrollbar */
-	.content::-webkit-scrollbar {
-		width: 10px;
-	}
-
-	.content::-webkit-scrollbar-track {
-		background: rgba(0, 0, 0, 0.2);
-	}
-
-	.content::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.3);
-		border-radius: 5px;
-	}
-
-	.content::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.4);
+	.modal-content::-webkit-scrollbar-thumb:hover {
+		background: #9ca3af;
 	}
 
 	@media (max-width: 768px) {
-		.sidebar {
-			width: 100vw;
-			max-width: 100vw;
+		.admin-modal {
+			width: 95%;
+			max-height: 95vh;
 		}
 
-		.tabs {
-			padding: 12px 16px;
-		}
-
-		.tab {
-			font-size: 13px;
-			padding: 8px 12px;
-		}
-
-		.content {
+		.modal-content {
 			padding: 16px;
+		}
+
+		.action-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		.setting-row {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.setting-row label {
+			min-width: auto;
+		}
+
+		.slider-group,
+		.theme-selector {
+			width: 100%;
 		}
 	}
 </style>
