@@ -2,14 +2,17 @@
 	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
-	// SVELTE 5 PROPS - Burger Menu & Help
-	let { onOpenMenu, onOpenHelp } = $props<{
-		onOpenMenu?: () => void;
-		onOpenHelp?: () => void;
+	// SVELTE 5 PROPS
+	let { canvasRef } = $props<{
+		canvasRef?: any;
 	}>();
+
+	// Auto-Scroll State
+	let autoScrollActive = $state(false);
 
 	// SVELTE 5 DERIVED SYNTAX
 	let formattedTime = $derived($currentTime.toLocaleTimeString('de-DE', {
@@ -110,6 +113,16 @@
 			}
 		}
 	}
+
+	function toggleAutoScroll() {
+		if (canvasRef?.toggleAutoScroll) {
+			autoScrollActive = canvasRef.toggleAutoScroll();
+		}
+	}
+
+	function goToAdmin() {
+		goto('/admin');
+	}
 </script>
 
 <header class="dashboard-header" transition:fade>
@@ -144,11 +157,27 @@
 	</div>
 
 	<div class="header-right">
-		{#if onOpenMenu}
-			<button class="admin-btn" onclick={onOpenMenu} title="Admin" aria-label="Admin öffnen">
-				Admin
-			</button>
-		{/if}
+		<button
+			class="quick-action-btn"
+			class:active={autoScrollActive}
+			onclick={toggleAutoScroll}
+			title="Auto-Scroll"
+			aria-label="Auto-Scroll umschalten"
+		>
+			{autoScrollActive ? '⏸' : '▶'}
+		</button>
+		<button
+			class="quick-action-btn"
+			class:active={isFullscreen}
+			onclick={toggleFullscreen}
+			title="Vollbild"
+			aria-label="Vollbild umschalten"
+		>
+			⛶
+		</button>
+		<button class="admin-btn" onclick={goToAdmin} title="Admin" aria-label="Admin öffnen">
+			Admin
+		</button>
 	</div>
 </header>
 
@@ -188,8 +217,9 @@
 	}
 
 	.header-right {
-		flex: 0 0 200px;
+		flex: 0 0 auto;
 		justify-content: flex-end;
+		gap: 8px;
 	}
 
 	.logo {
@@ -202,6 +232,36 @@
 		font-weight: 600;
 		letter-spacing: -0.01em;
 		color: #1a1a1a;
+	}
+
+	.quick-action-btn {
+		background: transparent;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		color: #1a1a1a;
+		font-size: 16px;
+		width: 36px;
+		height: 36px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.quick-action-btn:hover {
+		background: rgba(0, 0, 0, 0.04);
+		border-color: rgba(0, 0, 0, 0.2);
+	}
+
+	.quick-action-btn.active {
+		background: #1a1a1a;
+		border-color: #1a1a1a;
+		color: white;
+	}
+
+	.quick-action-btn:active {
+		transform: scale(0.96);
 	}
 
 	.admin-btn {
