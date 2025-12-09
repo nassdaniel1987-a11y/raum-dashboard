@@ -250,65 +250,66 @@
 	}
 
 	.help-modal {
-		background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-		border-radius: 20px;
+		background: rgba(15, 23, 42, 0.98);
+		backdrop-filter: blur(20px);
+		border-radius: 12px;
+		border: 2px solid rgba(255, 255, 255, 0.15);
 		width: 100%;
 		max-width: 900px;
 		max-height: 90vh;
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-		border: 2px solid rgba(255, 255, 255, 0.1);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 	}
 
 	.modal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 24px 28px;
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+		padding: 16px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 		flex-shrink: 0;
 	}
 
 	.modal-header h2 {
 		margin: 0;
-		font-size: 26px;
-		font-weight: 700;
+		font-size: 18px;
+		font-weight: 600;
+		letter-spacing: 0.3px;
 		color: white;
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.close-btn {
+		width: 32px;
+		height: 32px;
+		border-radius: 6px;
 		background: rgba(239, 68, 68, 0.2);
-		border: 2px solid rgba(239, 68, 68, 0.4);
+		border: 1px solid rgba(239, 68, 68, 0.4);
 		color: white;
-		font-size: 24px;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
+		font-size: 18px;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		line-height: 1;
 	}
 
 	.close-btn:hover {
-		background: rgba(239, 68, 68, 0.4);
-		transform: scale(1.1);
+		background: rgba(239, 68, 68, 0.3);
 	}
 
 	.modal-content {
-		padding: 24px 28px;
+		padding: 20px;
 		overflow-y: auto;
 		flex-grow: 1;
 	}
 
 	.help-section {
-		margin-bottom: 32px;
+		margin-bottom: 24px;
 	}
 
 	.help-section:last-child {
@@ -316,45 +317,39 @@
 	}
 
 	.help-section h3 {
-		margin: 0 0 16px 0;
-		font-size: 20px;
-		font-weight: 700;
-		color: #60a5fa;
+		margin: 0 0 12px 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
 		padding-bottom: 8px;
-		border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.help-section.highlight {
-		background: rgba(96, 165, 250, 0.1);
-		padding: 20px;
-		border-radius: 12px;
-		border: 2px solid rgba(96, 165, 250, 0.3);
+		background: rgba(255, 255, 255, 0.05);
+		padding: 16px;
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.help-section.highlight h3 {
-		color: #fbbf24;
-		border-bottom-color: rgba(251, 191, 36, 0.3);
+		color: rgba(255, 255, 255, 0.9);
 	}
 
 	.help-item {
 		display: flex;
 		align-items: flex-start;
-		gap: 16px;
-		margin-bottom: 16px;
-		padding: 14px;
+		gap: 12px;
+		margin-bottom: 12px;
+		padding: 12px;
 		background: rgba(255, 255, 255, 0.05);
-		border-radius: 10px;
+		border-radius: 6px;
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		transition: all 0.2s;
-	}
-
-	.help-item:hover {
-		background: rgba(255, 255, 255, 0.08);
-		border-color: rgba(255, 255, 255, 0.2);
-		transform: translateX(4px);
 	}
 
 	.help-item:last-child {
@@ -362,9 +357,8 @@
 	}
 
 	.help-icon {
-		font-size: 32px;
+		font-size: 24px;
 		flex-shrink: 0;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 	}
 
 	.help-text {
@@ -373,17 +367,17 @@
 
 	.help-text strong {
 		display: block;
-		font-size: 16px;
-		font-weight: 700;
+		font-size: 14px;
+		font-weight: 600;
 		color: white;
-		margin-bottom: 6px;
+		margin-bottom: 4px;
 	}
 
 	.help-text p {
 		margin: 0;
-		font-size: 14px;
+		font-size: 13px;
 		line-height: 1.5;
-		color: rgba(255, 255, 255, 0.8);
+		color: rgba(255, 255, 255, 0.7);
 	}
 
 	.tips-list {
@@ -392,10 +386,10 @@
 	}
 
 	.tips-list li {
-		font-size: 15px;
-		line-height: 1.8;
-		color: rgba(255, 255, 255, 0.9);
-		margin-bottom: 8px;
+		font-size: 13px;
+		line-height: 1.6;
+		color: rgba(255, 255, 255, 0.8);
+		margin-bottom: 6px;
 	}
 
 	.tips-list li:last-child {
@@ -403,8 +397,9 @@
 	}
 
 	.modal-footer {
-		padding: 20px 28px;
-		border-top: 2px solid rgba(255, 255, 255, 0.1);
+		padding: 16px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -412,31 +407,26 @@
 	}
 
 	.version-info {
-		font-size: 13px;
+		font-size: 11px;
 		color: rgba(255, 255, 255, 0.5);
 		font-weight: 500;
 	}
 
 	.primary-btn {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-		border: none;
+		background: rgba(59, 130, 246, 0.3);
+		border: 1px solid rgba(59, 130, 246, 0.5);
 		color: white;
-		font-size: 16px;
-		font-weight: 700;
-		padding: 14px 40px;
-		border-radius: 12px;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 10px 24px;
+		border-radius: 6px;
 		cursor: pointer;
-		transition: all 0.3s;
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+		transition: all 0.2s;
 	}
 
 	.primary-btn:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-	}
-
-	.primary-btn:active {
-		transform: translateY(0);
+		background: rgba(59, 130, 246, 0.4);
+		border-color: rgba(59, 130, 246, 0.6);
 	}
 
 	/* Scrollbar Styling */
@@ -460,51 +450,33 @@
 
 	@media (max-width: 768px) {
 		.help-modal {
-			max-width: 100%;
-			max-height: 100vh;
-			border-radius: 0;
-		}
-
-		.modal-header {
-			padding: 20px;
-		}
-
-		.modal-header h2 {
-			font-size: 22px;
+			width: 95%;
+			max-width: 95%;
+			max-height: 95vh;
 		}
 
 		.modal-content {
-			padding: 20px;
-		}
-
-		.help-section h3 {
-			font-size: 18px;
+			padding: 16px;
 		}
 
 		.help-item {
 			flex-direction: column;
-			gap: 10px;
-		}
-
-		.help-icon {
-			font-size: 28px;
-		}
-
-		.help-text strong {
-			font-size: 15px;
-		}
-
-		.help-text p {
-			font-size: 13px;
+			gap: 8px;
 		}
 
 		.modal-footer {
 			flex-direction: column;
-			gap: 12px;
+			gap: 8px;
 		}
+	}
 
-		.version-info {
-			font-size: 12px;
+	@media (max-width: 480px) {
+		.help-modal {
+			width: 100%;
+			max-width: 100%;
+			height: 100vh;
+			max-height: 100vh;
+			border-radius: 0;
 		}
 	}
 </style>
