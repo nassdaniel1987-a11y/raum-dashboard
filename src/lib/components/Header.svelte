@@ -114,37 +114,12 @@
 
 <header class="dashboard-header" transition:fade>
 	<div class="header-left">
-		<!-- Burger Menu Button -->
-		{#if onOpenMenu}
-			<button
-				class="burger-btn"
-				onclick={onOpenMenu}
-				title="Menü öffnen"
-				aria-label="Menü öffnen"
-			>
-				<span class="icon">☰</span>
-			</button>
-		{/if}
-
 		<div class="logo">
-			<span class="logo-icon">🏫</span>
 			<span class="logo-text">Raum-Dashboard</span>
 		</div>
-
-		{#if onOpenHelp}
-			<button
-				class="help-btn"
-				onclick={onOpenHelp}
-				title="Hilfe & Anleitung"
-				aria-label="Hilfe öffnen"
-			>
-				<span class="icon">❓</span>
-			</button>
-		{/if}
 	</div>
 
 	<div class="header-center">
-		<!-- ✅ NEU: Tag-Navigation -->
 		<button class="day-nav-btn" onclick={previousDay} title="Vorheriger Tag" aria-label="Vorheriger Tag">
 			◀
 		</button>
@@ -162,14 +137,18 @@
 			▶
 		</button>
 
-		<div class="separator">•</div>
+		<div class="separator"></div>
 		<div class="date">{formattedDate}</div>
+		<div class="separator"></div>
+		<div class="time">{formattedTime}</div>
 	</div>
 
 	<div class="header-right">
-		<div class="clock">
-			<span class="time">{formattedTime}</span>
-		</div>
+		{#if onOpenMenu}
+			<button class="admin-btn" onclick={onOpenMenu} title="Admin" aria-label="Admin öffnen">
+				Admin
+			</button>
+		{/if}
 	</div>
 </header>
 
@@ -180,12 +159,12 @@
 		left: 0;
 		right: 0;
 		height: 50px;
-		background: var(--header-bg);
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+		background: rgba(255, 255, 255, 0.95);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0 20px;
+		padding: 0 24px;
 		z-index: 100;
 		backdrop-filter: blur(10px);
 	}
@@ -193,248 +172,169 @@
 	.header-left,
 	.header-center,
 	.header-right {
-		flex: 1;
 		display: flex;
 		align-items: center;
 	}
 
 	.header-left {
+		flex: 0 0 200px;
 		justify-content: flex-start;
-		gap: 12px;
 	}
 
 	.header-center {
+		flex: 1;
 		justify-content: center;
-		gap: 8px;
+		gap: 12px;
 	}
 
 	.header-right {
+		flex: 0 0 200px;
 		justify-content: flex-end;
-		gap: 12px;
 	}
 
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		color: var(--color-text-primary);
-	}
-
-	.logo-icon {
-		font-size: 24px;
-		filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
 	}
 
 	.logo-text {
-		font-size: 18px;
-		font-weight: 700;
-		letter-spacing: 0.5px;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+		font-size: 16px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: #1a1a1a;
 	}
 
-	/* Burger Menu Button */
-	.burger-btn {
-		background: rgba(59, 130, 246, 0.2);
-		border: 2px solid rgba(59, 130, 246, 0.4);
-		color: var(--color-text-primary);
-		font-size: 24px;
-		width: 44px;
-		height: 44px;
-		border-radius: 8px;
+	.admin-btn {
+		background: #1a1a1a;
+		border: none;
+		color: white;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 8px 20px;
+		border-radius: 6px;
 		cursor: pointer;
-		transition: all 0.3s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+		transition: all 0.2s;
+		letter-spacing: 0.01em;
 	}
 
-	.burger-btn:hover {
-		background: rgba(59, 130, 246, 0.4);
-		transform: scale(1.1);
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+	.admin-btn:hover {
+		background: #2a2a2a;
 	}
 
-	.burger-btn:active {
-		transform: scale(0.95);
+	.admin-btn:active {
+		transform: scale(0.98);
 	}
 
-	.burger-btn .icon {
-		font-size: 26px;
-		line-height: 1;
-	}
-
-	/* ✅ Hilfe-Button */
-	.help-btn {
-		background: rgba(96, 165, 250, 0.2);
-		border: 2px solid rgba(96, 165, 250, 0.4);
-		color: var(--color-text-primary);
-		font-size: 20px;
-		width: 44px;
-		height: 44px;
-		border-radius: 50%;
-		cursor: pointer;
-		transition: all 0.3s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-
-	.help-btn:hover {
-		background: rgba(96, 165, 250, 0.4);
-		transform: scale(1.1);
-		box-shadow: 0 4px 12px rgba(96, 165, 250, 0.5);
-	}
-
-	.help-btn:active {
-		transform: scale(0.95);
-	}
-
-	.help-btn .icon {
-		font-size: 22px;
-		line-height: 1;
-	}
-
-	/* ✅ NEU: Tag-Navigation */
 	.day-nav-btn {
-		background: rgba(255, 255, 255, 0.2);
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		color: var(--color-text-primary);
-		font-size: 18px;
-		font-weight: 700;
-		width: 44px;
-		height: 44px;
-		border-radius: 8px;
+		background: transparent;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		color: #1a1a1a;
+		font-size: 14px;
+		font-weight: 500;
+		width: 36px;
+		height: 36px;
+		border-radius: 6px;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
 	.day-nav-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
-		transform: scale(1.05);
-		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+		background: rgba(0, 0, 0, 0.04);
+		border-color: rgba(0, 0, 0, 0.2);
 	}
 
 	.day-nav-btn:active {
-		transform: scale(0.95);
+		transform: scale(0.96);
 	}
 
 	.day-display {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 4px;
-		min-width: 160px;
+		gap: 2px;
+		min-width: 140px;
 	}
 
 	.weekday {
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--color-text-primary);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-		transition: all 0.3s;
+		font-size: 15px;
+		font-weight: 600;
+		color: #1a1a1a;
+		letter-spacing: 0.02em;
 	}
 
 	.weekday.today {
-		color: #22c55e;
-		text-shadow:
-			1px 1px 3px rgba(0, 0, 0, 0.4),
-			0 0 10px rgba(34, 197, 94, 0.5);
+		color: #059669;
 	}
 
 	.today-btn {
-		background: rgba(34, 197, 94, 0.2);
-		border: 1px solid rgba(34, 197, 94, 0.4);
-		color: rgba(255, 255, 255, 0.9);
-		font-size: 10px;
-		font-weight: 600;
-		padding: 2px 8px;
-		border-radius: 6px;
+		background: transparent;
+		border: none;
+		color: #6b7280;
+		font-size: 11px;
+		font-weight: 500;
+		padding: 0;
 		cursor: pointer;
 		transition: all 0.2s;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
 	}
 
 	.today-btn:hover {
-		background: rgba(34, 197, 94, 0.3);
-		border-color: rgba(34, 197, 94, 0.6);
-		transform: scale(1.05);
+		color: #059669;
 	}
 
 	.date {
 		font-size: 13px;
-		color: var(--color-text-secondary);
+		color: #6b7280;
 		font-weight: 500;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.separator {
-		color: rgba(255, 255, 255, 0.6);
-		font-size: 16px;
-		margin: 0 8px;
-	}
-
-	.clock {
-		background: rgba(255, 255, 255, 0.2);
-		padding: 6px 12px;
-		border-radius: 8px;
-		backdrop-filter: blur(10px);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+		width: 1px;
+		height: 20px;
+		background: rgba(0, 0, 0, 0.08);
+		margin: 0 12px;
 	}
 
 	.time {
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		font-family: 'Courier New', monospace;
-		letter-spacing: 1px;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+		font-size: 14px;
+		font-weight: 500;
+		color: #1a1a1a;
+		font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+		letter-spacing: 0.03em;
 	}
 
 	@media (max-width: 1200px) {
 		.dashboard-header {
-			padding: 0 15px;
+			padding: 0 16px;
 		}
 
 		.logo-text {
-			font-size: 16px;
-		}
-
-		.burger-btn,
-		.help-btn {
-			width: 40px;
-			height: 40px;
+			font-size: 15px;
 		}
 
 		.weekday {
-			font-size: 16px;
+			font-size: 14px;
 		}
 
 		.time {
-			font-size: 18px;
+			font-size: 13px;
 		}
 	}
 
 	@media (max-width: 768px) {
-		.header-right {
-			gap: 8px;
+		.header-left {
+			flex: 0 0 auto;
 		}
 
-		.burger-btn,
-		.help-btn {
-			width: 36px;
-			height: 36px;
+		.header-right {
+			flex: 0 0 auto;
+		}
+
+		.day-nav-btn {
+			width: 32px;
+			height: 32px;
 		}
 	}
 </style>
