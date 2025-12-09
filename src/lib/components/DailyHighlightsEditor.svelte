@@ -326,37 +326,40 @@
 	}
 
 	.modal-content {
-		background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-		border: 2px solid rgba(96, 165, 250, 0.3);
-		border-radius: 16px;
-		max-width: 800px;
+		background: rgba(15, 23, 42, 0.98);
+		backdrop-filter: blur(20px);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 12px;
+		max-width: 900px;
 		width: 100%;
 		max-height: 90vh;
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 	}
 
 	.modal-header {
-		padding: 24px 24px 16px;
-		border-bottom: 2px solid rgba(96, 165, 250, 0.2);
+		padding: 16px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 	}
 
 	.modal-header h2 {
-		font-size: 24px;
-		font-weight: 700;
-		color: var(--color-text-primary);
-		margin: 0 0 8px;
+		font-size: 18px;
+		font-weight: 600;
+		letter-spacing: 0.3px;
+		color: white;
+		margin: 0 0 4px;
 	}
 
 	.weekday-info {
-		font-size: 14px;
-		color: rgba(255, 255, 255, 0.7);
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.6);
 		margin: 0;
 	}
 
 	.weekday-info strong {
-		color: rgba(96, 165, 250, 1);
+		color: white;
 	}
 
 	.modal-body {
@@ -377,9 +380,11 @@
 	}
 
 	.section-header h3 {
-		font-size: 18px;
+		font-size: 15px;
 		font-weight: 600;
-		color: var(--color-text-primary);
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 		margin: 0;
 	}
 
@@ -387,20 +392,20 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		background: rgba(34, 197, 94, 0.2);
-		border: 2px solid rgba(34, 197, 94, 0.4);
-		color: var(--color-text-primary);
+		background: rgba(34, 197, 94, 0.3);
+		border: 1px solid rgba(34, 197, 94, 0.5);
+		color: white;
 		padding: 8px 16px;
-		border-radius: 8px;
+		border-radius: 6px;
 		cursor: pointer;
-		font-size: 14px;
-		font-weight: 600;
-		transition: all 0.3s;
+		font-size: 13px;
+		font-weight: 500;
+		transition: all 0.2s;
 	}
 
 	.add-btn:hover {
 		background: rgba(34, 197, 94, 0.4);
-		transform: translateY(-2px);
+		border-color: rgba(34, 197, 94, 0.6);
 	}
 
 	.highlights-list {
@@ -416,14 +421,8 @@
 		gap: 12px;
 		padding: 12px;
 		background: rgba(255, 255, 255, 0.05);
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		border-radius: 10px;
-		transition: all 0.2s;
-	}
-
-	.highlight-row:hover {
-		background: rgba(255, 255, 255, 0.08);
-		border-color: rgba(96, 165, 250, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
 	}
 
 	.highlight-preview {
@@ -449,7 +448,7 @@
 
 	.highlight-preview .text {
 		font-size: 14px;
-		color: var(--color-text-primary);
+		color: white;
 		font-weight: 500;
 	}
 
@@ -457,8 +456,8 @@
 		display: flex;
 		gap: 10px;
 		font-size: 11px;
-		color: rgba(255, 255, 255, 0.7);
-		font-weight: 500;
+		color: rgba(255, 255, 255, 0.6);
+		font-weight: 400;
 	}
 
 	.preview-room,
@@ -532,44 +531,48 @@
 	}
 
 	.form-section {
-		background: rgba(96, 165, 250, 0.1);
-		border: 2px solid rgba(96, 165, 250, 0.3);
-		border-radius: 12px;
-		padding: 20px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		padding: 16px;
 	}
 
 	.form-section h3 {
-		font-size: 18px;
+		font-size: 15px;
 		font-weight: 600;
-		color: var(--color-text-primary);
-		margin: 0 0 16px;
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin: 0 0 12px;
 	}
 
 	.form-group {
-		margin-bottom: 16px;
+		margin-bottom: 12px;
 	}
 
 	.form-group label {
 		display: block;
 		font-size: 14px;
-		font-weight: 600;
-		color: var(--color-text-primary);
-		margin-bottom: 8px;
+		font-weight: 500;
+		color: white;
+		margin-bottom: 6px;
 	}
 
 	.form-group input {
 		width: 100%;
-		padding: 10px 12px;
-		background: rgba(0, 0, 0, 0.3);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
-		color: var(--color-text-primary);
-		font-size: 14px;
+		padding: 8px 12px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		color: white;
+		font-size: 13px;
+		transition: all 0.2s;
 	}
 
 	.form-group input:focus {
 		outline: none;
-		border-color: rgba(96, 165, 250, 0.6);
+		border-color: rgba(59, 130, 246, 0.6);
+		background: rgba(255, 255, 255, 0.1);
 	}
 
 	.icon-selector {
@@ -579,11 +582,11 @@
 	}
 
 	.icon-option {
-		background: rgba(255, 255, 255, 0.1);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
-		padding: 10px;
-		font-size: 24px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		padding: 8px;
+		font-size: 20px;
 		cursor: pointer;
 		transition: all 0.2s;
 		aspect-ratio: 1;
@@ -593,14 +596,12 @@
 	}
 
 	.icon-option:hover {
-		background: rgba(255, 255, 255, 0.2);
-		transform: scale(1.1);
+		background: rgba(255, 255, 255, 0.1);
 	}
 
 	.icon-option.selected {
-		background: rgba(96, 165, 250, 0.4);
-		border-color: rgba(96, 165, 250, 0.8);
-		box-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
 	}
 
 	.color-selector {
@@ -610,95 +611,93 @@
 	}
 
 	.color-option {
-		padding: 10px 16px;
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
+		padding: 8px 12px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
 		color: white;
-		font-size: 14px;
-		font-weight: 600;
+		font-size: 13px;
+		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.2s;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-	}
-
-	.color-option:hover {
-		transform: scale(1.05);
 	}
 
 	.color-option.selected {
 		border-color: white;
-		border-width: 3px;
-		box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+		border-width: 2px;
 	}
 
 	.form-actions {
 		display: flex;
-		gap: 12px;
-		margin-top: 20px;
+		gap: 8px;
+		margin-top: 16px;
 	}
 
 	.btn-save,
 	.btn-cancel {
 		flex: 1;
-		padding: 12px 20px;
-		border-radius: 8px;
-		font-size: 16px;
-		font-weight: 600;
+		padding: 10px 16px;
+		border-radius: 6px;
+		font-size: 13px;
+		font-weight: 500;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 	}
 
 	.btn-save {
 		background: rgba(34, 197, 94, 0.3);
-		border: 2px solid rgba(34, 197, 94, 0.6);
-		color: var(--color-text-primary);
+		border: 1px solid rgba(34, 197, 94, 0.5);
+		color: white;
 	}
 
 	.btn-save:hover {
-		background: rgba(34, 197, 94, 0.5);
-		transform: translateY(-2px);
+		background: rgba(34, 197, 94, 0.4);
+		border-color: rgba(34, 197, 94, 0.6);
 	}
 
 	.btn-cancel {
 		background: rgba(239, 68, 68, 0.2);
-		border: 2px solid rgba(239, 68, 68, 0.4);
-		color: var(--color-text-primary);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		color: white;
 	}
 
 	.btn-cancel:hover {
-		background: rgba(239, 68, 68, 0.4);
-		transform: translateY(-2px);
+		background: rgba(239, 68, 68, 0.3);
 	}
 
 	.modal-footer {
-		padding: 16px 24px;
-		border-top: 2px solid rgba(96, 165, 250, 0.2);
+		padding: 16px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 		display: flex;
 		justify-content: flex-end;
 	}
 
 	.btn-close {
-		background: rgba(148, 163, 184, 0.2);
-		border: 2px solid rgba(148, 163, 184, 0.4);
-		color: var(--color-text-primary);
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: white;
 		padding: 10px 24px;
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 600;
+		border-radius: 6px;
+		font-size: 13px;
+		font-weight: 500;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 	}
 
 	.btn-close:hover {
-		background: rgba(148, 163, 184, 0.4);
-		transform: translateY(-2px);
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
 	}
 
 	@media (max-width: 768px) {
 		.modal-content {
-			max-width: 100%;
-			max-height: 100vh;
-			border-radius: 0;
+			width: 95%;
+			max-width: 95%;
+			max-height: 95vh;
+		}
+
+		.modal-body {
+			padding: 16px 20px;
 		}
 
 		.icon-selector {
@@ -707,6 +706,16 @@
 
 		.color-selector {
 			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.modal-content {
+			width: 100%;
+			max-width: 100%;
+			height: 100vh;
+			max-height: 100vh;
+			border-radius: 0;
 		}
 	}
 </style>
