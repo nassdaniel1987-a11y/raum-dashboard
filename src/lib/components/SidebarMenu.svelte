@@ -309,47 +309,26 @@
 								<span class="switch-slider"></span>
 							</label>
 						</div>
+					</section>
 
-						<div class="toggle-item">
-							<div class="toggle-label">
-								<span class="label">Auto-Scroll</span>
-								<span class="hint">{autoScrollActive ? 'Aktiv' : 'Gestoppt'}</span>
+					<!-- Auto-Scroll Einstellungen -->
+					<section class="section">
+						<h3>Auto-Scroll</h3>
+
+						<div class="slider-item">
+							<label>Geschwindigkeit</label>
+							<div class="slider-control">
+								<input type="range" min="0.1" max="3.0" step="0.1" bind:value={scrollSpeed} oninput={updateScrollSettings} />
+								<span class="value">{scrollSpeed.toFixed(1)} px</span>
 							</div>
-							<label class="switch">
-								<input type="checkbox" bind:checked={autoScrollActive} onchange={toggleAutoScroll} />
-								<span class="switch-slider"></span>
-							</label>
 						</div>
 
-						{#if autoScrollActive}
-							<div class="subsection" transition:slide={{ duration: 200 }}>
-								<div class="slider-item">
-									<label>Geschwindigkeit</label>
-									<div class="slider-control">
-										<input type="range" min="0.1" max="3.0" step="0.1" bind:value={scrollSpeed} oninput={updateScrollSettings} />
-										<span class="value">{scrollSpeed.toFixed(1)} px</span>
-									</div>
-								</div>
-
-								<div class="slider-item">
-									<label>Pause</label>
-									<div class="slider-control">
-										<input type="range" min="1" max="10" step="1" bind:value={pauseDuration} oninput={updateScrollSettings} />
-										<span class="value">{pauseDuration}s</span>
-									</div>
-								</div>
+						<div class="slider-item">
+							<label>Pause</label>
+							<div class="slider-control">
+								<input type="range" min="1" max="10" step="1" bind:value={pauseDuration} oninput={updateScrollSettings} />
+								<span class="value">{pauseDuration}s</span>
 							</div>
-						{/if}
-
-						<div class="toggle-item">
-							<div class="toggle-label">
-								<span class="label">Vollbild</span>
-								<span class="hint">{isFullscreen ? 'Aktiv' : 'Inaktiv'}</span>
-							</div>
-							<label class="switch">
-								<input type="checkbox" bind:checked={isFullscreen} onchange={toggleFullscreen} />
-								<span class="switch-slider"></span>
-							</label>
 						</div>
 					</section>
 
@@ -634,6 +613,7 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 20px;
+		min-height: 500px;
 	}
 
 	.tab-content {
