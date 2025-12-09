@@ -2,17 +2,18 @@
 	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
 	// SVELTE 5 PROPS
-	let { canvasRef } = $props<{
+	let { onOpenMenu, canvasRef } = $props<{
+		onOpenMenu?: () => void;
 		canvasRef?: any;
 	}>();
 
-	// Auto-Scroll State
+	// State
 	let autoScrollActive = $state(false);
+	let isFullscreen = $state(false);
 
 	// SVELTE 5 DERIVED SYNTAX
 	let formattedTime = $derived($currentTime.toLocaleTimeString('de-DE', {
@@ -31,10 +32,7 @@
 	let viewWeekdayName = $derived(weekdayNames[$viewWeekday % 7]);
 	let isToday = $derived($viewWeekday === $currentWeekday);
 
-	// SVELTE 5 STATE für Vollbild
-	let isFullscreen = $state(false);
-
-	// ✅ NEU: Tag-Navigation
+	// Tag-Navigation
 	function previousDay() {
 		viewWeekday.update(day => {
 			const newDay = day - 1;
@@ -53,8 +51,8 @@
 		viewWeekday.set($currentWeekday);
 	}
 
+	// Vollbild
 	onMount(() => {
-		// Überwache Vollbild-Status
 		const handleFullscreenChange = () => {
 			isFullscreen = !!(
 				document.fullscreenElement ||
@@ -69,7 +67,6 @@
 		document.addEventListener('mozfullscreenchange', handleFullscreenChange);
 		document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-		// Initial Status setzen
 		handleFullscreenChange();
 
 		return () => {
@@ -82,7 +79,6 @@
 
 	async function toggleFullscreen() {
 		if (!isFullscreen) {
-			// Vollbild aktivieren
 			try {
 				if (document.documentElement.requestFullscreen) {
 					await document.documentElement.requestFullscreen();
@@ -97,7 +93,6 @@
 				console.error('Vollbild konnte nicht aktiviert werden:', err);
 			}
 		} else {
-			// Vollbild verlassen
 			try {
 				if (document.exitFullscreen) {
 					await document.exitFullscreen();
@@ -118,10 +113,6 @@
 		if (canvasRef?.toggleAutoScroll) {
 			autoScrollActive = canvasRef.toggleAutoScroll();
 		}
-	}
-
-	function goToAdmin() {
-		goto('/admin');
 	}
 </script>
 
@@ -158,7 +149,7 @@
 
 	<div class="header-right">
 		<button
-			class="quick-action-btn"
+			class="icon-btn"
 			class:active={autoScrollActive}
 			onclick={toggleAutoScroll}
 			title="Auto-Scroll"
@@ -167,7 +158,7 @@
 			{autoScrollActive ? '⏸' : '▶'}
 		</button>
 		<button
-			class="quick-action-btn"
+			class="icon-btn"
 			class:active={isFullscreen}
 			onclick={toggleFullscreen}
 			title="Vollbild"
@@ -175,9 +166,11 @@
 		>
 			⛶
 		</button>
-		<button class="admin-btn" onclick={goToAdmin} title="Admin" aria-label="Admin öffnen">
-			Admin
-		</button>
+		{#if onOpenMenu}
+			<button class="menu-btn" onclick={onOpenMenu} title="Menü" aria-label="Menü öffnen">
+				Menü
+			</button>
+		{/if}
 	</div>
 </header>
 
@@ -188,8 +181,8 @@
 		left: 0;
 		right: 0;
 		height: 50px;
-		background: rgba(255, 255, 255, 0.95);
-		border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+		background: var(--header-bg);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -228,141 +221,162 @@
 	}
 
 	.logo-text {
-		font-size: 16px;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		color: #1a1a1a;
+		font-size: 18px;
+		font-weight: 700;
+		letter-spacing: 0.5px;
+		color: var(--color-text-primary);
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
-	.quick-action-btn {
-		background: transparent;
-		border: 1px solid rgba(0, 0, 0, 0.12);
-		color: #1a1a1a;
-		font-size: 16px;
-		width: 36px;
-		height: 36px;
-		border-radius: 6px;
+	.icon-btn {
+		background: rgba(255, 255, 255, 0.15);
+		border: 2px solid rgba(255, 255, 255, 0.25);
+		color: var(--color-text-primary);
+		font-size: 18px;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.3s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
-	.quick-action-btn:hover {
-		background: rgba(0, 0, 0, 0.04);
-		border-color: rgba(0, 0, 0, 0.2);
+	.icon-btn:hover {
+		background: rgba(255, 255, 255, 0.25);
+		transform: scale(1.05);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 	}
 
-	.quick-action-btn.active {
-		background: #1a1a1a;
-		border-color: #1a1a1a;
-		color: white;
+	.icon-btn.active {
+		background: rgba(59, 130, 246, 0.4);
+		border-color: rgba(59, 130, 246, 0.6);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 	}
 
-	.quick-action-btn:active {
-		transform: scale(0.96);
+	.icon-btn:active {
+		transform: scale(0.95);
 	}
 
-	.admin-btn {
-		background: #1a1a1a;
-		border: none;
-		color: white;
-		font-size: 13px;
-		font-weight: 500;
-		padding: 8px 20px;
-		border-radius: 6px;
+	.menu-btn {
+		background: rgba(59, 130, 246, 0.3);
+		border: 2px solid rgba(59, 130, 246, 0.5);
+		color: var(--color-text-primary);
+		font-size: 14px;
+		font-weight: 600;
+		padding: 10px 20px;
+		border-radius: 8px;
 		cursor: pointer;
-		transition: all 0.2s;
-		letter-spacing: 0.01em;
+		transition: all 0.3s;
+		letter-spacing: 0.3px;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
-	.admin-btn:hover {
-		background: #2a2a2a;
+	.menu-btn:hover {
+		background: rgba(59, 130, 246, 0.5);
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
 	}
 
-	.admin-btn:active {
-		transform: scale(0.98);
+	.menu-btn:active {
+		transform: scale(0.95);
 	}
 
 	.day-nav-btn {
-		background: transparent;
-		border: 1px solid rgba(0, 0, 0, 0.12);
-		color: #1a1a1a;
-		font-size: 14px;
-		font-weight: 500;
-		width: 36px;
-		height: 36px;
-		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		color: var(--color-text-primary);
+		font-size: 18px;
+		font-weight: 700;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.3s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		backdrop-filter: blur(10px);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
 	.day-nav-btn:hover {
-		background: rgba(0, 0, 0, 0.04);
-		border-color: rgba(0, 0, 0, 0.2);
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.05);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 	}
 
 	.day-nav-btn:active {
-		transform: scale(0.96);
+		transform: scale(0.95);
 	}
 
 	.day-display {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 2px;
-		min-width: 140px;
+		gap: 4px;
+		min-width: 160px;
 	}
 
 	.weekday {
-		font-size: 15px;
-		font-weight: 600;
-		color: #1a1a1a;
-		letter-spacing: 0.02em;
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+		transition: all 0.3s;
 	}
 
 	.weekday.today {
-		color: #059669;
+		color: #22c55e;
+		text-shadow:
+			1px 1px 3px rgba(0, 0, 0, 0.4),
+			0 0 10px rgba(34, 197, 94, 0.5);
 	}
 
 	.today-btn {
-		background: transparent;
-		border: none;
-		color: #6b7280;
-		font-size: 11px;
-		font-weight: 500;
-		padding: 0;
+		background: rgba(34, 197, 94, 0.2);
+		border: 1px solid rgba(34, 197, 94, 0.4);
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 10px;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: 6px;
 		cursor: pointer;
 		transition: all 0.2s;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.today-btn:hover {
-		color: #059669;
+		background: rgba(34, 197, 94, 0.3);
+		border-color: rgba(34, 197, 94, 0.6);
+		transform: scale(1.05);
 	}
 
 	.date {
 		font-size: 13px;
-		color: #6b7280;
+		color: var(--color-text-secondary);
 		font-weight: 500;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.separator {
-		width: 1px;
-		height: 20px;
-		background: rgba(0, 0, 0, 0.08);
-		margin: 0 12px;
+		color: rgba(255, 255, 255, 0.6);
+		font-size: 16px;
+		margin: 0 8px;
 	}
 
 	.time {
-		font-size: 14px;
-		font-weight: 500;
-		color: #1a1a1a;
-		font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-		letter-spacing: 0.03em;
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--color-text-primary);
+		font-family: 'Courier New', monospace;
+		letter-spacing: 1px;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 	}
 
 	@media (max-width: 1200px) {

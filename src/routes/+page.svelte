@@ -61,9 +61,15 @@
 </script>
 
 <div class="dashboard">
-	<Header {canvasRef} />
+	<Header onOpenMenu={openMenu} {canvasRef} />
 	<DailyHighlights onOpenEditor={openHighlightsEditor} />
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
+	<SidebarMenu
+		isOpen={showMenu}
+		onClose={closeMenu}
+		onOpenScheduler={openScheduler}
+		{canvasRef}
+	/>
 	<ToastContainer />
 	<ConfirmDialog />
 
