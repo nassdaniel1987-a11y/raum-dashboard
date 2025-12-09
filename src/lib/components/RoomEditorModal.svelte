@@ -320,16 +320,15 @@
 	}
 
 	.modal {
-		background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-		border-radius: 20px;
+		background: rgba(15, 23, 42, 0.98);
+		backdrop-filter: blur(20px);
+		border-radius: 12px;
+		border: 2px solid rgba(255, 255, 255, 0.15);
 		width: 90%;
-		max-width: 650px;
+		max-width: 900px;
 		max-height: 90vh;
 		overflow: hidden;
-		box-shadow:
-			0 24px 64px rgba(0, 0, 0, 0.6),
-			0 8px 24px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 		color: white;
 		display: flex;
 		flex-direction: column;
@@ -339,44 +338,36 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 20px 24px;
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-		background: rgba(0, 0, 0, 0.2);
+		padding: 16px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 	}
 
 	.modal-header h2 {
 		margin: 0;
-		font-size: 26px;
-		font-weight: 700;
-		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+		font-size: 18px;
+		font-weight: 600;
+		letter-spacing: 0.3px;
+		color: white;
 	}
 
 	.close-btn {
-		background: rgba(255, 255, 255, 0.1);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		width: 32px;
+		height: 32px;
+		border-radius: 6px;
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
 		color: white;
-		font-size: 22px;
-		width: 44px;
-		height: 44px;
-		border-radius: 50%;
+		font-size: 18px;
 		cursor: pointer;
-		transition: all 0.3s;
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	}
 
 	.close-btn:hover {
 		background: rgba(239, 68, 68, 0.3);
-		border-color: rgba(239, 68, 68, 0.5);
-		transform: rotate(90deg) scale(1.1);
-		box-shadow:
-			0 0 20px rgba(239, 68, 68, 0.4),
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
 	}
 
 	.modal-content {
@@ -388,13 +379,10 @@
 
 	/* ✅ Section Cards */
 	.section-card {
-		background: rgba(0, 0, 0, 0.3);
-		border-radius: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.15);
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
 		margin-bottom: 16px;
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		overflow: visible; /* ✅ Verhindert Abschneiden von ColorPicker */
 		position: relative; /* ✅ Für z-index Stacking */
 	}
@@ -407,27 +395,29 @@
 	.section-header {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 20px;
-		background: rgba(0, 0, 0, 0.3);
-		border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+		gap: 8px;
+		padding: 12px 16px;
+		background: rgba(0, 0, 0, 0.2);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.section-icon {
-		font-size: 24px;
-		min-width: 28px;
+		font-size: 18px;
+		min-width: 24px;
 		text-align: center;
 	}
 
 	.section-title {
 		margin: 0;
-		font-size: 18px;
-		font-weight: 700;
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		text-transform: uppercase;
 		letter-spacing: 0.5px;
 	}
 
 	.section-body {
-		padding: 20px;
+		padding: 16px;
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
@@ -451,19 +441,16 @@
 
 	label {
 		display: block;
-		font-weight: 600;
-		font-size: 13px;
-		text-transform: uppercase;
-		letter-spacing: 0.8px;
-		opacity: 0.95;
-		color: rgba(255, 255, 255, 0.95);
+		font-weight: 500;
+		font-size: 14px;
+		color: white;
 	}
 
 	.hint-inline {
-		font-size: 10px;
+		font-size: 11px;
 		font-weight: 400;
 		text-transform: none;
-		opacity: 0.6;
+		color: rgba(255, 255, 255, 0.5);
 		margin-left: 8px;
 	}
 
@@ -546,11 +533,10 @@
 	}
 
 	.hint {
-		font-size: 12px;
-		opacity: 0.7;
+		font-size: 11px;
 		margin: 0;
 		padding: 6px 0 0 0;
-		color: rgba(255, 255, 255, 0.7);
+		color: rgba(255, 255, 255, 0.5);
 	}
 
 	/* ✅ Slider Groups */
@@ -567,11 +553,12 @@
 	}
 
 	.slider-value {
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: 700;
-		color: var(--color-accent);
+		color: white;
 		min-width: 60px;
 		text-align: right;
+		font-family: 'Courier New', monospace;
 	}
 
 	/* ✅ Premium Slider */
@@ -678,66 +665,51 @@
 
 	/* ✅ Modal Footer - Premium Buttons */
 	.modal-footer {
-		padding: 20px 24px;
-		border-top: 2px solid rgba(255, 255, 255, 0.1);
-		background: rgba(0, 0, 0, 0.2);
+		padding: 16px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.3);
 		display: flex;
-		gap: 12px;
+		gap: 8px;
 		justify-content: flex-end;
 	}
 
 	.btn {
-		padding: 14px 28px;
-		border: none;
-		border-radius: 12px;
-		font-size: 15px;
-		font-weight: 700;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: white;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 10px 16px;
+		border-radius: 6px;
 		cursor: pointer;
-		transition: all 0.3s;
-		min-width: 120px;
-		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.3),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		transition: all 0.2s;
+		min-width: 100px;
 	}
 
 	.btn-secondary {
 		background: rgba(255, 255, 255, 0.1);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.2);
 		color: white;
 	}
 
 	.btn-secondary:hover {
 		background: rgba(255, 255, 255, 0.15);
 		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-2px);
-		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.15);
 	}
 
 	.btn-primary {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-		border: 2px solid rgba(59, 130, 246, 0.5);
-		color: white;
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.5);
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 32px rgba(59, 130, 246, 0.5),
-			0 6px 20px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2);
-		border-color: rgba(59, 130, 246, 0.8);
-	}
-
-	.btn-primary:active:not(:disabled) {
-		transform: translateY(0);
+		background: rgba(59, 130, 246, 0.4);
+		border-color: rgba(59, 130, 246, 0.6);
 	}
 
 	.btn-primary:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
-		transform: none;
 	}
 
 	/* ✅ Scrollbar Styling */
@@ -768,19 +740,12 @@
 	@media (max-width: 768px) {
 		.modal {
 			width: 95%;
-			max-height: 85vh;
+			max-width: 95%;
+			max-height: 95vh;
 		}
 
 		.input-row {
 			grid-template-columns: 1fr;
-		}
-
-		.modal-header {
-			padding: 16px 20px;
-		}
-
-		.modal-header h2 {
-			font-size: 22px;
 		}
 
 		.modal-content {
@@ -788,20 +753,29 @@
 		}
 
 		.section-header {
-			padding: 14px 16px;
+			padding: 10px 14px;
 		}
 
 		.section-body {
-			padding: 16px;
+			padding: 14px;
 		}
 
 		.modal-footer {
-			padding: 16px 20px;
 			flex-direction: column-reverse;
 		}
 
 		.btn {
 			width: 100%;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.modal {
+			width: 100%;
+			max-width: 100%;
+			height: 100vh;
+			max-height: 100vh;
+			border-radius: 0;
 		}
 	}
 </style>
