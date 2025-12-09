@@ -267,8 +267,8 @@
 	<!-- Overlay -->
 	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 200 }}></div>
 
-	<!-- Sidebar -->
-	<aside class="sidebar" transition:slide={{ duration: 300, axis: 'x' }}>
+	<!-- Modal -->
+	<aside class="settings-modal" transition:fade={{ duration: 200 }}>
 		<!-- Header -->
 		<div class="sidebar-header">
 			<h2>Einstellungen</h2>
@@ -543,20 +543,23 @@
 		z-index: 9998;
 	}
 
-	.sidebar {
+	.settings-modal {
 		position: fixed;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		width: 380px;
-		max-width: 90vw;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 90%;
+		max-width: 900px;
+		max-height: 90vh;
 		background: rgba(15, 23, 42, 0.98);
 		backdrop-filter: blur(20px);
-		box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 		z-index: 9999;
 		display: flex;
 		flex-direction: column;
-		border-right: 2px solid rgba(255, 255, 255, 0.1);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 12px;
+		overflow: hidden;
 	}
 
 	.sidebar-header {
@@ -732,10 +735,10 @@
 
 	.subsection {
 		margin-top: 12px;
-		padding: 12px;
-		background: rgba(0, 0, 0, 0.2);
+		padding: 14px;
+		background: rgba(0, 0, 0, 0.3);
 		border-radius: 6px;
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.slider-item {
@@ -748,10 +751,12 @@
 
 	.slider-item label {
 		display: block;
-		font-size: 12px;
-		font-weight: 500;
-		color: rgba(255, 255, 255, 0.8);
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
 		margin-bottom: 8px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.slider-control {
@@ -800,11 +805,12 @@
 	}
 
 	.slider-control .value {
-		font-size: 12px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		min-width: 50px;
+		font-size: 14px;
+		font-weight: 700;
+		color: white;
+		min-width: 60px;
 		text-align: right;
+		font-family: 'Courier New', monospace;
 	}
 
 	.button-row {
@@ -962,9 +968,9 @@
 
 	.time-field label {
 		display: block;
-		font-size: 11px;
-		font-weight: 500;
-		color: rgba(255, 255, 255, 0.7);
+		font-size: 12px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
 		margin-bottom: 6px;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
@@ -1038,12 +1044,33 @@
 	}
 
 	@media (max-width: 768px) {
-		.sidebar {
-			width: 100vw;
-			max-width: 100vw;
+		.settings-modal {
+			width: 95%;
+			max-width: 95%;
+			max-height: 95vh;
 		}
 
 		.theme-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+
+		.tab {
+			font-size: 10px;
+			padding: 10px 6px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.settings-modal {
+			width: 100%;
+			max-width: 100%;
+			height: 100vh;
+			max-height: 100vh;
+			border-radius: 0;
+			transform: translate(-50%, -50%);
+		}
+
+		.theme-grid.compact {
 			grid-template-columns: repeat(3, 1fr);
 		}
 	}
