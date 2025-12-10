@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { currentTime, currentWeekday, viewWeekday } from '$lib/stores/appState';
+	import { currentTime, currentWeekday, viewWeekday, isEditMode } from '$lib/stores/appState';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
@@ -148,6 +148,15 @@
 	</div>
 
 	<div class="header-right">
+		<button
+			class="icon-btn"
+			class:active={$isEditMode}
+			onclick={() => isEditMode.update(v => !v)}
+			title="Edit-Modus"
+			aria-label="Edit-Modus umschalten"
+		>
+			✏️
+		</button>
 		<button
 			class="icon-btn"
 			class:active={autoScrollActive}
