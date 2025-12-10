@@ -379,8 +379,7 @@
 	.canvas {
 		max-width: 1400px;
 		margin: 0 auto;
-		padding: 8px;
-		padding-bottom: 50px;
+		padding: 58px 8px 50px 8px; /* 58px top = 50px Header + 8px Spacing */
 		min-height: 100%;
 		transform: translateZ(0);
 	}

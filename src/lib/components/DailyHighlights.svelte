@@ -87,7 +87,7 @@
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		backdrop-filter: blur(5px);
 		padding: 10px 20px;
-		margin-top: 50px; /* Platz für Header */
+		margin-top: 50px; /* Platz für fixen Header */
 	}
 
 	.highlights-header {
