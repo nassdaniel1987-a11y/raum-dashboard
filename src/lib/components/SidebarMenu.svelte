@@ -295,22 +295,6 @@
 		<div class="content">
 			{#if activeTab === 'dashboard'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
-					<!-- Modi -->
-					<section class="section">
-						<h3>Modi</h3>
-
-						<div class="toggle-item">
-							<div class="toggle-label">
-								<span class="label">Edit-Modus</span>
-								<span class="hint">Räume bearbeiten</span>
-							</div>
-							<label class="switch">
-								<input type="checkbox" bind:checked={$isEditMode} />
-								<span class="switch-slider"></span>
-							</label>
-						</div>
-					</section>
-
 					<!-- Auto-Scroll Einstellungen -->
 					<section class="section">
 						<h3>Auto-Scroll</h3>
