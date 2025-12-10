@@ -469,54 +469,33 @@
 		pointer-events: none;
 	}
 
-	/* Das Absperrband */
+	/* Stempel-Badge - Basis */
 	.badge-tape {
-		padding: 8px 20px;
-		font-size: 13px;
+		padding: 10px 24px;
+		font-size: 14px;
 		font-weight: 900;
 		text-transform: uppercase;
-		letter-spacing: 1.5px;
-		color: #000;
-		border: 3px solid rgba(0, 0, 0, 0.3);
+		letter-spacing: 2px;
 		border-radius: 4px;
-		box-shadow:
-			0 6px 20px rgba(0, 0, 0, 0.6),
-			inset 0 2px 0 rgba(255, 255, 255, 0.4),
-			inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-		backdrop-filter: blur(4px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 		position: relative;
-		overflow: hidden;
 		white-space: nowrap;
-		text-shadow:
-			1px 1px 0 rgba(255, 255, 255, 0.5),
-			-1px -1px 0 rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(8px);
 	}
 
-	/* Absperrband - GESCHLOSSEN (Rot/Weiß gestreift) */
+	/* Stempel - GESCHLOSSEN (Rot) */
 	.closed-badge-hanging .badge-tape {
-		background: repeating-linear-gradient(
-			45deg,
-			rgba(220, 38, 38, 0.92),
-			rgba(220, 38, 38, 0.92) 20px,
-			rgba(255, 255, 255, 0.92) 20px,
-			rgba(255, 255, 255, 0.92) 40px
-		);
-		color: #1a1a1a;
+		color: #dc2626;
+		border: 3px solid #dc2626;
+		text-shadow: 0 0 1px rgba(220, 38, 38, 0.3);
 	}
 
-	/* Absperrband - ÖFFNET UM (Gelb/Schwarz gestreift) */
+	/* Stempel - ÖFFNET UM (Gelb) */
 	.opens-badge-hanging .badge-tape {
-		background: repeating-linear-gradient(
-			45deg,
-			rgba(234, 179, 8, 0.92),
-			rgba(234, 179, 8, 0.92) 20px,
-			rgba(20, 20, 20, 0.92) 20px,
-			rgba(20, 20, 20, 0.92) 40px
-		);
-		color: #fff;
-		text-shadow:
-			2px 2px 4px rgba(0, 0, 0, 0.8),
-			-1px -1px 2px rgba(0, 0, 0, 0.6);
+		color: #eab308;
+		border: 3px solid #eab308;
+		text-shadow: 0 0 1px rgba(234, 179, 8, 0.3);
 	}
 
 	/* Kleine "Kette" oder Verbindung oben */
