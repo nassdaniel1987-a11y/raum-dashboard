@@ -528,8 +528,8 @@
 		left: 50%;
 		transform: translate(-50%, -50%);
 		width: 90%;
-		max-width: 900px;
-		max-height: 90vh;
+		max-width: 800px;
+		max-height: 600px;
 		background: rgba(15, 23, 42, 0.98);
 		backdrop-filter: blur(20px);
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);

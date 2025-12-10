@@ -83,11 +83,10 @@
 	.highlights-container {
 		position: relative;
 		width: 100%;
-		background: linear-gradient(to bottom, rgba(30, 41, 59, 0.98), rgba(30, 41, 59, 0.95));
-		border-bottom: 2px solid rgba(59, 130, 246, 0.3);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		backdrop-filter: blur(10px);
-		padding: 12px 20px;
+		background: rgba(0, 0, 0, 0.15);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(5px);
+		padding: 10px 20px;
 		margin-top: 50px; /* Platz für Header */
 	}
 
@@ -101,37 +100,34 @@
 	.highlights-title {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		color: var(--color-text-primary);
-		font-size: 16px;
-		font-weight: 700;
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+		gap: 8px;
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 14px;
+		font-weight: 500;
 	}
 
 	.highlights-title .icon {
-		font-size: 20px;
+		font-size: 16px;
 	}
 
 	.edit-btn {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		background: rgba(96, 165, 250, 0.2);
-		border: 2px solid rgba(96, 165, 250, 0.4);
-		color: var(--color-text-primary);
-		font-size: 14px;
-		font-weight: 600;
-		padding: 6px 12px;
-		border-radius: 8px;
+		gap: 4px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: white;
+		font-size: 12px;
+		font-weight: 500;
+		padding: 4px 10px;
+		border-radius: 6px;
 		cursor: pointer;
-		transition: all 0.3s;
-		backdrop-filter: blur(10px);
+		transition: all 0.2s;
 	}
 
 	.edit-btn:hover {
-		background: rgba(96, 165, 250, 0.4);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 10px rgba(96, 165, 250, 0.5);
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
 	}
 
 	.edit-btn .icon {
@@ -174,19 +170,13 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 10px 16px;
-		border: 2px solid;
-		border-radius: 12px;
-		backdrop-filter: blur(10px);
+		padding: 8px 14px;
+		border: 1px solid;
+		border-radius: 8px;
+		backdrop-filter: blur(5px);
 		white-space: nowrap;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-		transition: all 0.3s;
+		transition: all 0.2s;
 		flex-shrink: 0;
-	}
-
-	.highlight-item:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	}
 
 	.highlight-icon {
