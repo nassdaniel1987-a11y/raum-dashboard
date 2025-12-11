@@ -134,13 +134,51 @@
 		}
 	}
 
-	function removeActivityImage() {
-		activityImageFile = null;
-		activityImagePreview = null;
-		activityImageCrop = null;
-		originalImageDimensions = null;
-		resizedImageFile = null;
-		resizePercentage = 75;
+	async function removeActivityImage() {
+		// Bestätigung einholen
+		if (!confirm('Möchtest du dieses Bild wirklich löschen?')) {
+			return;
+		}
+
+		uploading = true;
+		try {
+			// ✅ Lösche aus Storage wenn es eine URL gibt
+			if (room.config?.activity_image_url && room.config.activity_image_url.includes('room-images')) {
+				// Extrahiere Dateinamen aus URL
+				const urlParts = room.config.activity_image_url.split('/');
+				const fileName = urlParts[urlParts.length - 1];
+
+				const { error: deleteError } = await supabase.storage
+					.from('room-images')
+					.remove([fileName]);
+
+				if (deleteError) {
+					console.error('Error deleting from storage:', deleteError);
+				}
+			}
+
+			// ✅ Update Database - setze image URL auf null
+			await supabase.from('daily_configs').update({
+				activity_image_url: null,
+				activity_image_size: 'medium',
+				activity_image_crop: null
+			}).eq('room_id', room.id).eq('weekday', get(viewWeekday));
+
+			// ✅ Clear local state
+			activityImageFile = null;
+			activityImagePreview = null;
+			activityImageCrop = null;
+			originalImageDimensions = null;
+			resizedImageFile = null;
+			resizePercentage = 75;
+
+			toasts.show('✓ Bild erfolgreich gelöscht!', 'success');
+		} catch (error) {
+			console.error('Error removing image:', error);
+			toasts.show('✕ Fehler beim Löschen!', 'error');
+		} finally {
+			uploading = false;
+		}
 	}
 
 	async function handleSave() {
