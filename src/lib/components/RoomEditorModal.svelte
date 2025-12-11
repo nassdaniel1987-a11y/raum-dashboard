@@ -68,15 +68,25 @@
 
 					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
+					// ✅ Aggressivere Kompression (0.8 statt 0.92)
 					canvas.toBlob((blob) => {
 						if (!blob) {
 							reject(new Error('Could not create blob'));
 							return;
 						}
-						const resizedFile = new File([blob], file.name, { type: file.type });
-						const dataUrl = canvas.toDataURL(file.type);
-						resolve({ file: resizedFile, dataUrl });
-					}, file.type, 0.92);
+
+						// ✅ Vergleiche Dateigrößen - nur verkleinern wenn tatsächlich kleiner
+						if (blob.size >= file.size && percentage >= 100) {
+							// Original ist kleiner oder gleich - verwende Original
+							const dataUrl = canvas.toDataURL(file.type);
+							resolve({ file, dataUrl });
+						} else {
+							// Resized ist kleiner - verwende resized
+							const resizedFile = new File([blob], file.name, { type: file.type });
+							const dataUrl = canvas.toDataURL(file.type);
+							resolve({ file: resizedFile, dataUrl });
+						}
+					}, file.type, 0.8); // ✅ 80% Qualität statt 92%
 				};
 				img.onerror = reject;
 				img.src = e.target?.result as string;
