@@ -228,6 +228,19 @@
 		{#if room.config?.activity}
 			<p class="room-activity" style="font-size: {textFontSize}px; color: {textColor};">{room.config.activity}</p>
 		{/if}
+
+		{#if room.config?.activity_image_url}
+			<div class="activity-image-container" class:size-small={room.config.activity_image_size === 'small'} class:size-medium={room.config.activity_image_size === 'medium'} class:size-large={room.config.activity_image_size === 'large'}>
+				<img
+					src={room.config.activity_image_url}
+					alt={room.config.activity || 'Aktivität'}
+					class="activity-image"
+					style={room.config.activity_image_crop
+						? `object-position: ${-room.config.activity_image_crop.x}px ${-room.config.activity_image_crop.y}px;`
+						: ''}
+				/>
+			</div>
+		{/if}
 	</div>
 
 	<!-- ✅ Status-Badges hängend in der Mitte (Absperrband-Stil) -->
@@ -707,6 +720,41 @@
 			padding: 4px 7px;
 			font-size: 13px;
 		}
+	}
+
+	/* ✅ Aktivitäts-Bild - geheftet an Kachel (Polaroid-Stil) */
+	.activity-image-container {
+		width: 100%;
+		margin-top: 8px;
+		padding: 8px;
+		background: rgba(255, 255, 255, 0.95);
+		border-radius: 4px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.activity-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		border-radius: 2px;
+	}
+
+	/* Größen-Varianten */
+	.activity-image-container.size-small {
+		max-height: 60px; /* ~25% einer typischen Kachel */
+	}
+
+	.activity-image-container.size-medium {
+		max-height: 100px; /* ~40% einer typischen Kachel */
+	}
+
+	.activity-image-container.size-large {
+		max-height: 150px; /* ~60% einer typischen Kachel */
 	}
 
 	@media (max-width: 768px) {

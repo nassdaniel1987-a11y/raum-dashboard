@@ -3,7 +3,8 @@
 	import { toasts } from '$lib/stores/toastStore';
 	import ColorPicker from './ColorPicker.svelte';
 	import TextColorPicker from './TextColorPicker.svelte';
-	import type { RoomWithConfig } from '$lib/types';
+	import ImageCropTool from './ImageCropTool.svelte';
+	import type { RoomWithConfig, ImageCrop } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { viewWeekday, currentTime } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
@@ -28,12 +29,40 @@
 	let imageFile = $state<File | null>(null);
 	let uploading = $state(false);
 
+	// ✅ Aktivitäts-Bild State
+	let activityImageFile = $state<File | null>(null);
+	let activityImagePreview = $state<string | null>(room.config?.activity_image_url || null);
+	let activityImageSize = $state<'small' | 'medium' | 'large'>(room.config?.activity_image_size || 'medium');
+	let activityImageCrop = $state(room.config?.activity_image_crop || null);
+	let showCropTool = $state(false);
+
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
 		if (isNaN(hours) || isNaN(minutes)) return null;
 		return hours * 60 + minutes;
 	};
+
+	// ✅ Handle Aktivitäts-Bild Upload
+	function handleActivityImageSelect(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) {
+			activityImageFile = file;
+			// Erstelle Preview
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				activityImagePreview = e.target?.result as string;
+			};
+			reader.readAsDataURL(file);
+		}
+	}
+
+	function removeActivityImage() {
+		activityImageFile = null;
+		activityImagePreview = null;
+		activityImageCrop = null;
+	}
 
 	async function handleSave() {
 		uploading = true;
@@ -58,7 +87,10 @@
 				close_time: closeTime || null,
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize,
-				text_color: textColor // ✅ NEU: Textfarbe speichern
+				text_color: textColor, // ✅ NEU: Textfarbe speichern
+				activity_image_url: activityImagePreview, // ✅ Aktivitäts-Bild URL
+				activity_image_size: activityImageSize, // ✅ Bildgröße
+				activity_image_crop: activityImageCrop // ✅ Crop-Einstellungen
 			};
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
@@ -249,6 +281,84 @@
 							<input id="room-close-time-{room.id}" type="time" bind:value={closeTime} />
 						</div>
 					</div>
+				</div>
+			</div>
+
+			<!-- ✅ SEKTION 3.5: Aktivitäts-Bild -->
+			<div class="section-card">
+				<div class="section-header">
+					<span class="section-icon">🖼️</span>
+					<h3 class="section-title">Aktivitäts-Bild</h3>
+				</div>
+				<div class="section-body">
+					<p class="hint">📌 Zeigt Kindern visuell was in diesem Raum stattfindet (z.B. Bastel-Beispiel)</p>
+
+					<!-- Größen-Auswahl -->
+					<div class="input-group">
+						<label>Bildgröße</label>
+						<div class="size-buttons">
+							<button
+								type="button"
+								class="size-btn"
+								class:active={activityImageSize === 'small'}
+								onclick={() => activityImageSize = 'small'}
+							>
+								Klein
+							</button>
+							<button
+								type="button"
+								class="size-btn"
+								class:active={activityImageSize === 'medium'}
+								onclick={() => activityImageSize = 'medium'}
+							>
+								Mittel
+							</button>
+							<button
+								type="button"
+								class="size-btn"
+								class:active={activityImageSize === 'large'}
+								onclick={() => activityImageSize = 'large'}
+							>
+								Groß
+							</button>
+						</div>
+					</div>
+
+					<!-- Bild Upload -->
+					<div class="input-group">
+						<label>Bild hochladen</label>
+						<input
+							type="file"
+							accept="image/*"
+							onchange={handleActivityImageSelect}
+							class="file-input"
+						/>
+					</div>
+
+					<!-- Bild Preview -->
+					{#if activityImagePreview}
+						<div class="image-preview-container">
+							<div class="preview-header">
+								<span>Vorschau ({activityImageSize})</span>
+								<button type="button" class="remove-btn" onclick={removeActivityImage}>
+									🗑️ Entfernen
+								</button>
+							</div>
+							<div class="activity-preview" class:size-small={activityImageSize === 'small'} class:size-medium={activityImageSize === 'medium'} class:size-large={activityImageSize === 'large'}>
+								<img src={activityImagePreview} alt="Preview" />
+							</div>
+							<button type="button" class="crop-btn" onclick={() => showCropTool = !showCropTool}>
+								✂️ {showCropTool ? 'Crop schließen' : 'Bild zuschneiden'}
+							</button>
+
+							{#if showCropTool}
+								<ImageCropTool
+									imageSrc={activityImagePreview}
+									onCropChange={(crop) => activityImageCrop = crop}
+								/>
+							{/if}
+						</div>
+					{/if}
 				</div>
 			</div>
 
@@ -737,6 +847,114 @@
 	}
 
 	/* ✅ Responsive */
+	/* ✅ Aktivitäts-Bild Styles */
+	.size-buttons {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+
+	.size-btn {
+		flex: 1;
+		padding: 8px 16px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		color: var(--color-text-primary);
+		cursor: pointer;
+		transition: all 0.2s;
+		font-weight: 600;
+	}
+
+	.size-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.size-btn.active {
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
+		color: #60a5fa;
+	}
+
+	.image-preview-container {
+		margin-top: 16px;
+		padding: 16px;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 8px;
+	}
+
+	.preview-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 12px;
+		font-weight: 600;
+	}
+
+	.remove-btn {
+		padding: 6px 12px;
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		border-radius: 6px;
+		color: #ef4444;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 13px;
+	}
+
+	.remove-btn:hover {
+		background: rgba(239, 68, 68, 0.3);
+	}
+
+	.activity-preview {
+		width: 100%;
+		padding: 8px;
+		background: rgba(255, 255, 255, 0.95);
+		border-radius: 4px;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.4),
+			inset 0 1px 0 rgba(255, 255, 255, 0.8);
+		overflow: hidden;
+	}
+
+	.activity-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		border-radius: 2px;
+	}
+
+	.activity-preview.size-small {
+		max-height: 80px;
+	}
+
+	.activity-preview.size-medium {
+		max-height: 120px;
+	}
+
+	.activity-preview.size-large {
+		max-height: 180px;
+	}
+
+	.crop-btn {
+		width: 100%;
+		margin-top: 12px;
+		padding: 10px;
+		background: rgba(59, 130, 246, 0.2);
+		border: 2px solid rgba(59, 130, 246, 0.4);
+		border-radius: 6px;
+		color: #60a5fa;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-weight: 600;
+	}
+
+	.crop-btn:hover {
+		background: rgba(59, 130, 246, 0.3);
+	}
+
 	@media (max-width: 768px) {
 		.modal {
 			width: 95%;
