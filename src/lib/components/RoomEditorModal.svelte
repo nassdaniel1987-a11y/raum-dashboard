@@ -36,6 +36,11 @@
 	let activityImageCrop = $state(room.config?.activity_image_crop || null);
 	let showCropTool = $state(false);
 
+	// ✅ Bild-Resize State
+	let originalImageDimensions = $state<{ width: number; height: number; size: number } | null>(null);
+	let resizePercentage = $state(75); // Default 75%
+	let resizedImageFile = $state<File | null>(null);
+
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
@@ -43,18 +48,89 @@
 		return hours * 60 + minutes;
 	};
 
+	// ✅ Bild resizen mit Canvas
+	async function resizeImage(file: File, percentage: number): Promise<{ file: File; dataUrl: string }> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const img = new Image();
+				img.onload = () => {
+					const canvas = document.createElement('canvas');
+					const scale = percentage / 100;
+					canvas.width = img.width * scale;
+					canvas.height = img.height * scale;
+
+					const ctx = canvas.getContext('2d');
+					if (!ctx) {
+						reject(new Error('Could not get canvas context'));
+						return;
+					}
+
+					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+					canvas.toBlob((blob) => {
+						if (!blob) {
+							reject(new Error('Could not create blob'));
+							return;
+						}
+						const resizedFile = new File([blob], file.name, { type: file.type });
+						const dataUrl = canvas.toDataURL(file.type);
+						resolve({ file: resizedFile, dataUrl });
+					}, file.type, 0.92);
+				};
+				img.onerror = reject;
+				img.src = e.target?.result as string;
+			};
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+	}
+
 	// ✅ Handle Aktivitäts-Bild Upload
-	function handleActivityImageSelect(e: Event) {
+	async function handleActivityImageSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
 		const file = input.files?.[0];
 		if (file) {
 			activityImageFile = file;
-			// Erstelle Preview
+
+			// Lade Bild um Dimensionen zu bekommen
 			const reader = new FileReader();
-			reader.onload = (e) => {
-				activityImagePreview = e.target?.result as string;
+			reader.onload = async (e) => {
+				const img = new Image();
+				img.onload = async () => {
+					// Speichere Original-Dimensionen
+					originalImageDimensions = {
+						width: img.width,
+						height: img.height,
+						size: file.size
+					};
+
+					// Resize mit aktuellem Prozentsatz
+					try {
+						const { file: resized, dataUrl } = await resizeImage(file, resizePercentage);
+						resizedImageFile = resized;
+						activityImagePreview = dataUrl;
+					} catch (error) {
+						console.error('Error resizing image:', error);
+						activityImagePreview = e.target?.result as string;
+					}
+				};
+				img.src = e.target?.result as string;
 			};
 			reader.readAsDataURL(file);
+		}
+	}
+
+	// ✅ Handle Resize Percentage Change
+	async function handleResizeChange() {
+		if (activityImageFile && originalImageDimensions) {
+			try {
+				const { file: resized, dataUrl } = await resizeImage(activityImageFile, resizePercentage);
+				resizedImageFile = resized;
+				activityImagePreview = dataUrl;
+			} catch (error) {
+				console.error('Error resizing image:', error);
+			}
 		}
 	}
 
@@ -62,6 +138,9 @@
 		activityImageFile = null;
 		activityImagePreview = null;
 		activityImageCrop = null;
+		originalImageDimensions = null;
+		resizedImageFile = null;
+		resizePercentage = 75;
 	}
 
 	async function handleSave() {
@@ -69,12 +148,13 @@
 		try {
 			// ✅ 1. Upload Aktivitäts-Bild zu Storage (falls vorhanden)
 			let finalActivityImageUrl = activityImagePreview;
-			if (activityImageFile) {
-				const fileExt = activityImageFile.name.split('.').pop();
+			const fileToUpload = resizedImageFile || activityImageFile;
+			if (fileToUpload) {
+				const fileExt = fileToUpload.name.split('.').pop();
 				const fileName = `activity-${room.id}-${Date.now()}.${fileExt}`;
 				const { error: uploadError } = await supabase.storage
 					.from('room-images')
-					.upload(fileName, activityImageFile, {
+					.upload(fileName, fileToUpload, {
 						cacheControl: '3600',
 						upsert: true
 					});
@@ -359,6 +439,45 @@
 							class="file-input"
 						/>
 					</div>
+
+					<!-- ✅ Bild-Resize Slider -->
+					{#if originalImageDimensions}
+						<div class="resize-control">
+							<div class="resize-info">
+								<div class="info-row">
+									<span class="label">📏 Original:</span>
+									<span class="value">
+										{originalImageDimensions.width} × {originalImageDimensions.height} px
+										({Math.round(originalImageDimensions.size / 1024)} KB)
+									</span>
+								</div>
+								<div class="slider-group">
+									<div class="slider-header">
+										<label>Größe anpassen</label>
+										<span class="slider-value">{resizePercentage}%</span>
+									</div>
+									<input
+										type="range"
+										bind:value={resizePercentage}
+										oninput={handleResizeChange}
+										min="25"
+										max="100"
+										step="25"
+										class="premium-slider"
+									/>
+								</div>
+								<div class="info-row">
+									<span class="label">📐 Neu:</span>
+									<span class="value">
+										{Math.round(originalImageDimensions.width * resizePercentage / 100)} × {Math.round(originalImageDimensions.height * resizePercentage / 100)} px
+										{#if resizedImageFile}
+											({Math.round(resizedImageFile.size / 1024)} KB)
+										{/if}
+									</span>
+								</div>
+							</div>
+						</div>
+					{/if}
 
 					<!-- Bild Preview -->
 					{#if activityImagePreview}
@@ -978,6 +1097,38 @@
 
 	.crop-btn:hover {
 		background: rgba(59, 130, 246, 0.3);
+	}
+
+	/* ✅ Resize Control Styles */
+	.resize-control {
+		margin-top: 16px;
+		padding: 16px;
+		background: rgba(59, 130, 246, 0.1);
+		border: 2px solid rgba(59, 130, 246, 0.3);
+		border-radius: 8px;
+	}
+
+	.resize-info {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.info-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 14px;
+	}
+
+	.info-row .label {
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.info-row .value {
+		color: rgba(255, 255, 255, 0.9);
+		font-family: monospace;
 	}
 
 	@media (max-width: 768px) {
