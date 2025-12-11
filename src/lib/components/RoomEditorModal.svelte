@@ -517,17 +517,22 @@
 						</div>
 					{/if}
 
-					<!-- Bild Preview -->
+					<!-- Bild Preview - Wie es auf der Kachel aussehen wird -->
 					{#if activityImagePreview}
 						<div class="image-preview-container">
 							<div class="preview-header">
-								<span>Vorschau ({activityImageSize})</span>
+								<span>📸 Vorschau (so wird es angezeigt)</span>
 								<button type="button" class="remove-btn" onclick={removeActivityImage}>
 									🗑️ Entfernen
 								</button>
 							</div>
-							<div class="activity-preview" class:size-small={activityImageSize === 'small'} class:size-medium={activityImageSize === 'medium'} class:size-large={activityImageSize === 'large'}>
-								<img src={activityImagePreview} alt="Preview" />
+							<!-- ✅ Exakt wie auf der Kachel -->
+							<div class="card-preview-wrapper">
+								<div class="preview-activity-image-container" class:size-small={activityImageSize === 'small'} class:size-medium={activityImageSize === 'medium'} class:size-large={activityImageSize === 'large'}>
+									<div class="preview-image-wrapper">
+										<img src={activityImagePreview} alt="Preview" />
+									</div>
+								</div>
 							</div>
 							<button type="button" class="crop-btn" onclick={() => showCropTool = !showCropTool}>
 								✂️ {showCropTool ? 'Crop schließen' : 'Bild zuschneiden'}
@@ -1089,35 +1094,55 @@
 		background: rgba(239, 68, 68, 0.3);
 	}
 
-	.activity-preview {
-		width: 100%;
-		padding: 8px;
-		background: rgba(255, 255, 255, 0.95);
-		border-radius: 4px;
-		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.8);
-		overflow: hidden;
+	/* ✅ Preview - Exakt wie auf der Kachel */
+	.card-preview-wrapper {
+		display: flex;
+		justify-content: center;
+		padding: 20px;
+		background: rgba(0, 0, 0, 0.1);
+		border-radius: 8px;
 	}
 
-	.activity-preview img {
+	.preview-activity-image-container {
+		width: 100%;
+		max-width: 300px;
+		padding: 6px;
+		padding-bottom: 10px;
+		background: rgba(255, 255, 255, 0.98);
+		border-radius: 3px;
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.3),
+			0 1px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	.preview-image-wrapper {
+		width: 100%;
+		overflow: hidden;
+		background: rgba(0, 0, 0, 0.05);
+		border-radius: 2px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.preview-image-wrapper img {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 		display: block;
-		border-radius: 2px;
 	}
 
-	.activity-preview.size-small {
-		max-height: 80px;
+	/* Größen-Varianten für Preview */
+	.preview-activity-image-container.size-small .preview-image-wrapper {
+		height: 80px;
 	}
 
-	.activity-preview.size-medium {
-		max-height: 120px;
+	.preview-activity-image-container.size-medium .preview-image-wrapper {
+		height: 120px;
 	}
 
-	.activity-preview.size-large {
-		max-height: 180px;
+	.preview-activity-image-container.size-large .preview-image-wrapper {
+		height: 180px;
 	}
 
 	.crop-btn {
