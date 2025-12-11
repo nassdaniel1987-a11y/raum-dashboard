@@ -15,6 +15,13 @@ export interface Room {
 	created_at: string;
 }
 
+export interface ImageCrop {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
 export interface DailyConfig {
 	id: string;
 	room_id: string;
@@ -28,6 +35,10 @@ export interface DailyConfig {
 	open_time: string | null; // HH:MM format
 	close_time: string | null; // HH:MM format
 	is_locked: boolean;
+	// ✅ Aktivitäts-Bild (geheftet an Kachel, kein Hintergrund)
+	activity_image_url: string | null;
+	activity_image_size: 'small' | 'medium' | 'large';
+	activity_image_crop: ImageCrop | null;
 }
 
 export interface RoomStatus {
