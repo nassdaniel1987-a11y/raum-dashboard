@@ -16,6 +16,7 @@
 	let dragStartY = $state(0);
 	let containerWidth = $state(300);
 	let containerHeight = $state(200);
+	let containerRef: HTMLDivElement;
 
 	// ✅ Neue Features
 	let zoom = $state(1);
@@ -55,60 +56,97 @@
 		}
 	});
 
-	function handleMouseDown(e: MouseEvent) {
-		isDragging = true;
-		dragStartX = e.offsetX - cropX;
-		dragStartY = e.offsetY - cropY;
-	}
-
-	function handleMouseMove(e: MouseEvent) {
-		if (isDragging) {
-			cropX = Math.max(0, Math.min(e.offsetX - dragStartX, containerWidth - cropWidth));
-			cropY = Math.max(0, Math.min(e.offsetY - dragStartY, containerHeight - cropHeight));
-			updateCrop();
+	// ✅ Unified handlers for Mouse & Touch
+	function getPointerPosition(e: MouseEvent | TouchEvent): { x: number; y: number } {
+		if (e instanceof MouseEvent) {
+			const rect = containerRef.getBoundingClientRect();
+			return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+		} else {
+			const rect = containerRef.getBoundingClientRect();
+			return {
+				x: e.touches[0].clientX - rect.left,
+				y: e.touches[0].clientY - rect.top
+			};
 		}
 	}
 
-	function handleMouseUp() {
+	function handlePointerDown(e: MouseEvent | TouchEvent) {
+		const pos = getPointerPosition(e);
+		isDragging = true;
+		dragStartX = pos.x - cropX;
+		dragStartY = pos.y - cropY;
+		if (e instanceof TouchEvent) {
+			e.preventDefault();
+		}
+	}
+
+	function handlePointerMove(e: MouseEvent | TouchEvent) {
+		if (!isDragging) return;
+		const pos = getPointerPosition(e);
+		cropX = Math.max(0, Math.min(pos.x - dragStartX, containerWidth - cropWidth));
+		cropY = Math.max(0, Math.min(pos.y - dragStartY, containerHeight - cropHeight));
+		updateCrop();
+		if (e instanceof TouchEvent) {
+			e.preventDefault();
+		}
+	}
+
+	function handlePointerUp() {
 		isDragging = false;
 	}
 
-	function handleResizeMouseDown(e: MouseEvent) {
+	function handleResizePointerDown(e: MouseEvent | TouchEvent) {
 		e.stopPropagation();
 		isResizing = true;
-		dragStartX = e.clientX;
-		dragStartY = e.clientY;
-	}
-
-	function handleResizeMouseMove(e: MouseEvent) {
-		if (isResizing) {
-			const deltaX = e.clientX - dragStartX;
-			const deltaY = e.clientY - dragStartY;
-
-			if (lockedRatio !== null) {
-				// Maintain aspect ratio
-				const newWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
-				cropWidth = newWidth;
-				cropHeight = newWidth / lockedRatio;
-
-				// Ensure height doesn't exceed container
-				if (cropHeight > containerHeight - cropY) {
-					cropHeight = containerHeight - cropY;
-					cropWidth = cropHeight * lockedRatio;
-				}
-			} else {
-				// Free resize
-				cropWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
-				cropHeight = Math.max(50, Math.min(cropHeight + deltaY, containerHeight - cropY));
-			}
-
+		if (e instanceof MouseEvent) {
 			dragStartX = e.clientX;
 			dragStartY = e.clientY;
-			updateCrop();
+		} else {
+			dragStartX = e.touches[0].clientX;
+			dragStartY = e.touches[0].clientY;
+			e.preventDefault();
 		}
 	}
 
-	function handleResizeMouseUp() {
+	function handleResizePointerMove(e: MouseEvent | TouchEvent) {
+		if (!isResizing) return;
+
+		let clientX, clientY;
+		if (e instanceof MouseEvent) {
+			clientX = e.clientX;
+			clientY = e.clientY;
+		} else {
+			clientX = e.touches[0].clientX;
+			clientY = e.touches[0].clientY;
+			e.preventDefault();
+		}
+
+		const deltaX = clientX - dragStartX;
+		const deltaY = clientY - dragStartY;
+
+		if (lockedRatio !== null) {
+			// Maintain aspect ratio
+			const newWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
+			cropWidth = newWidth;
+			cropHeight = newWidth / lockedRatio;
+
+			// Ensure height doesn't exceed container
+			if (cropHeight > containerHeight - cropY) {
+				cropHeight = containerHeight - cropY;
+				cropWidth = cropHeight * lockedRatio;
+			}
+		} else {
+			// Free resize
+			cropWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
+			cropHeight = Math.max(50, Math.min(cropHeight + deltaY, containerHeight - cropY));
+		}
+
+		dragStartX = clientX;
+		dragStartY = clientY;
+		updateCrop();
+	}
+
+	function handleResizePointerUp() {
 		isResizing = false;
 	}
 
@@ -128,7 +166,6 @@
 	}
 
 	function handleZoomChange() {
-		// Zoom affects the image display scale
 		updateCrop();
 	}
 
@@ -142,11 +179,19 @@
 
 	$effect(() => {
 		if (isResizing) {
-			document.addEventListener('mousemove', handleResizeMouseMove);
-			document.addEventListener('mouseup', handleResizeMouseUp);
+			const handleMove = (e: MouseEvent | TouchEvent) => handleResizePointerMove(e);
+			const handleUp = () => handleResizePointerUp();
+
+			document.addEventListener('mousemove', handleMove as any);
+			document.addEventListener('mouseup', handleUp);
+			document.addEventListener('touchmove', handleMove as any, { passive: false });
+			document.addEventListener('touchend', handleUp);
+
 			return () => {
-				document.removeEventListener('mousemove', handleResizeMouseMove);
-				document.removeEventListener('mouseup', handleResizeMouseUp);
+				document.removeEventListener('mousemove', handleMove as any);
+				document.removeEventListener('mouseup', handleUp);
+				document.removeEventListener('touchmove', handleMove as any);
+				document.removeEventListener('touchend', handleUp);
 			};
 		}
 	});
@@ -193,10 +238,14 @@
 
 	<!-- Crop Container -->
 	<div
+		bind:this={containerRef}
 		class="crop-container"
-		onmousedown={handleMouseDown}
-		onmousemove={handleMouseMove}
-		onmouseup={handleMouseUp}
+		onmousedown={handlePointerDown}
+		onmousemove={handlePointerMove}
+		onmouseup={handlePointerUp}
+		ontouchstart={handlePointerDown}
+		ontouchmove={handlePointerMove}
+		ontouchend={handlePointerUp}
 		bind:clientWidth={containerWidth}
 		bind:clientHeight={containerHeight}
 	>
@@ -211,7 +260,11 @@
 			class="crop-overlay"
 			style="left: {cropX}px; top: {cropY}px; width: {cropWidth}px; height: {cropHeight}px;"
 		>
-			<div class="crop-handle" onmousedown={handleResizeMouseDown}></div>
+			<div
+				class="crop-handle"
+				onmousedown={handleResizePointerDown}
+				ontouchstart={handleResizePointerDown}
+			></div>
 		</div>
 	</div>
 
@@ -364,6 +417,7 @@
 		border-radius: 4px;
 		cursor: move;
 		user-select: none;
+		touch-action: none; /* ✅ Wichtig für Touch-Support */
 		background: rgba(0, 0, 0, 0.5);
 	}
 
@@ -387,15 +441,16 @@
 
 	.crop-handle {
 		position: absolute;
-		bottom: -6px;
-		right: -6px;
-		width: 16px;
-		height: 16px;
+		bottom: -8px;
+		right: -8px;
+		width: 24px; /* ✅ Größer für Touch */
+		height: 24px;
 		background: #60a5fa;
 		border: 2px solid white;
 		border-radius: 50%;
 		cursor: nwse-resize;
 		pointer-events: all;
+		touch-action: none; /* ✅ Wichtig für Touch-Support */
 	}
 
 	.crop-handle:hover {
