@@ -231,14 +231,13 @@
 
 		{#if room.config?.activity_image_url}
 			<div class="activity-image-container" class:size-small={room.config.activity_image_size === 'small'} class:size-medium={room.config.activity_image_size === 'medium'} class:size-large={room.config.activity_image_size === 'large'}>
-				<img
-					src={room.config.activity_image_url}
-					alt={room.config.activity || 'Aktivität'}
-					class="activity-image"
-					style={room.config.activity_image_crop
-						? `object-position: ${-room.config.activity_image_crop.x}px ${-room.config.activity_image_crop.y}px;`
-						: ''}
-				/>
+				<div class="image-wrapper">
+					<img
+						src={room.config.activity_image_url}
+						alt={room.config.activity || 'Aktivität'}
+						class="activity-image"
+					/>
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -725,36 +724,46 @@
 	/* ✅ Aktivitäts-Bild - geheftet an Kachel (Polaroid-Stil) */
 	.activity-image-container {
 		width: 100%;
-		margin-top: 8px;
-		padding: 8px;
-		background: rgba(255, 255, 255, 0.95);
-		border-radius: 4px;
+		margin-top: 10px;
+		padding: 6px;
+		padding-bottom: 10px;
+		background: rgba(255, 255, 255, 0.98);
+		border-radius: 3px;
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.8);
+			0 2px 8px rgba(0, 0, 0, 0.3),
+			0 1px 3px rgba(0, 0, 0, 0.2);
 		position: relative;
+	}
+
+	.image-wrapper {
+		width: 100%;
+		height: 100%;
 		overflow: hidden;
+		background: rgba(0, 0, 0, 0.05);
+		border-radius: 2px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.activity-image {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 		display: block;
-		border-radius: 2px;
 	}
 
 	/* Größen-Varianten */
-	.activity-image-container.size-small {
-		max-height: 60px; /* ~25% einer typischen Kachel */
+	.activity-image-container.size-small .image-wrapper {
+		height: 80px;
 	}
 
-	.activity-image-container.size-medium {
-		max-height: 100px; /* ~40% einer typischen Kachel */
+	.activity-image-container.size-medium .image-wrapper {
+		height: 120px;
 	}
 
-	.activity-image-container.size-large {
-		max-height: 150px; /* ~60% einer typischen Kachel */
+	.activity-image-container.size-large .image-wrapper {
+		height: 180px;
 	}
 
 	@media (max-width: 768px) {
