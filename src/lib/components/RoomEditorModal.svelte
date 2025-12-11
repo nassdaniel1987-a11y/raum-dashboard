@@ -67,6 +67,31 @@
 	async function handleSave() {
 		uploading = true;
 		try {
+			// ✅ 1. Upload Aktivitäts-Bild zu Storage (falls vorhanden)
+			let finalActivityImageUrl = activityImagePreview;
+			if (activityImageFile) {
+				const fileExt = activityImageFile.name.split('.').pop();
+				const fileName = `activity-${room.id}-${Date.now()}.${fileExt}`;
+				const { error: uploadError } = await supabase.storage
+					.from('room-images')
+					.upload(fileName, activityImageFile, {
+						cacheControl: '3600',
+						upsert: true
+					});
+
+				if (!uploadError) {
+					const {
+						data: { publicUrl }
+					} = supabase.storage.from('room-images').getPublicUrl(fileName);
+					finalActivityImageUrl = publicUrl;
+				} else {
+					console.error('Error uploading activity image:', uploadError);
+					toasts.show('✕ Fehler beim Aktivitäts-Bild Upload!', 'error');
+					uploading = false;
+					return;
+				}
+			}
+
 			// Update Room
 			await supabase
 				.from('rooms')
@@ -88,7 +113,7 @@
 				title_font_size: titleFontSize,
 				text_font_size: textFontSize,
 				text_color: textColor, // ✅ NEU: Textfarbe speichern
-				activity_image_url: activityImagePreview, // ✅ Aktivitäts-Bild URL
+				activity_image_url: finalActivityImageUrl, // ✅ Storage URL statt Base64
 				activity_image_size: activityImageSize, // ✅ Bildgröße
 				activity_image_crop: activityImageCrop // ✅ Crop-Einstellungen
 			};
