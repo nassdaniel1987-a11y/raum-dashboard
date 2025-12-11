@@ -17,6 +17,44 @@
 	let containerWidth = $state(300);
 	let containerHeight = $state(200);
 
+	// ✅ Neue Features
+	let zoom = $state(1);
+	let rotation = $state(0); // 0, 90, 180, 270
+	let aspectRatio = $state<'free' | '1:1' | '16:9' | '4:3' | '9:16'>('free');
+	let lockedRatio = $state<number | null>(null);
+
+	// ✅ Aspect Ratio Lock
+	$effect(() => {
+		switch (aspectRatio) {
+			case '1:1':
+				lockedRatio = 1;
+				break;
+			case '16:9':
+				lockedRatio = 16 / 9;
+				break;
+			case '4:3':
+				lockedRatio = 4 / 3;
+				break;
+			case '9:16':
+				lockedRatio = 9 / 16;
+				break;
+			default:
+				lockedRatio = null;
+		}
+
+		// Adjust crop to match aspect ratio
+		if (lockedRatio !== null) {
+			const newHeight = cropWidth / lockedRatio;
+			if (newHeight <= containerHeight) {
+				cropHeight = newHeight;
+			} else {
+				cropHeight = containerHeight;
+				cropWidth = cropHeight * lockedRatio;
+			}
+			updateCrop();
+		}
+	});
+
 	function handleMouseDown(e: MouseEvent) {
 		isDragging = true;
 		dragStartX = e.offsetX - cropX;
@@ -46,8 +84,24 @@
 		if (isResizing) {
 			const deltaX = e.clientX - dragStartX;
 			const deltaY = e.clientY - dragStartY;
-			cropWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
-			cropHeight = Math.max(50, Math.min(cropHeight + deltaY, containerHeight - cropY));
+
+			if (lockedRatio !== null) {
+				// Maintain aspect ratio
+				const newWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
+				cropWidth = newWidth;
+				cropHeight = newWidth / lockedRatio;
+
+				// Ensure height doesn't exceed container
+				if (cropHeight > containerHeight - cropY) {
+					cropHeight = containerHeight - cropY;
+					cropWidth = cropHeight * lockedRatio;
+				}
+			} else {
+				// Free resize
+				cropWidth = Math.max(50, Math.min(cropWidth + deltaX, containerWidth - cropX));
+				cropHeight = Math.max(50, Math.min(cropHeight + deltaY, containerHeight - cropY));
+			}
+
 			dragStartX = e.clientX;
 			dragStartY = e.clientY;
 			updateCrop();
@@ -67,7 +121,23 @@
 		cropY = 0;
 		cropWidth = containerWidth;
 		cropHeight = containerHeight;
+		zoom = 1;
+		rotation = 0;
+		aspectRatio = 'free';
 		updateCrop();
+	}
+
+	function handleZoomChange() {
+		// Zoom affects the image display scale
+		updateCrop();
+	}
+
+	function rotateLeft() {
+		rotation = (rotation - 90 + 360) % 360;
+	}
+
+	function rotateRight() {
+		rotation = (rotation + 90) % 360;
 	}
 
 	$effect(() => {
@@ -83,8 +153,45 @@
 </script>
 
 <div class="crop-tool">
-	<p class="instructions">📐 Ziehe das Rechteck um den gewünschten Ausschnitt zu wählen</p>
+	<p class="instructions">✂️ Wähle den Ausschnitt, Zoom, Seitenverhältnis und Drehung</p>
 
+	<!-- ✅ Controls -->
+	<div class="controls">
+		<!-- Zoom -->
+		<div class="control-group">
+			<label>🔍 Zoom</label>
+			<div class="zoom-controls">
+				<button type="button" onclick={() => { zoom = Math.max(0.5, zoom - 0.25); handleZoomChange(); }}>−</button>
+				<input type="range" bind:value={zoom} oninput={handleZoomChange} min="0.5" max="3" step="0.25" />
+				<button type="button" onclick={() => { zoom = Math.min(3, zoom + 0.25); handleZoomChange(); }}>+</button>
+				<span class="zoom-value">{zoom.toFixed(2)}×</span>
+			</div>
+		</div>
+
+		<!-- Aspect Ratio -->
+		<div class="control-group">
+			<label>📐 Seitenverhältnis</label>
+			<div class="aspect-buttons">
+				<button type="button" class:active={aspectRatio === 'free'} onclick={() => aspectRatio = 'free'}>Frei</button>
+				<button type="button" class:active={aspectRatio === '1:1'} onclick={() => aspectRatio = '1:1'}>1:1</button>
+				<button type="button" class:active={aspectRatio === '16:9'} onclick={() => aspectRatio = '16:9'}>16:9</button>
+				<button type="button" class:active={aspectRatio === '4:3'} onclick={() => aspectRatio = '4:3'}>4:3</button>
+				<button type="button" class:active={aspectRatio === '9:16'} onclick={() => aspectRatio = '9:16'}>9:16</button>
+			</div>
+		</div>
+
+		<!-- Rotation -->
+		<div class="control-group">
+			<label>🔄 Drehen</label>
+			<div class="rotation-controls">
+				<button type="button" onclick={rotateLeft}>↶ 90° Links</button>
+				<button type="button" onclick={rotateRight}>↷ 90° Rechts</button>
+				<span class="rotation-value">{rotation}°</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Crop Container -->
 	<div
 		class="crop-container"
 		onmousedown={handleMouseDown}
@@ -93,7 +200,12 @@
 		bind:clientWidth={containerWidth}
 		bind:clientHeight={containerHeight}
 	>
-		<img src={imageSrc} alt="Crop" class="crop-image" />
+		<img
+			src={imageSrc}
+			alt="Crop"
+			class="crop-image"
+			style="transform: scale({zoom}) rotate({rotation}deg); transform-origin: center;"
+		/>
 
 		<div
 			class="crop-overlay"
@@ -118,23 +230,141 @@
 	}
 
 	.instructions {
-		margin-bottom: 12px;
+		margin-bottom: 16px;
 		color: rgba(255, 255, 255, 0.8);
 		font-size: 14px;
 		text-align: center;
+		font-weight: 600;
+	}
+
+	/* ✅ Controls */
+	.controls {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	.control-group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.control-group label {
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	/* Zoom Controls */
+	.zoom-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.zoom-controls button {
+		padding: 6px 12px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		color: white;
+		cursor: pointer;
+		font-weight: bold;
+		font-size: 16px;
+		transition: all 0.2s;
+	}
+
+	.zoom-controls button:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.zoom-controls input[type="range"] {
+		flex: 1;
+	}
+
+	.zoom-value {
+		min-width: 50px;
+		text-align: right;
+		color: rgba(255, 255, 255, 0.9);
+		font-family: monospace;
+		font-size: 13px;
+	}
+
+	/* Aspect Ratio Buttons */
+	.aspect-buttons {
+		display: flex;
+		gap: 6px;
+	}
+
+	.aspect-buttons button {
+		flex: 1;
+		padding: 6px 10px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		color: rgba(255, 255, 255, 0.8);
+		cursor: pointer;
+		font-size: 12px;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.aspect-buttons button:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.aspect-buttons button.active {
+		background: rgba(59, 130, 246, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
+		color: #60a5fa;
+	}
+
+	/* Rotation Controls */
+	.rotation-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.rotation-controls button {
+		flex: 1;
+		padding: 6px 10px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		color: white;
+		cursor: pointer;
+		font-size: 12px;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.rotation-controls button:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.rotation-value {
+		min-width: 40px;
+		text-align: right;
+		color: rgba(255, 255, 255, 0.9);
+		font-family: monospace;
+		font-size: 13px;
 	}
 
 	.crop-container {
 		position: relative;
 		width: 100%;
-		max-width: 400px;
+		max-width: 500px;
 		margin: 0 auto;
-		height: 300px;
+		height: 350px;
 		overflow: hidden;
 		border: 2px solid rgba(255, 255, 255, 0.3);
 		border-radius: 4px;
 		cursor: move;
 		user-select: none;
+		background: rgba(0, 0, 0, 0.5);
 	}
 
 	.crop-image {
@@ -142,6 +372,7 @@
 		height: 100%;
 		object-fit: contain;
 		pointer-events: none;
+		transition: transform 0.2s;
 	}
 
 	.crop-overlay {
@@ -182,6 +413,7 @@
 		color: var(--color-text-primary);
 		cursor: pointer;
 		transition: all 0.2s;
+		font-weight: 600;
 	}
 
 	.reset-btn:hover {
