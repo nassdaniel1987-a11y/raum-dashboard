@@ -171,6 +171,7 @@
 	class:status-closing-soon={roomStatus() === 'closing-soon'}
 	class:open={room.isOpen}
 	class:selected={isSelected}
+	class:has-activity-image={room.config?.activity_image_url}
 	style="{roomStyle}; border: {currentTheme.borderWidth} {currentTheme.borderStyle} {currentTheme.borderColor}; box-shadow: {currentTheme.boxShadow};"
 	onkeydown={(e) => e.key === 'Enter' && handleClick()}
 	in:scale={{ duration: 300, start: 0.8 }}
@@ -465,6 +466,11 @@
 		flex-direction: column;
 		align-items: center;
 		animation: badge-swing 3s ease-in-out infinite;
+	}
+
+	/* ✅ Badge-Position anpassen wenn Aktivitäts-Bild vorhanden */
+	.room-card.has-activity-image .person-badge {
+		bottom: -30px; /* ✅ Tiefer positioniert - hängt am Polaroid-Rahmen des Bildes */
 	}
 
 	/* ✅ Status-Badge - Hängend in der Mitte (Absperrband-Stil) */
