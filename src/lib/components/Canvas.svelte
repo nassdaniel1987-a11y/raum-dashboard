@@ -459,7 +459,8 @@
 		/* ✅ Weniger Spalten = BREITERE Kacheln */
 		width: calc((100% - 12px) / 4);
 		min-width: 180px;
-		max-height: calc(140px * var(--card-height-scale, 1)); /* ✅ Max-Höhe skaliert mit */
+		/* ✅ ENTFERNT: max-height - erlaubt Kacheln mit Bildern zu wachsen ohne Überlappung */
+		margin-bottom: 40px; /* ✅ Extra Platz für hängende Person-Badges (auch mit Bildern) */
 	}
 
 	.room-wrapper.selected {
