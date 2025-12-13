@@ -3,8 +3,8 @@
 	import { toasts } from '$lib/stores/toastStore';
 	import ColorPicker from './ColorPicker.svelte';
 	import TextColorPicker from './TextColorPicker.svelte';
-	import ImageCropTool from './ImageCropTool.svelte';
-	import type { RoomWithConfig, ImageCrop } from '$lib/types';
+	import ImagePositionEditor from './ImagePositionEditor.svelte';
+	import type { RoomWithConfig, ImagePosition } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { viewWeekday, currentTime } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
@@ -33,8 +33,7 @@
 	let activityImageFile = $state<File | null>(null);
 	let activityImagePreview = $state<string | null>(room.config?.activity_image_url || null);
 	let activityImageSize = $state<'small' | 'medium' | 'large'>(room.config?.activity_image_size || 'medium');
-	let activityImageCrop = $state(room.config?.activity_image_crop || null);
-	let showCropTool = $state(false);
+	let activityImagePosition = $state<ImagePosition | null>(room.config?.activity_image_position || null);
 
 	// ✅ Bild-Resize State
 	let originalImageDimensions = $state<{ width: number; height: number; size: number } | null>(null);
@@ -171,13 +170,13 @@
 			await supabase.from('daily_configs').update({
 				activity_image_url: null,
 				activity_image_size: 'medium',
-				activity_image_crop: null
+				activity_image_position: null
 			}).eq('room_id', room.id).eq('weekday', get(viewWeekday));
 
 			// ✅ Clear local state
 			activityImageFile = null;
 			activityImagePreview = null;
-			activityImageCrop = null;
+			activityImagePosition = null;
 			originalImageDimensions = null;
 			resizedImageFile = null;
 			resizePercentage = 75;
@@ -243,7 +242,7 @@
 				text_color: textColor, // ✅ NEU: Textfarbe speichern
 				activity_image_url: finalActivityImageUrl, // ✅ Storage URL statt Base64
 				activity_image_size: activityImageSize, // ✅ Bildgröße
-				activity_image_crop: activityImageCrop // ✅ Crop-Einstellungen
+				activity_image_position: activityImagePosition // ✅ Position & Zoom-Einstellungen
 			};
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
@@ -530,64 +529,22 @@
 						</div>
 					{/if}
 
-					<!-- ✅ Bild Preview & Crop - IMMER SICHTBAR -->
+					<!-- ✅ WYSIWYG Editor - EXAKTE Vorschau -->
 					{#if activityImagePreview}
 						<div class="image-preview-container">
 							<div class="preview-header">
-								<span>📸 Vorschau - So wird es auf der Kachel aussehen</span>
+								<span>📸 WYSIWYG Editor</span>
 								<button type="button" class="remove-btn" onclick={removeActivityImage}>
 									🗑️ Entfernen
 								</button>
 							</div>
 
-							<!-- ✅ Crop-Tool IMMER sichtbar -->
-							<div class="crop-section">
-								<label class="crop-label">✂️ Bildausschnitt wählen</label>
-								<ImageCropTool
-									imageSrc={activityImagePreview}
-									onCropChange={(crop) => activityImageCrop = crop}
-								/>
-							</div>
-
-							<!-- ✅ Alle 3 Größen nebeneinander -->
-							<div class="all-sizes-preview">
-								<div class="size-preview-item" class:selected={activityImageSize === 'small'}>
-									<div class="size-preview-label">
-										<span class="label-text">Klein</span>
-										<span class="label-dim">80px</span>
-									</div>
-									<div class="preview-activity-image-container size-small">
-										<div class="preview-image-wrapper">
-											<img src={activityImagePreview} alt="Klein" />
-										</div>
-									</div>
-								</div>
-
-								<div class="size-preview-item" class:selected={activityImageSize === 'medium'}>
-									<div class="size-preview-label">
-										<span class="label-text">Mittel</span>
-										<span class="label-dim">120px</span>
-									</div>
-									<div class="preview-activity-image-container size-medium">
-										<div class="preview-image-wrapper">
-											<img src={activityImagePreview} alt="Mittel" />
-										</div>
-									</div>
-								</div>
-
-								<div class="size-preview-item" class:selected={activityImageSize === 'large'}>
-									<div class="size-preview-label">
-										<span class="label-text">Groß</span>
-										<span class="label-dim">180px</span>
-									</div>
-									<div class="preview-activity-image-container size-large">
-										<div class="preview-image-wrapper">
-											<img src={activityImagePreview} alt="Groß" />
-										</div>
-									</div>
-								</div>
-							</div>
-							<p class="preview-hint">👆 Die gewählte Größe (<strong>{activityImageSize === 'small' ? 'Klein' : activityImageSize === 'medium' ? 'Mittel' : 'Groß'}</strong>) wird verwendet</p>
+							<!-- ✅ Neuer WYSIWYG Editor -->
+							<ImagePositionEditor
+								imageSrc={activityImagePreview}
+								size={activityImageSize}
+								onPositionChange={(pos) => activityImagePosition = pos}
+							/>
 						</div>
 					{/if}
 				</div>
