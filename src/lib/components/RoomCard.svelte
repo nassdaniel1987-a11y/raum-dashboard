@@ -237,6 +237,9 @@
 						src={room.config.activity_image_url}
 						alt={room.config.activity || 'Aktivität'}
 						class="activity-image"
+						style={room.config.activity_image_position
+							? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}); transform-origin: center;`
+							: ''}
 					/>
 				</div>
 			</div>
@@ -742,6 +745,7 @@
 	}
 
 	.image-wrapper {
+		position: relative; /* ✅ Für absolute positioning des Bildes */
 		width: 100%;
 		height: 100%;
 		overflow: hidden;
@@ -753,10 +757,14 @@
 	}
 
 	.activity-image {
+		position: absolute;
+		top: 50%;
+		left: 50%;
 		width: 100%;
-		height: 100%;
+		height: auto;
 		object-fit: contain;
 		display: block;
+		/* ✅ Transform wird inline gesetzt von activity_image_position */
 	}
 
 	/* Größen-Varianten */

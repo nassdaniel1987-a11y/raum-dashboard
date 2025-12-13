@@ -22,6 +22,13 @@ export interface ImageCrop {
 	height: number;
 }
 
+// ✅ NEU: Position & Zoom für WYSIWYG Editor
+export interface ImagePosition {
+	x: number; // Position in % (horizontal)
+	y: number; // Position in % (vertikal)
+	zoom: number; // Zoom level (0.5 - 3.0)
+}
+
 export interface DailyConfig {
 	id: string;
 	room_id: string;
@@ -38,7 +45,8 @@ export interface DailyConfig {
 	// ✅ Aktivitäts-Bild (geheftet an Kachel, kein Hintergrund)
 	activity_image_url: string | null;
 	activity_image_size: 'small' | 'medium' | 'large';
-	activity_image_crop: ImageCrop | null;
+	activity_image_crop: ImageCrop | null; // ✅ Legacy - wird durch activity_image_position ersetzt
+	activity_image_position: ImagePosition | null; // ✅ NEU: WYSIWYG Position & Zoom
 }
 
 export interface RoomStatus {
