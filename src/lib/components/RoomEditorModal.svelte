@@ -448,7 +448,7 @@
 
 					<!-- Größen-Auswahl -->
 					<div class="input-group">
-						<label>Bildgröße</label>
+						<label>Bildgröße auf Kachel</label>
 						<div class="size-buttons">
 							<button
 								type="button"
@@ -456,7 +456,8 @@
 								class:active={activityImageSize === 'small'}
 								onclick={() => activityImageSize = 'small'}
 							>
-								Klein
+								<span class="size-label">Klein</span>
+								<span class="size-dimension">80px</span>
 							</button>
 							<button
 								type="button"
@@ -464,7 +465,8 @@
 								class:active={activityImageSize === 'medium'}
 								onclick={() => activityImageSize = 'medium'}
 							>
-								Mittel
+								<span class="size-label">Mittel</span>
+								<span class="size-dimension">120px</span>
 							</button>
 							<button
 								type="button"
@@ -472,7 +474,8 @@
 								class:active={activityImageSize === 'large'}
 								onclick={() => activityImageSize = 'large'}
 							>
-								Groß
+								<span class="size-label">Groß</span>
+								<span class="size-dimension">180px</span>
 							</button>
 						</div>
 					</div>
@@ -527,33 +530,64 @@
 						</div>
 					{/if}
 
-					<!-- Bild Preview - Wie es auf der Kachel aussehen wird -->
+					<!-- ✅ Bild Preview & Crop - IMMER SICHTBAR -->
 					{#if activityImagePreview}
 						<div class="image-preview-container">
 							<div class="preview-header">
-								<span>📸 Vorschau (so wird es angezeigt)</span>
+								<span>📸 Vorschau - So wird es auf der Kachel aussehen</span>
 								<button type="button" class="remove-btn" onclick={removeActivityImage}>
 									🗑️ Entfernen
 								</button>
 							</div>
-							<!-- ✅ Exakt wie auf der Kachel -->
-							<div class="card-preview-wrapper">
-								<div class="preview-activity-image-container" class:size-small={activityImageSize === 'small'} class:size-medium={activityImageSize === 'medium'} class:size-large={activityImageSize === 'large'}>
-									<div class="preview-image-wrapper">
-										<img src={activityImagePreview} alt="Preview" />
-									</div>
-								</div>
-							</div>
-							<button type="button" class="crop-btn" onclick={() => showCropTool = !showCropTool}>
-								✂️ {showCropTool ? 'Crop schließen' : 'Bild zuschneiden'}
-							</button>
 
-							{#if showCropTool}
+							<!-- ✅ Crop-Tool IMMER sichtbar -->
+							<div class="crop-section">
+								<label class="crop-label">✂️ Bildausschnitt wählen</label>
 								<ImageCropTool
 									imageSrc={activityImagePreview}
 									onCropChange={(crop) => activityImageCrop = crop}
 								/>
-							{/if}
+							</div>
+
+							<!-- ✅ Alle 3 Größen nebeneinander -->
+							<div class="all-sizes-preview">
+								<div class="size-preview-item" class:selected={activityImageSize === 'small'}>
+									<div class="size-preview-label">
+										<span class="label-text">Klein</span>
+										<span class="label-dim">80px</span>
+									</div>
+									<div class="preview-activity-image-container size-small">
+										<div class="preview-image-wrapper">
+											<img src={activityImagePreview} alt="Klein" />
+										</div>
+									</div>
+								</div>
+
+								<div class="size-preview-item" class:selected={activityImageSize === 'medium'}>
+									<div class="size-preview-label">
+										<span class="label-text">Mittel</span>
+										<span class="label-dim">120px</span>
+									</div>
+									<div class="preview-activity-image-container size-medium">
+										<div class="preview-image-wrapper">
+											<img src={activityImagePreview} alt="Mittel" />
+										</div>
+									</div>
+								</div>
+
+								<div class="size-preview-item" class:selected={activityImageSize === 'large'}>
+									<div class="size-preview-label">
+										<span class="label-text">Groß</span>
+										<span class="label-dim">180px</span>
+									</div>
+									<div class="preview-activity-image-container size-large">
+										<div class="preview-image-wrapper">
+											<img src={activityImagePreview} alt="Groß" />
+										</div>
+									</div>
+								</div>
+							</div>
+							<p class="preview-hint">👆 Die gewählte Größe (<strong>{activityImageSize === 'small' ? 'Klein' : activityImageSize === 'medium' ? 'Mittel' : 'Groß'}</strong>) wird verwendet</p>
 						</div>
 					{/if}
 				</div>
@@ -1053,7 +1087,7 @@
 
 	.size-btn {
 		flex: 1;
-		padding: 8px 16px;
+		padding: 10px 16px;
 		background: rgba(255, 255, 255, 0.1);
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
@@ -1061,17 +1095,37 @@
 		cursor: pointer;
 		transition: all 0.2s;
 		font-weight: 600;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		align-items: center;
+	}
+
+	.size-label {
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.size-dimension {
+		font-size: 11px;
+		opacity: 0.7;
+		font-weight: 400;
 	}
 
 	.size-btn:hover {
 		background: rgba(255, 255, 255, 0.15);
 		border-color: rgba(255, 255, 255, 0.3);
+		transform: translateY(-2px);
 	}
 
 	.size-btn.active {
 		background: rgba(59, 130, 246, 0.3);
 		border-color: rgba(59, 130, 246, 0.6);
 		color: #60a5fa;
+	}
+
+	.size-btn.active .size-dimension {
+		opacity: 1;
 	}
 
 	.image-preview-container {
@@ -1102,6 +1156,95 @@
 
 	.remove-btn:hover {
 		background: rgba(239, 68, 68, 0.3);
+	}
+
+	/* ✅ Crop-Bereich */
+	.crop-section {
+		margin-bottom: 20px;
+		padding: 16px;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 8px;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.crop-label {
+		display: block;
+		font-weight: 600;
+		margin-bottom: 12px;
+		color: var(--color-text-primary);
+		font-size: 14px;
+	}
+
+	/* ✅ Alle 3 Größen nebeneinander */
+	.all-sizes-preview {
+		display: flex;
+		gap: 12px;
+		justify-content: center;
+		padding: 16px;
+		background: rgba(0, 0, 0, 0.15);
+		border-radius: 8px;
+		margin-top: 16px;
+		flex-wrap: wrap;
+	}
+
+	.size-preview-item {
+		flex: 1;
+		min-width: 150px;
+		max-width: 250px;
+		padding: 12px;
+		background: rgba(0, 0, 0, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		transition: all 0.3s;
+	}
+
+	.size-preview-item.selected {
+		border-color: rgba(59, 130, 246, 0.6);
+		background: rgba(59, 130, 246, 0.1);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+	}
+
+	.size-preview-label {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+		padding-bottom: 6px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.label-text {
+		font-weight: 700;
+		font-size: 13px;
+		color: var(--color-text-primary);
+	}
+
+	.label-dim {
+		font-size: 11px;
+		opacity: 0.6;
+		font-weight: 400;
+	}
+
+	.size-preview-item.selected .label-text {
+		color: #60a5fa;
+	}
+
+	.size-preview-item.selected .label-dim {
+		opacity: 1;
+		color: #60a5fa;
+	}
+
+	.preview-hint {
+		text-align: center;
+		margin-top: 12px;
+		font-size: 13px;
+		opacity: 0.8;
+		font-style: italic;
+	}
+
+	.preview-hint strong {
+		color: #60a5fa;
+		font-weight: 700;
 	}
 
 	/* ✅ Preview - Exakt wie auf der Kachel */

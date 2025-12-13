@@ -198,7 +198,12 @@
 </script>
 
 <div class="crop-tool">
-	<p class="instructions">✂️ Wähle den Ausschnitt, Zoom, Seitenverhältnis und Drehung</p>
+	<div class="instructions">
+		<div class="instruction-main">✂️ Bildausschnitt wählen</div>
+		<div class="instruction-sub">
+			👆 Ziehe den blauen Rahmen • 🔵 Ziehe am Punkt zum Vergrößern
+		</div>
+	</div>
 
 	<!-- ✅ Controls -->
 	<div class="controls">
@@ -284,10 +289,24 @@
 
 	.instructions {
 		margin-bottom: 16px;
-		color: rgba(255, 255, 255, 0.8);
-		font-size: 14px;
 		text-align: center;
-		font-weight: 600;
+		padding: 12px;
+		background: rgba(59, 130, 246, 0.15);
+		border: 2px solid rgba(59, 130, 246, 0.3);
+		border-radius: 8px;
+	}
+
+	.instruction-main {
+		color: #60a5fa;
+		font-size: 16px;
+		font-weight: 700;
+		margin-bottom: 6px;
+	}
+
+	.instruction-sub {
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 12px;
+		font-weight: 500;
 	}
 
 	/* ✅ Controls */
@@ -431,12 +450,23 @@
 
 	.crop-overlay {
 		position: absolute;
-		border: 2px dashed #60a5fa;
-		background: rgba(96, 165, 250, 0.1);
+		border: 3px dashed #60a5fa; /* ✅ Dicker für bessere Sichtbarkeit */
+		background: rgba(96, 165, 250, 0.05);
 		box-shadow:
-			0 0 0 9999px rgba(0, 0, 0, 0.5),
-			inset 0 0 0 2px rgba(96, 165, 250, 0.3);
+			0 0 0 9999px rgba(0, 0, 0, 0.65), /* ✅ Dunkler für besseren Kontrast */
+			inset 0 0 0 3px rgba(96, 165, 250, 0.4),
+			0 0 20px rgba(96, 165, 250, 0.6); /* ✅ Leuchtender Glow */
 		pointer-events: none;
+		animation: pulse-border 2s ease-in-out infinite; /* ✅ Subtile Pulsierung */
+	}
+
+	@keyframes pulse-border {
+		0%, 100% {
+			border-color: #60a5fa;
+		}
+		50% {
+			border-color: #93c5fd;
+		}
 	}
 
 	.crop-handle {
