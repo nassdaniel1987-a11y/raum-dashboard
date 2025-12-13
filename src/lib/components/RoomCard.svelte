@@ -468,7 +468,6 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		animation: badge-swing 3s ease-in-out infinite;
 	}
 
 	/* ✅ Badge-Position anpassen wenn Aktivitäts-Bild vorhanden */
@@ -486,7 +485,6 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		animation: badge-swing 2.5s ease-in-out infinite;
 		pointer-events: none;
 	}
 
@@ -559,19 +557,6 @@
 			0 8px 20px rgba(0, 0, 0, 0.6),
 			0 0 30px rgba(59, 130, 246, 0.6),
 			inset 0 1px 0 rgba(255, 255, 255, 0.4);
-	}
-
-	/* Sanftes Schwingen des Badges */
-	@keyframes badge-swing {
-		0%, 100% {
-			transform: translateX(-50%) rotate(0deg);
-		}
-		25% {
-			transform: translateX(-50%) rotate(-2deg);
-		}
-		75% {
-			transform: translateX(-50%) rotate(2deg);
-		}
 	}
 
 	.person-icon {
