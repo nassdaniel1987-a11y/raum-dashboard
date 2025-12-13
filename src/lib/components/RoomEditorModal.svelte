@@ -52,6 +52,7 @@
 		return new Promise((resolve, reject) => {
 			const reader = new FileReader();
 			reader.onload = (e) => {
+				const originalDataUrl = e.target?.result as string;
 				const img = new Image();
 				img.onload = () => {
 					const canvas = document.createElement('canvas');
@@ -74,21 +75,22 @@
 							return;
 						}
 
-						// ✅ Vergleiche Dateigrößen - nur verkleinern wenn tatsächlich kleiner
-						if (blob.size >= file.size && percentage >= 100) {
-							// Original ist kleiner oder gleich - verwende Original
-							const dataUrl = canvas.toDataURL(file.type);
-							resolve({ file, dataUrl });
+						// ✅ VERBESSERT: Vergleiche Dateigrößen - IMMER die kleinere verwenden
+						if (blob.size >= file.size) {
+							// Resized ist GRÖSSER - verwende Original!
+							console.log(`📦 Original behalten: ${(file.size/1024).toFixed(0)}KB < ${(blob.size/1024).toFixed(0)}KB`);
+							resolve({ file, dataUrl: originalDataUrl });
 						} else {
-							// Resized ist kleiner - verwende resized
+							// Resized ist KLEINER - verwende resized!
+							console.log(`📦 Resized verwenden: ${(blob.size/1024).toFixed(0)}KB < ${(file.size/1024).toFixed(0)}KB`);
 							const resizedFile = new File([blob], file.name, { type: file.type });
 							const dataUrl = canvas.toDataURL(file.type);
 							resolve({ file: resizedFile, dataUrl });
 						}
-					}, file.type, 0.8); // ✅ 80% Qualität statt 92%
+					}, file.type, 0.8); // ✅ 80% Qualität
 				};
 				img.onerror = reject;
-				img.src = e.target?.result as string;
+				img.src = originalDataUrl;
 			};
 			reader.onerror = reject;
 			reader.readAsDataURL(file);
