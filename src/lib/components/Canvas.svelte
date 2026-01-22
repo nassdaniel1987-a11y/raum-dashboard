@@ -397,10 +397,12 @@
 		padding: 0 0 12px 0;
 		border: none;
 		border-bottom: 5px solid rgba(255, 255, 255, 0.35);
-		transition: all 0.3s ease;
+		transition: transform 0.2s ease;
 		transform: translateZ(0);
-		will-change: transform;
 		margin-bottom: 8px;
+		/* Performance: Rendert nur sichtbare Sektionen */
+		content-visibility: auto;
+		contain-intrinsic-size: 0 300px;
 	}
 
 	.floor-section:last-child {

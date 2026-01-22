@@ -265,10 +265,14 @@
 
 {#if isOpen}
 	<!-- Overlay -->
-	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 200 }}></div>
+	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 150 }}></div>
 
-	<!-- Modal -->
-	<aside class="settings-modal" transition:fade={{ duration: 200 }}>
+	<!-- Bottom-Sheet -->
+	<aside class="settings-modal" transition:slide={{ duration: 250, axis: 'y' }}>
+		<!-- Drag Handle für Touch -->
+		<div class="sheet-handle">
+			<div class="handle-bar"></div>
+		</div>
 		<!-- Header -->
 		<div class="sidebar-header">
 			<h2>Einstellungen</h2>
@@ -501,36 +505,48 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(4px);
+		background: rgba(0, 0, 0, 0.5);
 		z-index: 9998;
 	}
 
+	/* Bottom-Sheet Design - besser für iPad/Touch */
 	.settings-modal {
 		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: 90%;
-		max-width: 800px;
-		max-height: 600px;
-		background: rgba(15, 23, 42, 0.98);
-		backdrop-filter: blur(20px);
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+		bottom: 0;
+		left: 0;
+		right: 0;
+		max-height: 85vh;
+		background: rgba(20, 25, 35, 0.98);
+		box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
 		z-index: 9999;
 		display: flex;
 		flex-direction: column;
-		border: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 12px;
+		border-top: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 20px 20px 0 0;
 		overflow: hidden;
+	}
+
+	/* Drag Handle für Bottom-Sheet */
+	.sheet-handle {
+		display: flex;
+		justify-content: center;
+		padding: 12px 0 8px 0;
+		cursor: grab;
+	}
+
+	.handle-bar {
+		width: 40px;
+		height: 4px;
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 2px;
 	}
 
 	.sidebar-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 16px 20px;
-		background: rgba(0, 0, 0, 0.3);
+		padding: 8px 20px 16px 20px;
+		background: transparent;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
@@ -1009,9 +1025,7 @@
 
 	@media (max-width: 768px) {
 		.settings-modal {
-			width: 95%;
-			max-width: 95%;
-			max-height: 95vh;
+			max-height: 90vh;
 		}
 
 		.theme-grid {
@@ -1019,23 +1033,38 @@
 		}
 
 		.tab {
-			font-size: 10px;
-			padding: 10px 6px;
+			font-size: 11px;
+			padding: 12px 8px;
+		}
+
+		.content {
+			min-height: 400px;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.settings-modal {
-			width: 100%;
-			max-width: 100%;
-			height: 100vh;
-			max-height: 100vh;
-			border-radius: 0;
-			transform: translate(-50%, -50%);
+			max-height: 95vh;
+			border-radius: 16px 16px 0 0;
 		}
 
 		.theme-grid.compact {
 			grid-template-columns: repeat(3, 1fr);
+		}
+
+		.section {
+			padding: 12px;
+		}
+	}
+
+	/* iPad/Tablet optimiert */
+	@media (min-width: 769px) {
+		.settings-modal {
+			max-height: 70vh;
+			max-width: 800px;
+			left: 50%;
+			transform: translateX(-50%);
+			border-radius: 20px 20px 0 0;
 		}
 	}
 </style>
