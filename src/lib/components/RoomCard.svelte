@@ -304,7 +304,6 @@
 		flex-direction: column;
 		transform: scaleX(var(--card-scale-x, 1)) translateZ(0);
 		will-change: transform;
-		contain: layout style paint;
 	}
 
 	/* ✅ Glassmorphism: Gradient-Overlay für Tiefe */
