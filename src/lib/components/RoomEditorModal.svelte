@@ -105,33 +105,64 @@
 		const input = e.target as HTMLInputElement;
 		const file = input.files?.[0];
 		if (file) {
-			activityImageFile = file;
+			await processImageFile(file);
+		}
+	}
 
-			// Lade Bild um Dimensionen zu bekommen
-			const reader = new FileReader();
-			reader.onload = async (e) => {
-				const img = new Image();
-				img.onload = async () => {
-					// Speichere Original-Dimensionen
-					originalImageDimensions = {
-						width: img.width,
-						height: img.height,
-						size: file.size
-					};
+	// ✅ Gemeinsame Funktion für File-Verarbeitung (Input + Drag & Drop)
+	async function processImageFile(file: File) {
+		if (!file.type.startsWith('image/')) {
+			toasts.show('Nur Bilddateien erlaubt!', 'error');
+			return;
+		}
 
-					// Resize mit aktuellem Prozentsatz
-					try {
-						const { file: resized, dataUrl } = await resizeImage(file, resizePercentage);
-						resizedImageFile = resized;
-						activityImagePreview = dataUrl;
-					} catch (error) {
-						console.error('Error resizing image:', error);
-						activityImagePreview = e.target?.result as string;
-					}
+		activityImageFile = file;
+
+		// Lade Bild um Dimensionen zu bekommen
+		const reader = new FileReader();
+		reader.onload = async (e) => {
+			const img = new Image();
+			img.onload = async () => {
+				// Speichere Original-Dimensionen
+				originalImageDimensions = {
+					width: img.width,
+					height: img.height,
+					size: file.size
 				};
-				img.src = e.target?.result as string;
+
+				// Resize mit aktuellem Prozentsatz
+				try {
+					const { file: resized, dataUrl } = await resizeImage(file, resizePercentage);
+					resizedImageFile = resized;
+					activityImagePreview = dataUrl;
+				} catch (error) {
+					console.error('Error resizing image:', error);
+					activityImagePreview = e.target?.result as string;
+				}
 			};
-			reader.readAsDataURL(file);
+			img.src = e.target?.result as string;
+		};
+		reader.readAsDataURL(file);
+	}
+
+	// ✅ Drag & Drop Handler
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		isDragging = true;
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault();
+		isDragging = false;
+	}
+
+	async function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		isDragging = false;
+
+		const file = e.dataTransfer?.files[0];
+		if (file) {
+			await processImageFile(file);
 		}
 	}
 
@@ -484,15 +515,31 @@
 						</div>
 					</div>
 
-					<!-- Bild Upload -->
+					<!-- Bild Upload mit Drag & Drop -->
 					<div class="input-group">
 						<label>Bild hochladen</label>
-						<input
-							type="file"
-							accept="image/*"
-							onchange={handleActivityImageSelect}
-							class="file-input"
-						/>
+						<div
+							class="drop-zone"
+							class:dragging={isDragging}
+							ondragover={handleDragOver}
+							ondragleave={handleDragLeave}
+							ondrop={handleDrop}
+							role="button"
+							tabindex="0"
+						>
+							<div class="drop-zone-content">
+								<span class="drop-icon">{isDragging ? '📥' : '🖼️'}</span>
+								<span class="drop-text">
+									{isDragging ? 'Bild hier ablegen' : 'Bild hierher ziehen oder klicken'}
+								</span>
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								onchange={handleActivityImageSelect}
+								class="file-input-hidden"
+							/>
+						</div>
 					</div>
 
 					<!-- ✅ Bild-Resize Slider -->
@@ -811,28 +858,51 @@
 		padding: 10px;
 	}
 
-	/* ✅ File Input */
-	.file-input {
+	/* ✅ Drop Zone für Drag & Drop */
+	.drop-zone {
+		position: relative;
+		border: 2px dashed rgba(59, 130, 246, 0.5);
+		border-radius: 12px;
+		padding: 24px;
+		text-align: center;
 		cursor: pointer;
-		padding: 12px;
-		font-size: 14px;
+		transition: all 0.2s ease;
+		background: rgba(59, 130, 246, 0.05);
 	}
 
-	.file-input::-webkit-file-upload-button {
-		padding: 8px 16px;
-		border: 2px solid rgba(59, 130, 246, 0.5);
-		border-radius: 8px;
+	.drop-zone:hover {
+		border-color: rgba(59, 130, 246, 0.8);
+		background: rgba(59, 130, 246, 0.1);
+	}
+
+	.drop-zone.dragging {
+		border-color: #3b82f6;
 		background: rgba(59, 130, 246, 0.2);
-		color: white;
-		font-weight: 600;
-		cursor: pointer;
-		margin-right: 12px;
-		transition: all 0.3s;
+		transform: scale(1.01);
 	}
 
-	.file-input::-webkit-file-upload-button:hover {
-		background: rgba(59, 130, 246, 0.3);
-		border-color: rgba(59, 130, 246, 0.7);
+	.drop-zone-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		pointer-events: none;
+	}
+
+	.drop-icon {
+		font-size: 32px;
+	}
+
+	.drop-text {
+		font-size: 14px;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.file-input-hidden {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		cursor: pointer;
 	}
 
 	.hint {
