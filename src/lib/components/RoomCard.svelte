@@ -180,7 +180,7 @@
 	tabindex="0"
 >
 	{#if room.image_url}
-		<img src={room.image_url} alt={room.name} class="card-bg-image" />
+		<img src={room.image_url} alt={room.name} class="card-bg-image" loading="lazy" decoding="async" />
 	{/if}
 
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
@@ -237,6 +237,8 @@
 						src={room.config.activity_image_url}
 						alt={room.config.activity || 'Aktivität'}
 						class="activity-image"
+						loading="lazy"
+						decoding="async"
 						style={room.config.activity_image_position
 							? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}); transform-origin: center;`
 							: ''}
@@ -288,25 +290,21 @@
 <style>
 	.room-card {
 		position: relative;
-		border-radius: 20px; /* ✅ Noch runder für moderneren Look */
+		border-radius: 20px;
 		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.4),
-			0 2px 16px rgba(0, 0, 0, 0.2),
-			inset 0 2px 4px rgba(255, 255, 255, 0.1);
-		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* ✅ Smooth cubic-bezier */
-		overflow: visible; /* ✅ Erlaubt Badge außerhalb der Kachel */
-		/* ✅ GLASSMORPHISM: Verstärkt */
-		backdrop-filter: blur(20px) saturate(180%);
-		-webkit-backdrop-filter: blur(20px) saturate(180%);
-		background: rgba(255, 255, 255, 0.1); /* ✅ Basis-Glass-Layer */
+			0 4px 16px rgba(0, 0, 0, 0.3),
+			0 2px 8px rgba(0, 0, 0, 0.15);
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+		overflow: visible;
+		/* Performance: backdrop-filter entfernt - zu teuer für iPad */
+		background: rgba(30, 30, 40, 0.85);
 		height: 100%;
-		min-height: 80px; /* ✅ Niedriger für kompaktere Kacheln */
+		min-height: 80px;
 		display: flex;
 		flex-direction: column;
-		/* Border und box-shadow werden dynamisch per Theme gesetzt */
-		/* GPU-Beschleunigung + TV-Skalierung */
 		transform: scaleX(var(--card-scale-x, 1)) translateZ(0);
-		will-change: transform, box-shadow;
+		will-change: transform;
+		contain: layout style paint;
 	}
 
 	/* ✅ Glassmorphism: Gradient-Overlay für Tiefe */
@@ -353,11 +351,10 @@
 	}
 
 	.room-card:hover {
-		transform: translateY(-6px) scale(1.02) translateZ(0); /* ✅ Micro-lift + scale */
+		transform: translateY(-4px) scale(1.01) translateZ(0);
 		box-shadow:
-			0 16px 40px rgba(0, 0, 0, 0.5),
-			0 8px 16px rgba(0, 0, 0, 0.3),
-			inset 0 2px 4px rgba(255, 255, 255, 0.2);
+			0 8px 24px rgba(0, 0, 0, 0.4),
+			0 4px 8px rgba(0, 0, 0, 0.2);
 		border-color: rgba(255, 255, 255, 0.3);
 	}
 
@@ -499,8 +496,8 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 		position: relative;
 		white-space: nowrap;
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(8px);
+		background: rgba(255, 255, 255, 0.98);
+		/* Performance: backdrop-filter entfernt */
 	}
 
 	/* Stempel - GESCHLOSSEN (Rot) */
@@ -535,19 +532,15 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 14px;
-		/* Background und Border werden dynamisch per Theme gesetzt */
 		border-width: 2px;
 		border-style: solid;
 		border-radius: 8px;
 		font-size: 12px;
 		font-weight: 700;
 		color: white;
-		box-shadow:
-			0 6px 16px rgba(0, 0, 0, 0.5),
-			0 2px 8px rgba(59, 130, 246, 0.4),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
-		backdrop-filter: blur(8px);
-		transition: all 0.3s;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		/* Performance: backdrop-filter entfernt */
+		transition: transform 0.2s ease;
 		white-space: nowrap;
 	}
 

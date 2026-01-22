@@ -40,6 +40,9 @@
 	let resizePercentage = $state(75); // Default 75%
 	let resizedImageFile = $state<File | null>(null);
 
+	// ✅ Drag & Drop State
+	let isDragging = $state(false);
+
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
