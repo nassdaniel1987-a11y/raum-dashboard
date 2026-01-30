@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs } from '$lib/stores/appState';
 	import { toasts } from '$lib/stores/toastStore';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -16,14 +16,14 @@
 	let isOpen = $state(false);
 	let copiedDay = $state<number | null>(null);
 
-	// Actions
+	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
-		{ id: 'scheduler', icon: '📅', label: 'Tagesplaner', color: 'purple' },
-		{ id: 'paste', icon: '📋', label: 'Tag einfügen', color: 'blue', disabled: () => copiedDay === null },
-		{ id: 'copy', icon: '📄', label: 'Tag kopieren', color: 'blue' },
-		{ id: 'close-all', icon: '🔒', label: 'Alle schließen', color: 'red' },
-		{ id: 'open-all', icon: '🔓', label: 'Alle öffnen', color: 'green' },
 		{ id: 'new-room', icon: '➕', label: 'Neuer Raum', color: 'blue' },
+		{ id: 'open-all', icon: '🔓', label: 'Alle öffnen', color: 'green' },
+		{ id: 'close-all', icon: '🔒', label: 'Alle schließen', color: 'red' },
+		{ id: 'copy', icon: '📄', label: 'Tag kopieren', color: 'blue' },
+		{ id: 'paste', icon: '📋', label: 'Tag einfügen', color: 'blue', disabled: () => copiedDay === null },
+		{ id: 'scheduler', icon: '📅', label: 'Tagesplaner', color: 'purple' },
 	];
 
 	function toggleMenu() {
@@ -41,7 +41,6 @@
 				if (onOpenNewRoom) {
 					onOpenNewRoom();
 				} else {
-					// Fallback: Direkt erstellen mit Prompt
 					const name = prompt('Name des neuen Raums:');
 					if (name?.trim()) {
 						await createNewRoom(name.trim(), 'eg');
@@ -116,7 +115,17 @@
 			></div>
 		{/if}
 
-		<!-- Speed Dial Actions -->
+		<!-- Main FAB Button (jetzt oben) -->
+		<button
+			class="fab-main"
+			class:open={isOpen}
+			onclick={toggleMenu}
+			title="Schnellaktionen"
+		>
+			<span class="fab-icon">{isOpen ? '✕' : '⚡'}</span>
+		</button>
+
+		<!-- Speed Dial Actions (jetzt nach unten) -->
 		{#if isOpen}
 			<div class="fab-actions" transition:fade={{ duration: 150 }}>
 				{#each actions as action, i}
@@ -128,7 +137,7 @@
 						onclick={() => !isDisabled && handleAction(action.id)}
 						disabled={isDisabled}
 						title={action.label}
-						transition:fly={{ y: 20, duration: 200, delay: i * 30 }}
+						transition:fly={{ y: -20, duration: 200, delay: i * 30 }}
 					>
 						<span class="action-icon">{action.icon}</span>
 						<span class="action-label">{action.label}</span>
@@ -136,25 +145,15 @@
 				{/each}
 			</div>
 		{/if}
-
-		<!-- Main FAB Button -->
-		<button
-			class="fab-main"
-			class:open={isOpen}
-			onclick={toggleMenu}
-			title="Schnellaktionen"
-		>
-			<span class="fab-icon">{isOpen ? '✕' : '⚡'}</span>
-		</button>
 	</div>
 {/if}
 
 <style>
 	.fab-container {
 		position: fixed;
-		/* Höher positioniert damit er auch ohne Vollbild sichtbar ist */
-		bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-		right: calc(24px + env(safe-area-inset-right, 0px));
+		/* Oben rechts, unter Header + DailyHighlights */
+		top: 120px;
+		right: 24px;
 		z-index: 9000;
 		display: flex;
 		flex-direction: column;
@@ -177,7 +176,7 @@
 		flex-direction: column;
 		align-items: flex-end;
 		gap: 10px;
-		margin-bottom: 8px;
+		margin-top: 8px;
 	}
 
 	.fab-action {
@@ -274,7 +273,7 @@
 	/* Mobile/Tablet Anpassungen */
 	@media (max-width: 768px) {
 		.fab-container {
-			bottom: 16px;
+			top: 110px;
 			right: 16px;
 		}
 
@@ -296,7 +295,7 @@
 	/* iPad Landscape */
 	@media (min-width: 1024px) {
 		.fab-container {
-			bottom: 32px;
+			top: 130px;
 			right: 32px;
 		}
 	}
