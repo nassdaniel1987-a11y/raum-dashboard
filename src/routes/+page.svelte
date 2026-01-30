@@ -65,32 +65,34 @@
 	<Header onOpenMenu={openMenu} {canvasRef} />
 	<DailyHighlights onOpenEditor={openHighlightsEditor} />
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
-	<SidebarMenu
-		isOpen={showMenu}
-		onClose={closeMenu}
-		onOpenScheduler={openScheduler}
-		{canvasRef}
-	/>
-	<FloatingActionButton onOpenScheduler={openScheduler} />
-	<ToastContainer />
-	<ConfirmDialog />
+</div>
+
+<!-- Außerhalb des Containers damit contain: layout sie nicht abschneidet -->
+<SidebarMenu
+	isOpen={showMenu}
+	onClose={closeMenu}
+	onOpenScheduler={openScheduler}
+	{canvasRef}
+/>
+<FloatingActionButton onOpenScheduler={openScheduler} />
+<ToastContainer />
+<ConfirmDialog />
 
 	{#if editingRoom}
-		<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
-	{/if}
+	<RoomEditorModal room={editingRoom} onClose={closeEditModal} />
+{/if}
 
-	{#if showScheduler}
-		<DailySchedulerModal onClose={closeScheduler} />
-	{/if}
+{#if showScheduler}
+	<DailySchedulerModal onClose={closeScheduler} />
+{/if}
 
-	{#if showHelp}
-		<HelpModal onClose={closeHelp} />
-	{/if}
+{#if showHelp}
+	<HelpModal onClose={closeHelp} />
+{/if}
 
 	{#if showHighlightsEditor}
-		<DailyHighlightsEditor onClose={closeHighlightsEditor} />
-	{/if}
-</div>
+	<DailyHighlightsEditor onClose={closeHighlightsEditor} />
+{/if}
 
 <style>
 	.dashboard {
