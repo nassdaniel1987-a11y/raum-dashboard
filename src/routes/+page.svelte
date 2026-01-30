@@ -9,6 +9,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import DailyHighlights from '$lib/components/DailyHighlights.svelte';
 	import DailyHighlightsEditor from '$lib/components/DailyHighlightsEditor.svelte';
+	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -70,6 +71,7 @@
 		onOpenScheduler={openScheduler}
 		{canvasRef}
 	/>
+	<FloatingActionButton onOpenScheduler={openScheduler} />
 	<ToastContainer />
 	<ConfirmDialog />
 
