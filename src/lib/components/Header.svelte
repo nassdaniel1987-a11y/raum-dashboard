@@ -125,7 +125,7 @@
 
 	<div class="header-center">
 		<button class="day-nav-btn" onclick={previousDay} title="Vorheriger Tag" aria-label="Vorheriger Tag">
-			◀
+			⬅️
 		</button>
 
 		<div class="day-display">
@@ -138,7 +138,7 @@
 		</div>
 
 		<button class="day-nav-btn" onclick={nextDay} title="Nächster Tag" aria-label="Nächster Tag">
-			▶
+			➡️
 		</button>
 
 		<div class="separator"></div>
@@ -164,7 +164,7 @@
 			title="Auto-Scroll"
 			aria-label="Auto-Scroll umschalten"
 		>
-			{autoScrollActive ? '⏸' : '▶'}
+			{autoScrollActive ? '⏸️' : '▶️'}
 		</button>
 		<button
 			class="icon-btn"
@@ -173,11 +173,11 @@
 			title="Vollbild"
 			aria-label="Vollbild umschalten"
 		>
-			⛶
+			{isFullscreen ? '🔲' : '⬜'}
 		</button>
 		{#if onOpenMenu}
 			<button class="menu-btn" onclick={onOpenMenu} title="Menü" aria-label="Menü öffnen">
-				Menü
+				⚙️ Menü
 			</button>
 		{/if}
 	</div>
