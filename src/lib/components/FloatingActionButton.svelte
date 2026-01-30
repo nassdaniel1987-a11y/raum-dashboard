@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs } from '$lib/stores/appState';
 	import { toasts } from '$lib/stores/toastStore';
-	import { fade, fly } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
 	const weekdayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -15,6 +15,11 @@
 	// State
 	let isOpen = $state(false);
 	let copiedDay = $state<number | null>(null);
+
+	// Raum-Erstellung State
+	let showCreateForm = $state(false);
+	let newRoomName = $state('');
+	let newRoomFloor = $state('eg');
 
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
@@ -32,20 +37,37 @@
 
 	function closeMenu() {
 		isOpen = false;
+		showCreateForm = false;
+	}
+
+	async function handleCreateRoom() {
+		if (!newRoomName.trim()) {
+			toasts.show('Bitte Raum-Namen eingeben!', 'error');
+			return;
+		}
+
+		await createNewRoom(newRoomName.trim(), newRoomFloor);
+		toasts.show(`✓ Raum "${newRoomName}" erstellt!`, 'success');
+		newRoomName = '';
+		newRoomFloor = 'eg';
+		closeMenu();
+	}
+
+	function cancelCreateRoom() {
+		showCreateForm = false;
+		newRoomName = '';
+		newRoomFloor = 'eg';
 	}
 
 	async function handleAction(actionId: string) {
 		switch (actionId) {
 			case 'new-room':
-				closeMenu();
 				if (onOpenNewRoom) {
+					closeMenu();
 					onOpenNewRoom();
 				} else {
-					const name = prompt('Name des neuen Raums:');
-					if (name?.trim()) {
-						await createNewRoom(name.trim(), 'eg');
-						toasts.show(`✓ Raum "${name}" erstellt!`, 'success');
-					}
+					// Zeige Inline-Formular
+					showCreateForm = true;
 				}
 				break;
 
@@ -127,23 +149,52 @@
 
 		<!-- Speed Dial Actions (jetzt nach unten) -->
 		{#if isOpen}
-			<div class="fab-actions" transition:fade={{ duration: 150 }}>
-				{#each actions as action, i}
-					{@const isDisabled = action.disabled?.() ?? false}
-					<button
-						class="fab-action"
-						class:disabled={isDisabled}
-						style="background: {getActionColor(action.color)};"
-						onclick={() => !isDisabled && handleAction(action.id)}
-						disabled={isDisabled}
-						title={action.label}
-						transition:fly={{ y: -20, duration: 200, delay: i * 30 }}
-					>
-						<span class="action-icon">{action.icon}</span>
-						<span class="action-label">{action.label}</span>
-					</button>
-				{/each}
-			</div>
+			{#if showCreateForm}
+				<!-- Inline Raum-Erstellung Formular -->
+				<div class="create-form" transition:slide={{ duration: 200 }}>
+					<div class="form-header">
+						<span class="form-icon">➕</span>
+						<span class="form-title">Neuer Raum</span>
+					</div>
+					<input
+						type="text"
+						class="form-input"
+						bind:value={newRoomName}
+						placeholder="Raum-Name..."
+						onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()}
+					/>
+					<select class="form-select" bind:value={newRoomFloor}>
+						<option value="extern">Außenbereich</option>
+						<option value="dach">Dachgeschoss</option>
+						<option value="og2">2. OG</option>
+						<option value="og1">1. OG</option>
+						<option value="eg">Erdgeschoss</option>
+						<option value="ug">Untergeschoss</option>
+					</select>
+					<div class="form-buttons">
+						<button class="form-btn create" onclick={handleCreateRoom}>Erstellen</button>
+						<button class="form-btn cancel" onclick={cancelCreateRoom}>Abbrechen</button>
+					</div>
+				</div>
+			{:else}
+				<div class="fab-actions" transition:fade={{ duration: 150 }}>
+					{#each actions as action, i}
+						{@const isDisabled = action.disabled?.() ?? false}
+						<button
+							class="fab-action"
+							class:disabled={isDisabled}
+							style="background: {getActionColor(action.color)};"
+							onclick={() => !isDisabled && handleAction(action.id)}
+							disabled={isDisabled}
+							title={action.label}
+							transition:fly={{ y: -20, duration: 200, delay: i * 30 }}
+						>
+							<span class="action-icon">{action.icon}</span>
+							<span class="action-label">{action.label}</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
 		{/if}
 	</div>
 {/if}
@@ -270,6 +321,103 @@
 		transform: rotate(90deg);
 	}
 
+	/* Raum-Erstellung Formular */
+	.create-form {
+		background: rgba(30, 35, 50, 0.98);
+		border-radius: 16px;
+		padding: 16px;
+		min-width: 240px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.form-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 12px;
+		padding-bottom: 10px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.form-icon {
+		font-size: 20px;
+	}
+
+	.form-title {
+		color: white;
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	.form-input,
+	.form-select {
+		width: 100%;
+		padding: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 14px;
+		margin-bottom: 10px;
+		box-sizing: border-box;
+	}
+
+	.form-input::placeholder {
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.form-input:focus,
+	.form-select:focus {
+		outline: none;
+		border-color: #3b82f6;
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.form-select option {
+		background: #1e2332;
+		color: white;
+	}
+
+	.form-buttons {
+		display: flex;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	.form-btn {
+		flex: 1;
+		padding: 10px 16px;
+		border: none;
+		border-radius: 10px;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: transform 0.2s, opacity 0.2s;
+	}
+
+	.form-btn:hover {
+		transform: scale(1.02);
+	}
+
+	.form-btn:active {
+		transform: scale(0.98);
+	}
+
+	.form-btn.create {
+		background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+		color: white;
+	}
+
+	.form-btn.cancel {
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.form-btn.cancel:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
 	/* Mobile/Tablet Anpassungen */
 	@media (max-width: 768px) {
 		.fab-container {
@@ -289,6 +437,16 @@
 
 		.action-label {
 			font-size: 13px;
+		}
+
+		.create-form {
+			min-width: 220px;
+			padding: 14px;
+		}
+
+		.form-input,
+		.form-select {
+			padding: 10px;
 		}
 	}
 
