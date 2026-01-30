@@ -143,7 +143,6 @@
 			class:open={isOpen}
 			onclick={toggleMenu}
 			title="Schnellaktionen"
-			transition:scale={{ duration: 200 }}
 		>
 			<span class="fab-icon">{isOpen ? '✕' : '⚡'}</span>
 		</button>
@@ -153,9 +152,10 @@
 <style>
 	.fab-container {
 		position: fixed;
-		bottom: 24px;
-		right: 24px;
-		z-index: 1000;
+		/* Höher positioniert damit er auch ohne Vollbild sichtbar ist */
+		bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+		right: calc(24px + env(safe-area-inset-right, 0px));
+		z-index: 9000;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
