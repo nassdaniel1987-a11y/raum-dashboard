@@ -530,7 +530,7 @@
 							<div class="drop-zone-content">
 								<span class="drop-icon">{isDragging ? '📥' : '🖼️'}</span>
 								<span class="drop-text">
-									{isDragging ? 'Bild hier ablegen' : 'Bild hierher ziehen oder klicken'}
+									{isDragging ? 'Bild hier ablegen' : 'Bild hierher ziehen'}
 								</span>
 							</div>
 							<input
@@ -539,6 +539,31 @@
 								onchange={handleActivityImageSelect}
 								class="file-input-hidden"
 							/>
+						</div>
+
+						<!-- Buttons für Galerie und Kamera -->
+						<div class="image-source-buttons">
+							<label class="source-btn gallery">
+								<span class="btn-icon">📁</span>
+								<span class="btn-text">Bild auswählen</span>
+								<input
+									type="file"
+									accept="image/*"
+									onchange={handleActivityImageSelect}
+									class="file-input-hidden"
+								/>
+							</label>
+							<label class="source-btn camera">
+								<span class="btn-icon">📷</span>
+								<span class="btn-text">Foto aufnehmen</span>
+								<input
+									type="file"
+									accept="image/*"
+									capture="environment"
+									onchange={handleActivityImageSelect}
+									class="file-input-hidden"
+								/>
+							</label>
 						</div>
 					</div>
 
@@ -903,6 +928,59 @@
 		inset: 0;
 		opacity: 0;
 		cursor: pointer;
+	}
+
+	/* Bild-Quelle Buttons (Galerie & Kamera) */
+	.image-source-buttons {
+		display: flex;
+		gap: 10px;
+		margin-top: 12px;
+	}
+
+	.source-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 14px 16px;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.source-btn.gallery {
+		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+	}
+
+	.source-btn.gallery:hover {
+		background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
+		border-color: rgba(59, 130, 246, 0.5);
+		transform: translateY(-2px);
+	}
+
+	.source-btn.camera {
+		background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+		border: 1px solid rgba(34, 197, 94, 0.3);
+	}
+
+	.source-btn.camera:hover {
+		background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%);
+		border-color: rgba(34, 197, 94, 0.5);
+		transform: translateY(-2px);
+	}
+
+	.source-btn .btn-icon {
+		font-size: 20px;
+	}
+
+	.source-btn .btn-text {
+		font-size: 14px;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.9);
 	}
 
 	.hint {
@@ -1408,6 +1486,14 @@
 
 		.btn {
 			width: 100%;
+		}
+
+		.image-source-buttons {
+			flex-direction: column;
+		}
+
+		.source-btn {
+			padding: 12px 14px;
 		}
 	}
 
