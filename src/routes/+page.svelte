@@ -10,7 +10,6 @@
 	import DailyHighlights from '$lib/components/DailyHighlights.svelte';
 	import DailyHighlightsEditor from '$lib/components/DailyHighlightsEditor.svelte';
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
-	import Mascot from '$lib/components/Mascot.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -76,7 +75,6 @@
 	{canvasRef}
 />
 <FloatingActionButton onOpenScheduler={openScheduler} />
-<Mascot />
 <ToastContainer />
 <ConfirmDialog />
 
