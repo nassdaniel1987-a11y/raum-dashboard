@@ -24,6 +24,7 @@
 	"dependencies": {
 		"@neodrag/svelte": "^2.3.3",
 		"@supabase/ssr": "^0.7.0",
-		"@supabase/supabase-js": "^2.76.1"
+		"@supabase/supabase-js": "^2.76.1",
+		"lottie-web": "^5.13.0"
 	}
 }
