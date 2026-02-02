@@ -4,7 +4,7 @@
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
 	import { supabase } from '$lib/supabase/client';
-	import { fade, slide } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 
@@ -267,8 +267,8 @@
 	<!-- Overlay -->
 	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 150 }}></div>
 
-	<!-- Bottom-Sheet -->
-	<aside class="settings-modal" transition:slide={{ duration: 250, axis: 'y' }}>
+	<!-- Frei schwebendes Modal -->
+	<aside class="settings-modal" transition:scale={{ duration: 200, start: 0.95 }}>
 		<!-- Drag Handle für Touch -->
 		<div class="sheet-handle">
 			<div class="handle-bar"></div>
@@ -509,29 +509,28 @@
 		z-index: 9998;
 	}
 
-	/* Bottom-Sheet Design - besser für iPad/Touch */
+	/* Frei schwebendes Modal */
 	.settings-modal {
 		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 90%;
+		max-width: 500px;
 		max-height: 85vh;
 		background: rgba(20, 25, 35, 0.98);
-		box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
 		z-index: 9999;
 		display: flex;
 		flex-direction: column;
-		border-top: 2px solid rgba(255, 255, 255, 0.15);
-		border-radius: 20px 20px 0 0;
+		border-radius: 20px;
 		overflow: hidden;
+		backdrop-filter: blur(20px);
 	}
 
-	/* Drag Handle für Bottom-Sheet */
+	/* Drag Handle ausgeblendet bei freischwebendem Modal */
 	.sheet-handle {
-		display: flex;
-		justify-content: center;
-		padding: 12px 0 8px 0;
-		cursor: grab;
+		display: none;
 	}
 
 	.handle-bar {
