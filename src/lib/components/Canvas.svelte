@@ -394,15 +394,12 @@
 	.floor-section {
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 4px 0;
+		padding: 8px 0 8px 0;
 		border: none;
 		border-bottom: 5px solid rgba(255, 255, 255, 0.35);
 		transition: transform 0.2s ease;
 		transform: translateZ(0);
 		margin-bottom: 4px;
-		/* Performance: Rendert nur sichtbare Sektionen */
-		content-visibility: auto;
-		contain-intrinsic-size: 0 300px;
 		/* Neues Layout: Label und Kacheln nebeneinander */
 		display: flex;
 		flex-direction: row;
@@ -455,8 +452,8 @@
 		align-items: flex-start;
 		align-content: flex-start;
 		gap: 4px;
-		contain: layout;
 		flex: 1;
+		overflow: visible;
 	}
 
 	.room-wrapper {
