@@ -486,13 +486,13 @@
 
 	/* Stempel-Badge - Basis */
 	.badge-tape {
-		padding: 10px 24px;
-		font-size: 14px;
-		font-weight: 900;
+		padding: 6px 14px;
+		font-size: 12px;
+		font-weight: 800;
 		text-transform: uppercase;
-		letter-spacing: 2px;
+		letter-spacing: 1px;
 		border-radius: 4px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
 		position: relative;
 		white-space: nowrap;
 		background: rgba(255, 255, 255, 0.98);
@@ -502,14 +502,14 @@
 	/* Stempel - GESCHLOSSEN (Rot) */
 	.closed-badge-hanging .badge-tape {
 		color: #dc2626;
-		border: 3px solid #dc2626;
+		border: 2px solid #dc2626;
 		text-shadow: 0 0 1px rgba(220, 38, 38, 0.3);
 	}
 
 	/* Stempel - ÖFFNET UM (Gelb) */
 	.opens-badge-hanging .badge-tape {
-		color: #eab308;
-		border: 3px solid #eab308;
+		color: #b45309;
+		border: 2px solid #d97706;
 		text-shadow: 0 0 1px rgba(234, 179, 8, 0.3);
 	}
 
