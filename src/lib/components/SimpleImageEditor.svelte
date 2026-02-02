@@ -133,32 +133,34 @@
 </script>
 
 <div class="editor-container">
-	<!-- Vorschau-Container (simuliert echte Kachel) -->
+	<!-- Vorschau im Polaroid-Stil (wie in der echten Kachel) -->
 	<div class="preview-label">Vorschau (so sieht es in der Kachel aus):</div>
 
-	<div
-		class="image-viewport"
-		bind:this={containerRef}
-		onpointerdown={handlePointerDown}
-		onpointermove={handlePointerMove}
-		onpointerup={handlePointerUp}
-		onpointercancel={handlePointerUp}
-		ontouchstart={handleTouchStart}
-		ontouchmove={handleTouchMove}
-		class:dragging={isDragging}
-	>
-		<img
-			src={imageSrc}
-			alt="Aktivitätsbild"
-			class="preview-image"
-			style="transform: translate({posX}%, {posY}%) scale({zoom}); transform-origin: center;"
-			draggable="false"
-		/>
+	<div class="polaroid-frame">
+		<div
+			class="image-viewport"
+			bind:this={containerRef}
+			onpointerdown={handlePointerDown}
+			onpointermove={handlePointerMove}
+			onpointerup={handlePointerUp}
+			onpointercancel={handlePointerUp}
+			ontouchstart={handleTouchStart}
+			ontouchmove={handleTouchMove}
+			class:dragging={isDragging}
+		>
+			<img
+				src={imageSrc}
+				alt="Aktivitätsbild"
+				class="preview-image"
+				style="transform: translate({posX}%, {posY}%) scale({zoom}); transform-origin: center;"
+				draggable="false"
+			/>
 
-		<!-- Drag-Hinweis -->
-		{#if zoom > 1 && !isDragging}
-			<div class="drag-hint">Ziehen zum Verschieben</div>
-		{/if}
+			<!-- Drag-Hinweis -->
+			{#if zoom > 1 && !isDragging}
+				<div class="drag-hint">Ziehen zum Verschieben</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Controls -->
@@ -206,18 +208,27 @@
 		margin-bottom: 4px;
 	}
 
+	/* Polaroid-Rahmen wie in RoomCard */
+	.polaroid-frame {
+		width: 100%;
+		max-width: 300px;
+		margin: 0 auto;
+		padding: 6px;
+		padding-bottom: 10px;
+		background: rgba(255, 255, 255, 0.98);
+		border-radius: 3px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	}
+
 	.image-viewport {
 		position: relative;
 		width: 100%;
-		aspect-ratio: 16 / 9;
-		max-width: 400px;
-		margin: 0 auto;
+		height: 180px;
 		overflow: hidden;
-		border-radius: 8px;
-		background: rgba(0, 0, 0, 0.3);
+		border-radius: 2px;
+		background: rgba(0, 0, 0, 0.05);
 		cursor: grab;
 		touch-action: none;
-		border: 2px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.image-viewport.dragging {
