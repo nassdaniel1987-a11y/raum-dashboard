@@ -3,7 +3,7 @@
 	import { toasts } from '$lib/stores/toastStore';
 	import ColorPicker from './ColorPicker.svelte';
 	import TextColorPicker from './TextColorPicker.svelte';
-	import ImagePositionEditor from './ImagePositionEditor.svelte';
+	import SimpleImageEditor from './SimpleImageEditor.svelte';
 	import type { RoomWithConfig, ImagePosition } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
 	import { viewWeekday, currentTime } from '$lib/stores/appState';
@@ -616,11 +616,13 @@
 								</button>
 							</div>
 
-							<!-- ✅ Neuer WYSIWYG Editor -->
-							<ImagePositionEditor
+							<!-- Einfacher Bild-Editor -->
+							<SimpleImageEditor
 								imageSrc={activityImagePreview}
-								size={activityImageSize}
-								onPositionChange={(pos) => activityImagePosition = pos}
+								initialZoom={activityImagePosition?.zoom ?? 1}
+								initialX={activityImagePosition?.x ?? 0}
+								initialY={activityImagePosition?.y ?? 0}
+								onUpdate={(data) => activityImagePosition = { zoom: data.zoom, x: data.x, y: data.y }}
 							/>
 						</div>
 					{/if}
