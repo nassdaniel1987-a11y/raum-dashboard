@@ -403,6 +403,11 @@
 		/* Performance: Rendert nur sichtbare Sektionen */
 		content-visibility: auto;
 		contain-intrinsic-size: 0 300px;
+		/* Neues Layout: Label und Kacheln nebeneinander */
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 12px;
 	}
 
 	.floor-section:last-child {
@@ -412,12 +417,12 @@
 
 	.floor-title {
 		color: var(--color-text-primary);
-		font-size: 20px;
+		font-size: 16px;
 		font-weight: 700;
-		margin: 0 0 2px 0;
+		margin: 0;
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
-		padding: 6px 12px;
+		padding: 8px 12px;
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -426,9 +431,14 @@
 			0 0 20px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 6px;
 		letter-spacing: 0.3px;
-		width: fit-content;
+		/* Feste Breite für das Label */
+		min-width: 120px;
+		max-width: 120px;
+		flex-shrink: 0;
+		height: fit-content;
+		writing-mode: horizontal-tb;
 	}
 
 	.floor-hint {
@@ -441,9 +451,12 @@
 	.rooms-grid {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
-		gap: 4px; /* ✅ Kleinere Abstände */
+		justify-content: flex-start;
+		align-items: flex-start;
+		align-content: flex-start;
+		gap: 4px;
 		contain: layout;
+		flex: 1;
 	}
 
 	.room-wrapper {
