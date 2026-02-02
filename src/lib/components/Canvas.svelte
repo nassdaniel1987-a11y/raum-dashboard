@@ -394,12 +394,12 @@
 	.floor-section {
 		background: transparent;
 		border-radius: 16px;
-		padding: 0 0 12px 0;
+		padding: 0 0 4px 0;
 		border: none;
 		border-bottom: 5px solid rgba(255, 255, 255, 0.35);
 		transition: transform 0.2s ease;
 		transform: translateZ(0);
-		margin-bottom: 8px;
+		margin-bottom: 4px;
 		/* Performance: Rendert nur sichtbare Sektionen */
 		content-visibility: auto;
 		contain-intrinsic-size: 0 300px;
@@ -414,7 +414,7 @@
 		color: var(--color-text-primary);
 		font-size: 20px;
 		font-weight: 700;
-		margin: 0 0 6px 0;
+		margin: 0 0 2px 0;
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(10px);
 		padding: 6px 12px;
@@ -462,7 +462,7 @@
 		width: calc((100% - 12px) / 4);
 		min-width: 180px;
 		/* ✅ ENTFERNT: max-height - erlaubt Kacheln mit Bildern zu wachsen ohne Überlappung */
-		margin-bottom: 40px; /* ✅ Extra Platz für hängende Person-Badges (auch mit Bildern) */
+		margin-bottom: 28px; /* Platz für hängende Person-Badges */
 	}
 
 	.room-wrapper.selected {
