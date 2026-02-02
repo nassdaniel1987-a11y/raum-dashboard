@@ -475,7 +475,7 @@
 		width: calc((100% - 12px) / 4);
 		min-width: 180px;
 		/* ✅ ENTFERNT: max-height - erlaubt Kacheln mit Bildern zu wachsen ohne Überlappung */
-		margin-bottom: 28px; /* Platz für hängende Person-Badges */
+		margin-bottom: 45px; /* Platz für hängende Person-Badges */
 	}
 
 	.room-wrapper.selected {

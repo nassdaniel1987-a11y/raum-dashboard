@@ -734,14 +734,12 @@
 	}
 
 	.activity-image {
-		position: absolute;
-		top: 50%;
-		left: 50%;
 		width: 100%;
-		height: auto;
-		object-fit: contain;
+		height: 100%;
+		object-fit: cover;
 		display: block;
-		/* ✅ Transform wird inline gesetzt von activity_image_position */
+		transform-origin: center;
+		/* Transform wird inline gesetzt von activity_image_position */
 	}
 
 	/* Größen-Varianten */
