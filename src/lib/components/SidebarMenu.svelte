@@ -22,9 +22,8 @@
 
 	// State
 	let activeTab = $state<'dashboard' | 'planning' | 'design' | 'system'>('dashboard');
-	let autoScrollActive = $state(false);
-	let scrollSpeed = $state(0.6);
-	let pauseDuration = $state(4);
+	let autoPageActive = $state(true);
+	let pageDuration = $state(8);
 	let displayScaleX = $state(1.0);
 	let cardWidth = $state(1.0);
 	let cardHeight = $state(1.0);
@@ -52,14 +51,14 @@
 	let currentUITheme = $state($userTheme);
 
 	onMount(() => {
-		const savedSpeed = localStorage.getItem('scrollSpeed');
-		const savedPause = localStorage.getItem('pauseDuration');
+		const savedPageDuration = localStorage.getItem('pageDuration');
+		const savedAutoPage = localStorage.getItem('autoPageEnabled');
 		const savedScaleX = localStorage.getItem('displayScaleX');
 		const savedCardWidth = localStorage.getItem('cardWidth');
 		const savedCardHeight = localStorage.getItem('cardHeight');
 
-		if (savedSpeed) scrollSpeed = parseFloat(savedSpeed);
-		if (savedPause) pauseDuration = parseInt(savedPause);
+		if (savedPageDuration) pageDuration = parseInt(savedPageDuration);
+		if (savedAutoPage) autoPageActive = savedAutoPage === 'true';
 		if (savedScaleX) {
 			displayScaleX = parseFloat(savedScaleX);
 			applyDisplayScale(displayScaleX);
@@ -130,17 +129,16 @@
 		}
 	}
 
-	function toggleAutoScroll() {
-		if (canvasRef?.toggleAutoScroll) {
-			autoScrollActive = canvasRef.toggleAutoScroll();
+	function toggleAutoPage() {
+		if (canvasRef?.toggleAutoPage) {
+			autoPageActive = canvasRef.toggleAutoPage();
 		}
 	}
 
-	function updateScrollSettings() {
-		localStorage.setItem('scrollSpeed', scrollSpeed.toString());
-		localStorage.setItem('pauseDuration', pauseDuration.toString());
-		if (canvasRef?.setScrollSpeed) {
-			canvasRef.setScrollSpeed(scrollSpeed, pauseDuration);
+	function updatePageDuration() {
+		localStorage.setItem('pageDuration', pageDuration.toString());
+		if (canvasRef?.setPageDuration) {
+			canvasRef.setPageDuration(pageDuration);
 		}
 	}
 
@@ -346,23 +344,26 @@
 		<div class="content">
 			{#if activeTab === 'dashboard'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
-					<!-- Auto-Scroll Einstellungen -->
+					<!-- Seiten-Wechsel Einstellungen -->
 					<section class="section">
-						<h3>Auto-Scroll</h3>
+						<h3>Seiten-Wechsel</h3>
 
-						<div class="slider-item">
-							<label>Geschwindigkeit</label>
-							<div class="slider-control">
-								<input type="range" min="0.1" max="3.0" step="0.1" bind:value={scrollSpeed} oninput={updateScrollSettings} />
-								<span class="value">{scrollSpeed.toFixed(1)} px</span>
+						<div class="toggle-item">
+							<div class="toggle-label">
+								<span class="label">Auto-Wechsel</span>
+								<span class="hint">Seiten automatisch durchblättern</span>
 							</div>
+							<label class="switch">
+								<input type="checkbox" bind:checked={autoPageActive} onchange={toggleAutoPage} />
+								<span class="switch-slider"></span>
+							</label>
 						</div>
 
 						<div class="slider-item">
-							<label>Pause</label>
+							<label>Anzeigedauer pro Seite</label>
 							<div class="slider-control">
-								<input type="range" min="1" max="10" step="1" bind:value={pauseDuration} oninput={updateScrollSettings} />
-								<span class="value">{pauseDuration}s</span>
+								<input type="range" min="3" max="30" step="1" bind:value={pageDuration} oninput={updatePageDuration} />
+								<span class="value">{pageDuration}s</span>
 							</div>
 						</div>
 					</section>
