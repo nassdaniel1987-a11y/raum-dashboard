@@ -321,111 +321,30 @@
 				{#each floorOrder as floorKey (floorKey)}
 					{@const rooms = roomsByFloor[floorKey]}
 					{#if rooms && rooms.length > 0}
-						<!-- OG2 und OG1 nebeneinander in einer Zeile -->
-						{#if floorKey === 'og2'}
-							<div class="floor-row-combined">
-								<!-- OG2 -->
-								<div class="floor-section half-width">
-									<h2 class="floor-title compact">
-										{floorLabels.og2}
-									</h2>
-									<div class="rooms-grid">
-										{#each rooms as room (room.id)}
-											<div
-												animate:flip={{ duration: 300 }}
-												class="room-wrapper"
-												class:selected={$swapSelection.includes(room.id)}
-											>
-												<RoomCard
-													{room}
-													onEdit={handleEditRoom}
-													onSelect={handleSelectForSwap}
-													isSelected={$swapSelection.includes(room.id)}
-												/>
-											</div>
-										{/each}
-									</div>
-								</div>
-								<!-- OG1 -->
-								{#if roomsByFloor.og1 && roomsByFloor.og1.length > 0}
-									<div class="floor-section half-width">
-										<h2 class="floor-title compact">
-											{floorLabels.og1}
-										</h2>
-										<div class="rooms-grid">
-											{#each roomsByFloor.og1 as room (room.id)}
-												<div
-													animate:flip={{ duration: 300 }}
-													class="room-wrapper"
-													class:selected={$swapSelection.includes(room.id)}
-												>
-													<RoomCard
-														{room}
-														onEdit={handleEditRoom}
-														onSelect={handleSelectForSwap}
-														isSelected={$swapSelection.includes(room.id)}
-													/>
-												</div>
-											{/each}
-										</div>
-									</div>
+						<div class="floor-section">
+							<h2 class="floor-title">
+								{floorLabels[floorKey]}
+								{#if $isEditMode}
+									<span class="floor-hint">(Kacheln zum Tauschen auswählen)</span>
 								{/if}
-							</div>
-						{:else if floorKey === 'og1'}
-							<!-- OG1 wird schon in og2 Block gerendert, nur zeigen wenn og2 leer ist -->
-							{#if !roomsByFloor.og2 || roomsByFloor.og2.length === 0}
-								<div class="floor-section">
-									<h2 class="floor-title">
-										{floorLabels[floorKey]}
-										{#if $isEditMode}
-											<span class="floor-hint">(Kacheln zum Tauschen auswählen)</span>
-										{/if}
-									</h2>
-									<div class="rooms-grid">
-										{#each rooms as room (room.id)}
-											<div
-												animate:flip={{ duration: 300 }}
-												class="room-wrapper"
-												class:selected={$swapSelection.includes(room.id)}
-											>
-												<RoomCard
-													{room}
-													onEdit={handleEditRoom}
-													onSelect={handleSelectForSwap}
-													isSelected={$swapSelection.includes(room.id)}
-												/>
-											</div>
-										{/each}
+							</h2>
+							<div class="rooms-grid">
+								{#each rooms as room (room.id)}
+									<div
+										animate:flip={{ duration: 300 }}
+										class="room-wrapper"
+										class:selected={$swapSelection.includes(room.id)}
+									>
+										<RoomCard
+											{room}
+											onEdit={handleEditRoom}
+											onSelect={handleSelectForSwap}
+											isSelected={$swapSelection.includes(room.id)}
+										/>
 									</div>
-								</div>
-							{/if}
-						{:else}
-							<!-- Normale Stockwerke -->
-							<div class="floor-section">
-								<h2 class="floor-title">
-									{floorLabels[floorKey]}
-									{#if $isEditMode}
-										<span class="floor-hint">(Kacheln zum Tauschen auswählen)</span>
-									{/if}
-								</h2>
-								<div class="rooms-grid">
-									{#each rooms as room (room.id)}
-										<div
-											animate:flip={{ duration: 300 }}
-											class="room-wrapper"
-											class:selected={$swapSelection.includes(room.id)}
-										>
-											<RoomCard
-												{room}
-												onEdit={handleEditRoom}
-												onSelect={handleSelectForSwap}
-												isSelected={$swapSelection.includes(room.id)}
-											/>
-										</div>
-									{/each}
-								</div>
+								{/each}
 							</div>
-						{/if}
+						</div>
 					{/if}
 				{/each}
 			</div>
@@ -491,31 +410,6 @@
 	.floor-section:last-child {
 		border-bottom: none;
 		margin-bottom: 0;
-	}
-
-	/* Kombinierte Zeile für OG1 + OG2 nebeneinander */
-	.floor-row-combined {
-		display: flex;
-		flex-direction: row;
-		gap: 16px;
-		border-bottom: 5px solid rgba(255, 255, 255, 0.35);
-		padding-bottom: 8px;
-		margin-bottom: 4px;
-	}
-
-	.floor-section.half-width {
-		flex: 1;
-		min-width: 0;
-		border-bottom: none;
-		margin-bottom: 0;
-		padding-bottom: 0;
-	}
-
-	.floor-title.compact {
-		min-width: 90px;
-		max-width: 90px;
-		font-size: 14px;
-		padding: 6px 10px;
 	}
 
 	.floor-title {
@@ -646,21 +540,6 @@
 
 		.floor-section {
 			padding: 0 0 4px 0;
-		}
-
-		/* Auf kleinen Screens OG1/OG2 untereinander */
-		.floor-row-combined {
-			flex-direction: column;
-			gap: 8px;
-		}
-
-		.floor-section.half-width {
-			border-bottom: 3px solid rgba(255, 255, 255, 0.2);
-			padding-bottom: 8px;
-		}
-
-		.floor-section.half-width:last-child {
-			border-bottom: none;
 		}
 	}
 
