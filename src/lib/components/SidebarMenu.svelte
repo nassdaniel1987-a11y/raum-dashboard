@@ -34,6 +34,15 @@
 	let newRoomFloor = $state('eg');
 	let showCreateForm = $state(false);
 
+	// Drag state
+	let isDragging = $state(false);
+	let dragX = $state(0);
+	let dragY = $state(0);
+	let dragStartX = $state(0);
+	let dragStartY = $state(0);
+	let initialX = $state(0);
+	let initialY = $state(0);
+
 	// Nachtruhe
 	let nightModeEnabled = $state($appSettings?.night_mode_enabled ?? true);
 	let nightStart = $state($appSettings?.night_start || '17:00');
@@ -261,6 +270,34 @@
 			toasts.show('✕ Fehler beim Speichern!', 'error');
 		}
 	}
+
+	// Reset drag position when modal opens
+	$effect(() => {
+		if (isOpen) {
+			dragX = 0;
+			dragY = 0;
+		}
+	});
+
+	function handleDragStart(e: PointerEvent) {
+		isDragging = true;
+		dragStartX = e.clientX;
+		dragStartY = e.clientY;
+		initialX = dragX;
+		initialY = dragY;
+		(e.target as HTMLElement).setPointerCapture(e.pointerId);
+	}
+
+	function handleDragMove(e: PointerEvent) {
+		if (!isDragging) return;
+		dragX = initialX + (e.clientX - dragStartX);
+		dragY = initialY + (e.clientY - dragStartY);
+	}
+
+	function handleDragEnd(e: PointerEvent) {
+		isDragging = false;
+		(e.target as HTMLElement).releasePointerCapture(e.pointerId);
+	}
 </script>
 
 {#if isOpen}
@@ -268,13 +305,23 @@
 	<div class="overlay" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="button" tabindex="-1" transition:fade={{ duration: 150 }}></div>
 
 	<!-- Frei schwebendes Modal -->
-	<aside class="settings-modal" transition:scale={{ duration: 200, start: 0.95 }}>
-		<!-- Drag Handle für Touch -->
-		<div class="sheet-handle">
-			<div class="handle-bar"></div>
-		</div>
-		<!-- Header -->
-		<div class="sidebar-header">
+	<aside
+		class="settings-modal"
+		class:dragging={isDragging}
+		style="transform: translate(calc(-50% + {dragX}px), calc(-50% + {dragY}px));"
+		transition:scale={{ duration: 200, start: 0.95 }}
+	>
+		<!-- Header (zum Ziehen) -->
+		<div
+			class="sidebar-header drag-handle"
+			onpointerdown={handleDragStart}
+			onpointermove={handleDragMove}
+			onpointerup={handleDragEnd}
+			onpointercancel={handleDragEnd}
+		>
+			<div class="drag-indicator">
+				<span class="drag-dots"></span>
+			</div>
 			<h2>Einstellungen</h2>
 			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
@@ -514,7 +561,7 @@
 		position: fixed;
 		top: 50%;
 		left: 50%;
-		transform: translate(-50%, -50%);
+		/* transform wird per inline-style gesetzt */
 		width: 90%;
 		max-width: 500px;
 		max-height: 85vh;
@@ -526,25 +573,45 @@
 		border-radius: 20px;
 		overflow: hidden;
 		backdrop-filter: blur(20px);
+		transition: box-shadow 0.2s;
 	}
 
-	/* Drag Handle ausgeblendet bei freischwebendem Modal */
-	.sheet-handle {
-		display: none;
+	.settings-modal.dragging {
+		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15);
 	}
 
-	.handle-bar {
+	/* Drag Handle im Header */
+	.drag-handle {
+		cursor: grab;
+		user-select: none;
+		touch-action: none;
+	}
+
+	.drag-handle:active {
+		cursor: grabbing;
+	}
+
+	.drag-indicator {
+		position: absolute;
+		left: 50%;
+		top: 6px;
+		transform: translateX(-50%);
+	}
+
+	.drag-dots {
+		display: block;
 		width: 40px;
 		height: 4px;
-		background: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.25);
 		border-radius: 2px;
 	}
 
 	.sidebar-header {
+		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 8px 20px 16px 20px;
+		padding: 16px 20px 16px 20px;
 		background: transparent;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
@@ -1061,9 +1128,6 @@
 		.settings-modal {
 			max-height: 70vh;
 			max-width: 800px;
-			left: 50%;
-			transform: translateX(-50%);
-			border-radius: 20px 20px 0 0;
 		}
 	}
 </style>
