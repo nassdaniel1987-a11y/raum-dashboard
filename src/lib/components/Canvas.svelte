@@ -21,6 +21,7 @@
 	let animationDirection = $state<'next' | 'prev'>('next');
 	let autoPageEnabled = $state(true);
 	let pageDuration = $state(8); // Sekunden pro Seite
+	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
 	let pageTimerId: ReturnType<typeof setTimeout> | undefined;
 
 	// Seiten-Definition (4 Seiten)
@@ -210,13 +211,24 @@
 		return autoPageEnabled;
 	}
 
+	export function setAnimationType(type: 'book' | 'slide' | 'fade' | 'cube') {
+		animationType = type;
+		localStorage.setItem('animationType', type);
+	}
+
+	export function getAnimationType(): string {
+		return animationType;
+	}
+
 	// Mount: Einstellungen laden & Auto-Start
 	onMount(() => {
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
+		const savedAnimation = localStorage.getItem('animationType');
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
 		if (savedEnabled) autoPageEnabled = savedEnabled === 'true';
+		if (savedAnimation) animationType = savedAnimation as typeof animationType;
 
 		// Starte auf erster aktiver Seite
 		const pages = activePages();
@@ -259,8 +271,8 @@
 			<p>Erstelle deinen ersten Raum über das Menü unten rechts!</p>
 		</div>
 	{:else}
-		<!-- Seiten-Container mit Buchanimation -->
-		<div class="page-container">
+		<!-- Seiten-Container -->
+		<div class="page-container" class:anim-book={animationType === 'book'} class:anim-slide={animationType === 'slide'} class:anim-fade={animationType === 'fade'} class:anim-cube={animationType === 'cube'}>
 			<!-- Seiteninhalt -->
 			{#key currentPage}
 				<div
@@ -366,42 +378,70 @@
 		-webkit-backface-visibility: hidden;
 	}
 
-	/* Buchseiten-Animation - Nächste Seite */
-	.page-content.animate-next {
-		animation: pageFlipNext 0.6s ease-in-out;
+	/* ==================== ANIMATIONEN ==================== */
+
+	/* BUCH Animation (Standard) */
+	.anim-book .page-content.animate-next {
+		animation: bookFlipNext 0.6s ease-in-out;
+	}
+	.anim-book .page-content.animate-prev {
+		animation: bookFlipPrev 0.6s ease-in-out;
 	}
 
-	/* Buchseiten-Animation - Vorherige Seite */
-	.page-content.animate-prev {
-		animation: pageFlipPrev 0.6s ease-in-out;
+	@keyframes bookFlipNext {
+		0% { transform: rotateY(-90deg) translateZ(50px); opacity: 0; }
+		50% { opacity: 0.5; }
+		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+	}
+	@keyframes bookFlipPrev {
+		0% { transform: rotateY(90deg) translateZ(50px); opacity: 0; }
+		50% { opacity: 0.5; }
+		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
 	}
 
-	@keyframes pageFlipNext {
-		0% {
-			transform: rotateY(-90deg) translateZ(50px);
-			opacity: 0;
-		}
-		50% {
-			opacity: 0.5;
-		}
-		100% {
-			transform: rotateY(0deg) translateZ(0);
-			opacity: 1;
-		}
+	/* SLIDE Animation */
+	.anim-slide .page-content.animate-next {
+		animation: slideNext 0.4s ease-out;
+	}
+	.anim-slide .page-content.animate-prev {
+		animation: slidePrev 0.4s ease-out;
 	}
 
-	@keyframes pageFlipPrev {
-		0% {
-			transform: rotateY(90deg) translateZ(50px);
-			opacity: 0;
-		}
-		50% {
-			opacity: 0.5;
-		}
-		100% {
-			transform: rotateY(0deg) translateZ(0);
-			opacity: 1;
-		}
+	@keyframes slideNext {
+		0% { transform: translateX(100%); opacity: 0; }
+		100% { transform: translateX(0); opacity: 1; }
+	}
+	@keyframes slidePrev {
+		0% { transform: translateX(-100%); opacity: 0; }
+		100% { transform: translateX(0); opacity: 1; }
+	}
+
+	/* FADE Animation */
+	.anim-fade .page-content.animate-next,
+	.anim-fade .page-content.animate-prev {
+		animation: fadeIn 0.5s ease-in-out;
+	}
+
+	@keyframes fadeIn {
+		0% { opacity: 0; transform: scale(0.95); }
+		100% { opacity: 1; transform: scale(1); }
+	}
+
+	/* CUBE Animation */
+	.anim-cube .page-content.animate-next {
+		animation: cubeNext 0.5s ease-in-out;
+	}
+	.anim-cube .page-content.animate-prev {
+		animation: cubePrev 0.5s ease-in-out;
+	}
+
+	@keyframes cubeNext {
+		0% { transform: rotateY(-90deg) translateZ(200px); opacity: 0; }
+		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+	}
+	@keyframes cubePrev {
+		0% { transform: rotateY(90deg) translateZ(200px); opacity: 0; }
+		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
 	}
 
 	/* Seiten-Header */
