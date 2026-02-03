@@ -21,7 +21,6 @@
 	let animationDirection = $state<'next' | 'prev'>('next');
 	let autoPageEnabled = $state(true);
 	let pageDuration = $state(8); // Sekunden pro Seite
-	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
 	let pageTimerId: ReturnType<typeof setTimeout> | undefined;
 
 	// Seiten-Definition (4 Seiten)
@@ -211,24 +210,13 @@
 		return autoPageEnabled;
 	}
 
-	export function setAnimationType(type: 'book' | 'slide' | 'fade' | 'cube') {
-		animationType = type;
-		localStorage.setItem('animationType', type);
-	}
-
-	export function getAnimationType(): string {
-		return animationType;
-	}
-
 	// Mount: Einstellungen laden & Auto-Start
 	onMount(() => {
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
-		const savedAnimation = localStorage.getItem('animationType');
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
 		if (savedEnabled) autoPageEnabled = savedEnabled === 'true';
-		if (savedAnimation) animationType = savedAnimation as typeof animationType;
 
 		// Starte auf erster aktiver Seite
 		const pages = activePages();
@@ -271,8 +259,8 @@
 			<p>Erstelle deinen ersten Raum über das Menü unten rechts!</p>
 		</div>
 	{:else}
-		<!-- Seiten-Container -->
-		<div class="page-container" class:anim-book={animationType === 'book'} class:anim-slide={animationType === 'slide'} class:anim-fade={animationType === 'fade'} class:anim-cube={animationType === 'cube'}>
+		<!-- Seiten-Container mit Buchanimation -->
+		<div class="page-container">
 			<!-- Seiteninhalt -->
 			{#key currentPage}
 				<div
@@ -280,9 +268,9 @@
 					class:animate-next={isAnimating && animationDirection === 'next'}
 					class:animate-prev={isAnimating && animationDirection === 'prev'}
 				>
-					<!-- Seiten-Titel (kompakt) -->
+					<!-- Seiten-Titel -->
 					<div class="page-header">
-						<span class="page-title">{pageDefinitions[currentPage]?.label}</span>
+						<h2 class="page-title">{pageDefinitions[currentPage]?.label}</h2>
 					</div>
 
 					<!-- Räume Grid -->
@@ -362,14 +350,14 @@
 		overflow: hidden;
 	}
 
-	/* Seiten-Inhalt - KOMPAKT für iPad */
+	/* Seiten-Inhalt */
 	.page-content {
 		position: absolute;
 		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		padding: 8px 12px 45px 12px;
+		padding: 60px 16px 80px 16px;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
@@ -378,179 +366,160 @@
 		-webkit-backface-visibility: hidden;
 	}
 
-	/* ==================== ANIMATIONEN ==================== */
-
-	/* BUCH Animation */
-	.anim-book .page-content.animate-next {
-		animation: bookFlipNext 0.6s ease-in-out;
-	}
-	.anim-book .page-content.animate-prev {
-		animation: bookFlipPrev 0.6s ease-in-out;
+	/* Buchseiten-Animation - Nächste Seite */
+	.page-content.animate-next {
+		animation: pageFlipNext 0.6s ease-in-out;
 	}
 
-	@keyframes bookFlipNext {
-		0% { transform: rotateY(-90deg) translateZ(50px); opacity: 0; }
-		50% { opacity: 0.5; }
-		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-	}
-	@keyframes bookFlipPrev {
-		0% { transform: rotateY(90deg) translateZ(50px); opacity: 0; }
-		50% { opacity: 0.5; }
-		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+	/* Buchseiten-Animation - Vorherige Seite */
+	.page-content.animate-prev {
+		animation: pageFlipPrev 0.6s ease-in-out;
 	}
 
-	/* SLIDE Animation */
-	.anim-slide .page-content.animate-next {
-		animation: slideNext 0.4s ease-out;
-	}
-	.anim-slide .page-content.animate-prev {
-		animation: slidePrev 0.4s ease-out;
-	}
-
-	@keyframes slideNext {
-		0% { transform: translateX(100%); opacity: 0; }
-		100% { transform: translateX(0); opacity: 1; }
-	}
-	@keyframes slidePrev {
-		0% { transform: translateX(-100%); opacity: 0; }
-		100% { transform: translateX(0); opacity: 1; }
+	@keyframes pageFlipNext {
+		0% {
+			transform: rotateY(-90deg) translateZ(50px);
+			opacity: 0;
+		}
+		50% {
+			opacity: 0.5;
+		}
+		100% {
+			transform: rotateY(0deg) translateZ(0);
+			opacity: 1;
+		}
 	}
 
-	/* FADE Animation */
-	.anim-fade .page-content.animate-next,
-	.anim-fade .page-content.animate-prev {
-		animation: fadeIn 0.5s ease-in-out;
+	@keyframes pageFlipPrev {
+		0% {
+			transform: rotateY(90deg) translateZ(50px);
+			opacity: 0;
+		}
+		50% {
+			opacity: 0.5;
+		}
+		100% {
+			transform: rotateY(0deg) translateZ(0);
+			opacity: 1;
+		}
 	}
 
-	@keyframes fadeIn {
-		0% { opacity: 0; transform: scale(0.95); }
-		100% { opacity: 1; transform: scale(1); }
-	}
-
-	/* CUBE Animation */
-	.anim-cube .page-content.animate-next {
-		animation: cubeNext 0.5s ease-in-out;
-	}
-	.anim-cube .page-content.animate-prev {
-		animation: cubePrev 0.5s ease-in-out;
-	}
-
-	@keyframes cubeNext {
-		0% { transform: rotateY(-90deg) translateZ(200px); opacity: 0; }
-		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-	}
-	@keyframes cubePrev {
-		0% { transform: rotateY(90deg) translateZ(200px); opacity: 0; }
-		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
-	}
-
-	/* ==================== LAYOUT ==================== */
-
-	/* Seiten-Header - KOMPAKT */
+	/* Seiten-Header */
 	.page-header {
 		text-align: center;
-		margin-bottom: 6px;
+		margin-bottom: 16px;
 		flex-shrink: 0;
 	}
 
 	.page-title {
-		font-size: 18px;
-		font-weight: 600;
+		font-size: 28px;
+		font-weight: 700;
 		color: white;
-		text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-		background: rgba(0, 0, 0, 0.4);
-		padding: 6px 16px;
-		border-radius: 20px;
+		margin: 0;
+		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(10px);
+		padding: 12px 32px;
+		border-radius: 16px;
 		display: inline-block;
+		border: 2px solid rgba(255, 255, 255, 0.2);
 	}
 
-	/* Räume Grid - OPTIMIERT für iPad 1024x768 */
+	/* Räume Grid - optimiert für iPad 1024x768 */
 	.rooms-grid-page {
 		flex: 1;
 		display: grid;
+		/* 2x2 Grid für max 4 Räume pro Seite */
 		grid-template-columns: repeat(2, 1fr);
 		grid-template-rows: repeat(2, 1fr);
-		gap: 10px;
-		padding: 4px;
-		max-width: 100%;
-		max-height: 100%;
+		gap: 16px;
+		padding: 8px;
+		max-width: 900px;
+		max-height: calc(100% - 20px);
 		margin: 0 auto;
-		align-content: stretch;
+		align-content: center;
 	}
 
 	.room-wrapper-page {
 		display: flex;
 		justify-content: center;
-		align-items: stretch;
+		align-items: center;
 		min-height: 0;
-		overflow: hidden;
+		max-height: 100%;
 	}
 
 	.room-wrapper-page :global(.room-card) {
 		width: 100%;
-		height: 100%;
-		max-height: none;
+		max-width: 380px;
+		height: auto;
+		max-height: 280px;
 	}
 
 	.room-wrapper-page.selected {
-		transform: scale(1.01);
+		transform: scale(1.02);
 		filter: brightness(1.1);
 	}
 
-	/* Seiten-Indikatoren - KOMPAKT */
+	/* Seiten-Indikatoren */
 	.page-indicators {
 		position: absolute;
-		bottom: 8px;
+		bottom: 20px;
 		left: 50%;
 		transform: translateX(-50%);
 		display: flex;
-		gap: 8px;
+		gap: 12px;
 		z-index: 100;
-		background: rgba(0, 0, 0, 0.6);
-		padding: 4px 10px;
-		border-radius: 16px;
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(10px);
+		padding: 8px 16px;
+		border-radius: 24px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.page-dot {
-		width: 28px;
-		height: 28px;
+		width: 40px;
+		height: 40px;
 		border-radius: 50%;
 		background: rgba(255, 255, 255, 0.2);
-		border: none;
+		border: 2px solid rgba(255, 255, 255, 0.3);
 		cursor: pointer;
-		transition: all 0.2s ease;
+		transition: all 0.3s ease;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 14px;
+		font-size: 18px;
 	}
 
 	.page-dot:hover {
-		background: rgba(255, 255, 255, 0.4);
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.1);
 	}
 
 	.page-dot.active {
-		background: rgba(59, 130, 246, 0.8);
-		transform: scale(1.1);
+		background: rgba(59, 130, 246, 0.6);
+		border-color: rgba(59, 130, 246, 0.8);
+		transform: scale(1.15);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 	}
 
 	.dot-icon {
 		line-height: 1;
 	}
 
-	/* Navigations-Pfeile - KOMPAKT */
+	/* Navigations-Pfeile */
 	.nav-arrow {
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
-		width: 32px;
-		height: 60px;
-		background: rgba(0, 0, 0, 0.3);
-		border: none;
-		color: rgba(255, 255, 255, 0.7);
-		font-size: 28px;
+		width: 50px;
+		height: 80px;
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: white;
+		font-size: 36px;
 		cursor: pointer;
-		transition: all 0.2s ease;
+		transition: all 0.3s ease;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -558,31 +527,31 @@
 	}
 
 	.nav-prev {
-		left: 0;
-		border-radius: 0 8px 8px 0;
+		left: 8px;
+		border-radius: 0 12px 12px 0;
 	}
 
 	.nav-next {
-		right: 0;
-		border-radius: 8px 0 0 8px;
+		right: 8px;
+		border-radius: 12px 0 0 12px;
 	}
 
 	.nav-arrow:hover {
-		background: rgba(0, 0, 0, 0.5);
-		color: white;
+		background: rgba(0, 0, 0, 0.6);
+		transform: translateY(-50%) scale(1.05);
 	}
 
 	.nav-arrow:active {
 		transform: translateY(-50%) scale(0.95);
 	}
 
-	/* Fortschrittsbalken - TOP statt BOTTOM */
+	/* Fortschrittsbalken */
 	.progress-bar {
 		position: absolute;
-		top: 0;
+		bottom: 0;
 		left: 0;
 		right: 0;
-		height: 3px;
+		height: 4px;
 		background: rgba(255, 255, 255, 0.2);
 		z-index: 100;
 	}
