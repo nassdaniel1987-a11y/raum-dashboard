@@ -24,6 +24,7 @@
 	let activeTab = $state<'dashboard' | 'planning' | 'design' | 'system'>('dashboard');
 	let autoPageActive = $state(true);
 	let pageDuration = $state(8);
+	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
 	let displayScaleX = $state(1.0);
 	let cardWidth = $state(1.0);
 	let cardHeight = $state(1.0);
@@ -53,12 +54,14 @@
 	onMount(() => {
 		const savedPageDuration = localStorage.getItem('pageDuration');
 		const savedAutoPage = localStorage.getItem('autoPageEnabled');
+		const savedAnimationType = localStorage.getItem('animationType');
 		const savedScaleX = localStorage.getItem('displayScaleX');
 		const savedCardWidth = localStorage.getItem('cardWidth');
 		const savedCardHeight = localStorage.getItem('cardHeight');
 
 		if (savedPageDuration) pageDuration = parseInt(savedPageDuration);
 		if (savedAutoPage) autoPageActive = savedAutoPage === 'true';
+		if (savedAnimationType) animationType = savedAnimationType as typeof animationType;
 		if (savedScaleX) {
 			displayScaleX = parseFloat(savedScaleX);
 			applyDisplayScale(displayScaleX);
@@ -139,6 +142,14 @@
 		localStorage.setItem('pageDuration', pageDuration.toString());
 		if (canvasRef?.setPageDuration) {
 			canvasRef.setPageDuration(pageDuration);
+		}
+	}
+
+	function selectAnimationType(type: typeof animationType) {
+		animationType = type;
+		localStorage.setItem('animationType', type);
+		if (canvasRef?.setAnimationType) {
+			canvasRef.setAnimationType(type);
 		}
 	}
 
@@ -364,6 +375,36 @@
 							<div class="slider-control">
 								<input type="range" min="3" max="30" step="1" bind:value={pageDuration} oninput={updatePageDuration} />
 								<span class="value">{pageDuration}s</span>
+							</div>
+						</div>
+
+						<div class="animation-selector">
+							<label>Animation</label>
+							<div class="animation-options">
+								<button
+									class="anim-btn"
+									class:active={animationType === 'book'}
+									onclick={() => selectAnimationType('book')}
+									title="Buchseite"
+								>📖</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'slide'}
+									onclick={() => selectAnimationType('slide')}
+									title="Schieben"
+								>➡️</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'fade'}
+									onclick={() => selectAnimationType('fade')}
+									title="Überblenden"
+								>✨</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'cube'}
+									onclick={() => selectAnimationType('cube')}
+									title="Würfel"
+								>🎲</button>
 							</div>
 						</div>
 					</section>
@@ -858,6 +899,48 @@
 		min-width: 60px;
 		text-align: right;
 		font-family: 'Courier New', monospace;
+	}
+
+	/* Animation Selector */
+	.animation-selector {
+		margin-top: 12px;
+	}
+
+	.animation-selector label {
+		display: block;
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		margin-bottom: 8px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.animation-options {
+		display: flex;
+		gap: 8px;
+	}
+
+	.anim-btn {
+		flex: 1;
+		padding: 10px;
+		font-size: 20px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.anim-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+		transform: scale(1.05);
+	}
+
+	.anim-btn.active {
+		background: rgba(59, 130, 246, 0.4);
+		border-color: rgba(59, 130, 246, 0.8);
+		box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 	}
 
 	.button-row {
