@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { visibleRooms, isEditMode, swapSelection, viewWeekday } from '$lib/stores/appState';
+	import { visibleRooms, isEditMode, swapSelection, viewWeekday, runnerName as runnerNameStore } from '$lib/stores/appState';
 	import RoomCard from './RoomCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
@@ -24,14 +24,12 @@
 	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
 	let pageTimerId: ReturnType<typeof setTimeout> | undefined;
 
-	// Läufer (Ansprechpartner im Haus)
-	let runnerName = $state('');
-
-	// Seiten-Definition (4 Seiten)
+	// Seiten-Definition (5 Seiten)
 	const pageDefinitions = [
 		{ id: 'dach', label: '🏠 Dachgeschoss', floors: ['dach'] },
 		{ id: 'og', label: '1.OG / 2.OG', floors: ['og2', 'og1'] },
-		{ id: 'eg', label: '🚪 Erdgeschoss', floors: ['eg', 'essen'] },
+		{ id: 'eg', label: '🚪 Erdgeschoss', floors: ['eg'] },
+		{ id: 'essen', label: '🍽️ Essen', floors: ['essen'] },
 		{ id: 'extern', label: '🏃 Außenbereich', floors: ['extern'] }
 	];
 
@@ -224,26 +222,15 @@
 		return animationType;
 	}
 
-	export function setRunnerName(name: string) {
-		runnerName = name;
-		localStorage.setItem('runnerName', name);
-	}
-
-	export function getRunnerName(): string {
-		return runnerName;
-	}
-
 	// Mount: Einstellungen laden & Auto-Start
 	onMount(() => {
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
 		const savedAnimation = localStorage.getItem('animationType');
-		const savedRunner = localStorage.getItem('runnerName');
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
 		if (savedEnabled) autoPageEnabled = savedEnabled === 'true';
 		if (savedAnimation) animationType = savedAnimation as typeof animationType;
-		if (savedRunner) runnerName = savedRunner;
 
 		// Starte auf erster aktiver Seite
 		const pages = activePages();
@@ -299,11 +286,11 @@
 					<div class="page-header">
 						<h2 class="page-title">{pageDefinitions[currentPage]?.label}</h2>
 						<!-- Läufer Badge direkt unter dem Titel -->
-						{#if runnerName}
+						{#if $runnerNameStore}
 							<div class="runner-badge-inline">
 								<span class="runner-icon">🏃</span>
 								<span class="runner-label">Ansprechpartner:</span>
-								<span class="runner-name">{runnerName}</span>
+								<span class="runner-name">{$runnerNameStore}</span>
 							</div>
 						{/if}
 					</div>
