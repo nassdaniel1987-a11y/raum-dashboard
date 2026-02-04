@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms } from '$lib/stores/appState';
+	import { supabase } from '$lib/supabase/client';
 	import { toasts } from '$lib/stores/toastStore';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { get } from 'svelte/store';
@@ -21,8 +22,13 @@
 	let newRoomName = $state('');
 	let newRoomFloor = $state('eg');
 
+	// Personen-Übersicht State
+	let showPersonsPanel = $state(false);
+	let personInputs = $state<Record<string, string>>({});
+
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
+		{ id: 'persons', icon: '👥', label: 'Besetzung', color: 'orange' },
 		{ id: 'new-room', icon: '➕', label: 'Neuer Raum', color: 'blue' },
 		{ id: 'open-all', icon: '🔓', label: 'Alle öffnen', color: 'green' },
 		{ id: 'close-all', icon: '🔒', label: 'Alle schließen', color: 'red' },
@@ -31,6 +37,15 @@
 		{ id: 'scheduler', icon: '📅', label: 'Tagesplaner', color: 'purple' },
 	];
 
+	// Aktive Räume (offen) für Personen-Panel
+	let activeRooms = $derived($visibleRooms.filter(r => r.isOpen).sort((a, b) => {
+		// Sortiere nach Stockwerk, dann nach Position
+		const floorOrder = ['dach', 'og2', 'og1', 'eg', 'essen', 'ug', 'extern'];
+		const floorDiff = floorOrder.indexOf(a.floor) - floorOrder.indexOf(b.floor);
+		if (floorDiff !== 0) return floorDiff;
+		return a.position_x - b.position_x;
+	}));
+
 	function toggleMenu() {
 		isOpen = !isOpen;
 	}
@@ -38,6 +53,7 @@
 	function closeMenu() {
 		isOpen = false;
 		showCreateForm = false;
+		showPersonsPanel = false;
 	}
 
 	async function handleCreateRoom() {
@@ -59,8 +75,59 @@
 		newRoomFloor = 'eg';
 	}
 
+	function openPersonsPanel() {
+		showPersonsPanel = true;
+		// Initialisiere Input-Werte mit aktuellen Personen
+		personInputs = {};
+		for (const room of activeRooms) {
+			personInputs[room.id] = room.person || '';
+		}
+	}
+
+	async function savePersonForRoom(roomId: string, personName: string) {
+		try {
+			const { error } = await supabase
+				.from('rooms')
+				.update({ person: personName || null })
+				.eq('id', roomId);
+
+			if (error) throw error;
+
+			// Lokalen State aktualisieren
+			visibleRooms.update(rooms =>
+				rooms.map(r => r.id === roomId ? { ...r, person: personName || null } : r)
+			);
+		} catch (err) {
+			console.error('Fehler beim Speichern:', err);
+			toasts.show('Fehler beim Speichern!', 'error');
+		}
+	}
+
+	function handlePersonInput(roomId: string, value: string) {
+		personInputs[roomId] = value;
+		// Auto-Save nach kurzer Verzögerung (Debounce)
+		savePersonForRoom(roomId, value);
+	}
+
+	function getFloorLabel(floor: string): string {
+		const labels: Record<string, string> = {
+			dach: 'Dachgeschoss',
+			og2: '2. OG',
+			og1: '1. OG',
+			eg: 'Erdgeschoss',
+			essen: 'Essen',
+			ug: 'Untergeschoss',
+			extern: 'Außenbereich'
+		};
+		return labels[floor] || floor;
+	}
+
 	async function handleAction(actionId: string) {
 		switch (actionId) {
+			case 'persons':
+				openPersonsPanel();
+				break;
+
 			case 'new-room':
 				if (onOpenNewRoom) {
 					closeMenu();
@@ -149,7 +216,41 @@
 
 		<!-- Speed Dial Actions (jetzt nach unten) -->
 		{#if isOpen}
-			{#if showCreateForm}
+			{#if showPersonsPanel}
+				<!-- Personen-Übersicht Panel -->
+				<div class="persons-panel" transition:slide={{ duration: 200 }}>
+					<div class="panel-header">
+						<span class="panel-icon">👥</span>
+						<span class="panel-title">Besetzung</span>
+						<button class="panel-close" onclick={() => showPersonsPanel = false}>✕</button>
+					</div>
+
+					{#if activeRooms.length === 0}
+						<div class="empty-state">
+							<p>Keine offenen Räume</p>
+							<span class="hint">Öffne zuerst Räume, um Personen zuzuweisen</span>
+						</div>
+					{:else}
+						<div class="rooms-list">
+							{#each activeRooms as room (room.id)}
+								<div class="room-item">
+									<div class="room-info">
+										<span class="room-name">{room.name}</span>
+										<span class="room-floor">{getFloorLabel(room.floor)}</span>
+									</div>
+									<input
+										type="text"
+										class="person-input"
+										value={personInputs[room.id] || ''}
+										placeholder="Person eingeben..."
+										oninput={(e) => handlePersonInput(room.id, (e.target as HTMLInputElement).value)}
+									/>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{:else if showCreateForm}
 				<!-- Inline Raum-Erstellung Formular -->
 				<div class="create-form" transition:slide={{ duration: 200 }}>
 					<div class="form-header">
@@ -322,6 +423,152 @@
 		transform: rotate(90deg);
 	}
 
+	/* Personen-Panel */
+	.persons-panel {
+		background: rgba(30, 35, 50, 0.98);
+		border-radius: 16px;
+		min-width: 300px;
+		max-width: 350px;
+		max-height: 400px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.panel-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 14px 16px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.2);
+	}
+
+	.panel-icon {
+		font-size: 20px;
+	}
+
+	.panel-title {
+		flex: 1;
+		color: white;
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	.panel-close {
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.1);
+		border: none;
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 14px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+	}
+
+	.panel-close:hover {
+		background: rgba(239, 68, 68, 0.3);
+		color: white;
+	}
+
+	.rooms-list {
+		flex: 1;
+		overflow-y: auto;
+		padding: 8px;
+	}
+
+	.room-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 12px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 10px;
+		margin-bottom: 8px;
+	}
+
+	.room-item:last-child {
+		margin-bottom: 0;
+	}
+
+	.room-info {
+		flex: 0 0 100px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.room-name {
+		font-size: 13px;
+		font-weight: 600;
+		color: white;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.room-floor {
+		font-size: 10px;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.person-input {
+		flex: 1;
+		padding: 8px 10px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 13px;
+		transition: all 0.2s;
+	}
+
+	.person-input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.person-input:focus {
+		outline: none;
+		border-color: rgba(249, 115, 22, 0.6);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.empty-state {
+		padding: 24px 16px;
+		text-align: center;
+	}
+
+	.empty-state p {
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 14px;
+		margin: 0 0 4px 0;
+	}
+
+	.empty-state .hint {
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 12px;
+	}
+
+	/* Scrollbar für Räume-Liste */
+	.rooms-list::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.rooms-list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.rooms-list::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 3px;
+	}
+
 	/* Raum-Erstellung Formular */
 	.create-form {
 		background: rgba(30, 35, 50, 0.98);
@@ -448,6 +695,20 @@
 		.form-input,
 		.form-select {
 			padding: 10px;
+		}
+
+		.persons-panel {
+			min-width: 280px;
+			max-width: 300px;
+			max-height: 350px;
+		}
+
+		.room-info {
+			flex: 0 0 80px;
+		}
+
+		.room-name {
+			font-size: 12px;
 		}
 	}
 
