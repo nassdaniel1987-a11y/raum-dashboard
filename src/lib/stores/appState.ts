@@ -32,6 +32,9 @@ export const dailyConfigs = writable<Map<string, DailyConfig>>(new Map());
 export const appSettings = writable<AppSettings | null>(null);
 export const dailyHighlights = writable<DailyHighlight[]>([]);
 
+// ===== RUNNER (Ansprechpartner im Haus) =====
+export const runnerName = derived(appSettings, ($settings) => $settings?.runner_name || '');
+
 // ===== THEME HANDLING (BENUTZERSPEZIFISCH) =====
 export const userTheme = writable<string>('default');
 
@@ -568,6 +571,28 @@ export async function deleteRoomConfigForDay(roomId: string, day: number) {
 		const newMap = new Map(map);
 		newMap.delete(`${roomId}-${day}`);
 		return newMap;
+	});
+}
+
+// ========== RUNNER (Ansprechpartner) VERWALTUNG ==========
+
+export async function updateRunnerName(name: string) {
+	const { error } = await supabase
+		.from('app_settings')
+		.update({ runner_name: name || null })
+		.eq('id', 1);
+
+	if (error) {
+		console.error('Error updating runner name:', error);
+		throw error;
+	}
+
+	// Lokalen State aktualisieren
+	appSettings.update(settings => {
+		if (settings) {
+			return { ...settings, runner_name: name || null };
+		}
+		return settings;
 	});
 }
 

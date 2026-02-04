@@ -62,6 +62,7 @@ export interface AppSettings {
 	night_start: string; // HH:MM format
 	night_end: string; // HH:MM format
 	current_theme: string;
+	runner_name: string | null; // Läufer/Ansprechpartner im Haus
 }
 
 export interface RoomWithConfig extends Room {

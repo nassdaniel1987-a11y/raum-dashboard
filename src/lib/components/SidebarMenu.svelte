@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -48,8 +48,15 @@
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
 
-	// Läufer (Ansprechpartner)
-	let runnerName = $state('');
+	// Läufer (Ansprechpartner) - aus appSettings
+	let runnerName = $state($appSettings?.runner_name || '');
+
+	// Sync runnerName wenn sich appSettings ändert (Realtime von anderem Tablet)
+	$effect(() => {
+		if ($appSettings?.runner_name !== undefined) {
+			runnerName = $appSettings.runner_name || '';
+		}
+	});
 
 	// UI-Theme
 	let currentUITheme = $state($userTheme);
@@ -77,10 +84,6 @@
 			cardHeight = parseFloat(savedCardHeight);
 			applyCardSize();
 		}
-
-		// Läufer-Name
-		const savedRunner = localStorage.getItem('runnerName');
-		if (savedRunner) runnerName = savedRunner;
 
 		// Vollbild-Status
 		const handleFullscreenChange = () => {
@@ -160,10 +163,12 @@
 		}
 	}
 
-	function updateRunnerName() {
-		localStorage.setItem('runnerName', runnerName);
-		if (canvasRef?.setRunnerName) {
-			canvasRef.setRunnerName(runnerName);
+	async function updateRunnerName() {
+		try {
+			await updateRunnerNameInDb(runnerName);
+		} catch (error) {
+			console.error('Fehler beim Speichern des Läufers:', error);
+			toasts.show('Fehler beim Speichern!', 'error');
 		}
 	}
 
