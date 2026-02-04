@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms, rooms } from '$lib/stores/appState';
 	import { supabase } from '$lib/supabase/client';
 	import { toasts } from '$lib/stores/toastStore';
 	import { fade, fly, slide } from 'svelte/transition';
@@ -25,6 +25,7 @@
 	// Personen-Übersicht State
 	let showPersonsPanel = $state(false);
 	let personInputs = $state<Record<string, string>>({});
+	let saveTimeouts = $state<Record<string, ReturnType<typeof setTimeout>>>({});
 
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
@@ -93,9 +94,9 @@
 
 			if (error) throw error;
 
-			// Lokalen State aktualisieren
-			visibleRooms.update(rooms =>
-				rooms.map(r => r.id === roomId ? { ...r, person: personName || null } : r)
+			// Basis-Store "rooms" aktualisieren (visibleRooms ist derived und aktualisiert sich automatisch)
+			rooms.update(roomList =>
+				roomList.map(r => r.id === roomId ? { ...r, person: personName || null } : r)
 			);
 		} catch (err) {
 			console.error('Fehler beim Speichern:', err);
@@ -105,8 +106,16 @@
 
 	function handlePersonInput(roomId: string, value: string) {
 		personInputs[roomId] = value;
-		// Auto-Save nach kurzer Verzögerung (Debounce)
-		savePersonForRoom(roomId, value);
+
+		// Debounce: Vorheriges Timeout löschen
+		if (saveTimeouts[roomId]) {
+			clearTimeout(saveTimeouts[roomId]);
+		}
+
+		// Auto-Save nach 500ms Verzögerung
+		saveTimeouts[roomId] = setTimeout(() => {
+			savePersonForRoom(roomId, value);
+		}, 500);
 	}
 
 	function getFloorLabel(floor: string): string {
