@@ -24,6 +24,9 @@
 	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
 	let pageTimerId: ReturnType<typeof setTimeout> | undefined;
 
+	// Läufer (Ansprechpartner im Haus)
+	let runnerName = $state('');
+
 	// Seiten-Definition (4 Seiten)
 	const pageDefinitions = [
 		{ id: 'dach', label: '🏠 Dachgeschoss', floors: ['dach'] },
@@ -221,15 +224,26 @@
 		return animationType;
 	}
 
+	export function setRunnerName(name: string) {
+		runnerName = name;
+		localStorage.setItem('runnerName', name);
+	}
+
+	export function getRunnerName(): string {
+		return runnerName;
+	}
+
 	// Mount: Einstellungen laden & Auto-Start
 	onMount(() => {
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
 		const savedAnimation = localStorage.getItem('animationType');
+		const savedRunner = localStorage.getItem('runnerName');
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
 		if (savedEnabled) autoPageEnabled = savedEnabled === 'true';
 		if (savedAnimation) animationType = savedAnimation as typeof animationType;
+		if (savedRunner) runnerName = savedRunner;
 
 		// Starte auf erster aktiver Seite
 		const pages = activePages();
@@ -337,6 +351,17 @@
 					style="animation-duration: {pageDuration}s;"
 					class:paused={!autoPageEnabled}
 				></div>
+			</div>
+		{/if}
+
+		<!-- Läufer Badge -->
+		{#if runnerName}
+			<div class="runner-badge">
+				<span class="runner-icon">🏃</span>
+				<div class="runner-info">
+					<span class="runner-label">Euer Ansprechpartner im Haus</span>
+					<span class="runner-name">{runnerName}</span>
+				</div>
 			</div>
 		{/if}
 	{/if}
@@ -617,6 +642,49 @@
 		}
 	}
 
+	/* Läufer Badge */
+	.runner-badge {
+		position: absolute;
+		bottom: 20px;
+		left: 16px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(12px);
+		padding: 10px 16px;
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		z-index: 100;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+	}
+
+	.runner-icon {
+		font-size: 28px;
+		line-height: 1;
+	}
+
+	.runner-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.runner-label {
+		font-size: 10px;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.7);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.runner-name {
+		font-size: 16px;
+		font-weight: 700;
+		color: white;
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+	}
+
 	/* Empty State */
 	.empty-state {
 		position: absolute;
@@ -685,6 +753,24 @@
 			width: 36px;
 			height: 36px;
 			font-size: 16px;
+		}
+
+		.runner-badge {
+			bottom: 12px;
+			left: 12px;
+			padding: 8px 12px;
+		}
+
+		.runner-icon {
+			font-size: 24px;
+		}
+
+		.runner-label {
+			font-size: 9px;
+		}
+
+		.runner-name {
+			font-size: 14px;
 		}
 	}
 
