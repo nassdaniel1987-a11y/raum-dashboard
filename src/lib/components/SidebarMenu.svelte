@@ -48,6 +48,9 @@
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
 
+	// Läufer (Ansprechpartner)
+	let runnerName = $state('');
+
 	// UI-Theme
 	let currentUITheme = $state($userTheme);
 
@@ -74,6 +77,10 @@
 			cardHeight = parseFloat(savedCardHeight);
 			applyCardSize();
 		}
+
+		// Läufer-Name
+		const savedRunner = localStorage.getItem('runnerName');
+		if (savedRunner) runnerName = savedRunner;
 
 		// Vollbild-Status
 		const handleFullscreenChange = () => {
@@ -150,6 +157,13 @@
 		localStorage.setItem('animationType', type);
 		if (canvasRef?.setAnimationType) {
 			canvasRef.setAnimationType(type);
+		}
+	}
+
+	function updateRunnerName() {
+		localStorage.setItem('runnerName', runnerName);
+		if (canvasRef?.setRunnerName) {
+			canvasRef.setRunnerName(runnerName);
 		}
 	}
 
@@ -407,6 +421,23 @@
 								>🎲</button>
 							</div>
 						</div>
+					</section>
+
+					<!-- Läufer (Ansprechpartner) -->
+					<section class="section">
+						<h3>Läufer im Haus</h3>
+						<div class="runner-input">
+							<input
+								type="text"
+								bind:value={runnerName}
+								placeholder="Name eingeben..."
+								oninput={updateRunnerName}
+							/>
+							{#if runnerName}
+								<button class="clear-btn" onclick={() => { runnerName = ''; updateRunnerName(); }} title="Löschen">✕</button>
+							{/if}
+						</div>
+						<p class="hint-text">Wird auf allen Seiten als "Ansprechpartner im Haus" angezeigt</p>
 					</section>
 
 					<!-- Raumsteuerung -->
@@ -942,6 +973,61 @@
 		background: rgba(59, 130, 246, 0.4);
 		border-color: rgba(59, 130, 246, 0.8);
 		box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+	}
+
+	/* Läufer Input */
+	.runner-input {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		position: relative;
+	}
+
+	.runner-input input {
+		flex: 1;
+		padding: 12px 14px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.08);
+		color: white;
+		font-size: 15px;
+		font-weight: 500;
+		transition: all 0.2s;
+	}
+
+	.runner-input input:focus {
+		outline: none;
+		border-color: rgba(59, 130, 246, 0.6);
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.runner-input input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.runner-input .clear-btn {
+		width: 32px;
+		height: 32px;
+		border-radius: 6px;
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 14px;
+		cursor: pointer;
+		transition: all 0.2s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.runner-input .clear-btn:hover {
+		background: rgba(239, 68, 68, 0.3);
+	}
+
+	.hint-text {
+		margin: 8px 0 0 0;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.5);
 	}
 
 	.button-row {
