@@ -12,7 +12,7 @@
 	}>();
 
 	// State
-	let autoScrollActive = $state(false);
+	let autoPageActive = $state(true); // Standard: Auto-Wechsel aktiv
 	let isFullscreen = $state(false);
 
 	// SVELTE 5 DERIVED SYNTAX
@@ -51,8 +51,14 @@
 		viewWeekday.set($currentWeekday);
 	}
 
-	// Vollbild
+	// Vollbild & Auto-Page Status
 	onMount(() => {
+		// Auto-Page Status aus localStorage laden
+		const savedAutoPage = localStorage.getItem('autoPageEnabled');
+		if (savedAutoPage !== null) {
+			autoPageActive = savedAutoPage === 'true';
+		}
+
 		const handleFullscreenChange = () => {
 			isFullscreen = !!(
 				document.fullscreenElement ||
@@ -109,9 +115,13 @@
 		}
 	}
 
-	function toggleAutoScroll() {
-		if (canvasRef?.toggleAutoScroll) {
-			autoScrollActive = canvasRef.toggleAutoScroll();
+	function toggleAutoPage() {
+		if (canvasRef?.toggleAutoPage) {
+			autoPageActive = canvasRef.toggleAutoPage();
+		} else {
+			// Fallback wenn Canvas nicht verfügbar
+			autoPageActive = !autoPageActive;
+			localStorage.setItem('autoPageEnabled', autoPageActive.toString());
 		}
 	}
 </script>
@@ -159,12 +169,12 @@
 		</button>
 		<button
 			class="icon-btn"
-			class:active={autoScrollActive}
-			onclick={toggleAutoScroll}
-			title="Auto-Scroll"
-			aria-label="Auto-Scroll umschalten"
+			class:active={autoPageActive}
+			onclick={toggleAutoPage}
+			title={autoPageActive ? 'Auto-Wechsel pausieren' : 'Auto-Wechsel starten'}
+			aria-label="Auto-Wechsel umschalten"
 		>
-			{autoScrollActive ? '⏸️' : '▶️'}
+			{autoPageActive ? '⏸️' : '▶️'}
 		</button>
 		<button
 			class="icon-btn"
