@@ -479,30 +479,31 @@
 	.rooms-grid-page {
 		flex: 1;
 		display: grid;
-		/* 2x2 Grid für max 4 Räume pro Seite */
-		grid-template-columns: repeat(2, 1fr);
-		grid-template-rows: repeat(2, 1fr);
+		/* 2x2 Grid für max 4 Räume pro Seite - feste Größen */
+		grid-template-columns: repeat(2, minmax(200px, 400px));
+		grid-template-rows: repeat(2, minmax(150px, 280px));
 		gap: 16px;
 		padding: 8px;
 		max-width: 900px;
-		max-height: calc(100% - 20px);
 		margin: 0 auto;
 		align-content: center;
+		justify-content: center;
 	}
 
 	.room-wrapper-page {
 		display: flex;
 		justify-content: center;
-		align-items: center;
+		align-items: stretch;
 		min-height: 0;
-		max-height: 100%;
+		width: 100%;
+		height: 100%;
 	}
 
 	.room-wrapper-page :global(.room-card) {
 		width: 100%;
-		max-width: 380px;
-		height: auto;
-		max-height: 280px;
+		height: 100%;
+		max-width: 100%;
+		max-height: 100%;
 	}
 
 	.room-wrapper-page.selected {
@@ -703,11 +704,8 @@
 		.rooms-grid-page {
 			gap: 12px;
 			max-width: 95%;
-		}
-
-		.room-wrapper-page :global(.room-card) {
-			max-width: 100%;
-			max-height: 250px;
+			grid-template-columns: repeat(2, minmax(180px, 380px));
+			grid-template-rows: repeat(2, minmax(140px, 250px));
 		}
 
 		.nav-arrow {
@@ -758,7 +756,8 @@
 		}
 
 		.rooms-grid-page {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(2, minmax(150px, 1fr));
+			grid-template-rows: repeat(2, minmax(120px, 200px));
 			gap: 8px;
 		}
 
