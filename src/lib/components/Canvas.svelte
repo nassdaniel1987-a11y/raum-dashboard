@@ -298,6 +298,14 @@
 					<!-- Seiten-Titel -->
 					<div class="page-header">
 						<h2 class="page-title">{pageDefinitions[currentPage]?.label}</h2>
+						<!-- Läufer Badge direkt unter dem Titel -->
+						{#if runnerName}
+							<div class="runner-badge-inline">
+								<span class="runner-icon">🏃</span>
+								<span class="runner-label">Ansprechpartner:</span>
+								<span class="runner-name">{runnerName}</span>
+							</div>
+						{/if}
 					</div>
 
 					<!-- Räume Grid -->
@@ -351,17 +359,6 @@
 					style="animation-duration: {pageDuration}s;"
 					class:paused={!autoPageEnabled}
 				></div>
-			</div>
-		{/if}
-
-		<!-- Läufer Badge -->
-		{#if runnerName}
-			<div class="runner-badge">
-				<span class="runner-icon">🏃</span>
-				<div class="runner-info">
-					<span class="runner-label">Euer Ansprechpartner im Haus</span>
-					<span class="runner-name">{runnerName}</span>
-				</div>
 			</div>
 		{/if}
 	{/if}
@@ -642,47 +639,36 @@
 		}
 	}
 
-	/* Läufer Badge */
-	.runner-badge {
-		position: absolute;
-		bottom: 20px;
-		left: 16px;
+	/* Läufer Badge Inline (unter dem Titel) */
+	.runner-badge-inline {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(12px);
-		padding: 10px 16px;
-		border-radius: 12px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		z-index: 100;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+		justify-content: center;
+		gap: 8px;
+		margin-top: 6px;
+		padding: 6px 16px;
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(8px);
+		border-radius: 20px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
 	}
 
-	.runner-icon {
-		font-size: 28px;
+	.runner-badge-inline .runner-icon {
+		font-size: 18px;
 		line-height: 1;
 	}
 
-	.runner-info {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.runner-label {
-		font-size: 10px;
+	.runner-badge-inline .runner-label {
+		font-size: 12px;
 		font-weight: 500;
 		color: rgba(255, 255, 255, 0.7);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
 	}
 
-	.runner-name {
-		font-size: 16px;
+	.runner-badge-inline .runner-name {
+		font-size: 14px;
 		font-weight: 700;
 		color: white;
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 	}
 
 	/* Empty State */
@@ -755,22 +741,21 @@
 			font-size: 16px;
 		}
 
-		.runner-badge {
-			bottom: 12px;
-			left: 12px;
-			padding: 8px 12px;
+		.runner-badge-inline {
+			padding: 5px 12px;
+			margin-top: 4px;
 		}
 
-		.runner-icon {
-			font-size: 24px;
+		.runner-badge-inline .runner-icon {
+			font-size: 16px;
 		}
 
-		.runner-label {
-			font-size: 9px;
+		.runner-badge-inline .runner-label {
+			font-size: 11px;
 		}
 
-		.runner-name {
-			font-size: 14px;
+		.runner-badge-inline .runner-name {
+			font-size: 13px;
 		}
 	}
 
