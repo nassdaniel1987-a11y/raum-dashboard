@@ -496,6 +496,8 @@
 		align-items: center;
 		min-height: 0;
 		max-height: 100%;
+		/* Verhindert Layout-Shifts beim Seitenwechsel */
+		contain: layout style;
 	}
 
 	.room-wrapper-page :global(.room-card) {
@@ -503,6 +505,8 @@
 		max-width: 380px;
 		height: auto;
 		max-height: 280px;
+		/* Verhindert Größenänderungen während Animation */
+		contain: layout;
 	}
 
 	.room-wrapper-page.selected {
