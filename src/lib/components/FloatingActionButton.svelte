@@ -169,6 +169,7 @@
 						<option value="og2">2. OG</option>
 						<option value="og1">1. OG</option>
 						<option value="eg">Erdgeschoss</option>
+						<option value="essen">Essen</option>
 						<option value="ug">Untergeschoss</option>
 					</select>
 					<div class="form-buttons">

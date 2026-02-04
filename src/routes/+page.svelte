@@ -7,8 +7,6 @@
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import DailyHighlights from '$lib/components/DailyHighlights.svelte';
-	import DailyHighlightsEditor from '$lib/components/DailyHighlightsEditor.svelte';
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
@@ -16,9 +14,8 @@
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
 	let showHelp = $state(false);
-	let showHighlightsEditor = $state(false);
-	let showMenu = $state(false); // ✅ NEU: Sidebar Menu
-	let canvasRef: any = $state(null); // Referenz zur Canvas-Komponente
+	let showMenu = $state(false);
+	let canvasRef: any = $state(null);
 
 	function handleEditRoom(room: RoomWithConfig) {
 		editingRoom = room;
@@ -44,14 +41,6 @@
 		showHelp = false;
 	}
 
-	function openHighlightsEditor() {
-		showHighlightsEditor = true;
-	}
-
-	function closeHighlightsEditor() {
-		showHighlightsEditor = false;
-	}
-
 	function openMenu() {
 		showMenu = true;
 	}
@@ -63,7 +52,6 @@
 
 <div class="dashboard">
 	<Header onOpenMenu={openMenu} {canvasRef} />
-	<DailyHighlights onOpenEditor={openHighlightsEditor} />
 	<Canvas {handleEditRoom} bind:this={canvasRef} />
 </div>
 
@@ -88,10 +76,6 @@
 
 {#if showHelp}
 	<HelpModal onClose={closeHelp} />
-{/if}
-
-	{#if showHighlightsEditor}
-	<DailyHighlightsEditor onClose={closeHighlightsEditor} />
 {/if}
 
 <style>
