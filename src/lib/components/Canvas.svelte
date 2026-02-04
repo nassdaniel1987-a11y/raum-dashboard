@@ -27,8 +27,8 @@
 	// Seiten-Definition (4 Seiten)
 	const pageDefinitions = [
 		{ id: 'dach', label: '🏠 Dachgeschoss', floors: ['dach'] },
-		{ id: 'og', label: '1️⃣2️⃣ Obergeschosse', floors: ['og2', 'og1'] },
-		{ id: 'eg', label: '🚪 Erdgeschoss', floors: ['eg'] },
+		{ id: 'og', label: '1.OG / 2.OG', floors: ['og2', 'og1'] },
+		{ id: 'eg', label: '🚪 Erdgeschoss', floors: ['eg', 'essen'] },
 		{ id: 'extern', label: '🏃 Außenbereich', floors: ['extern'] }
 	];
 
@@ -47,6 +47,7 @@
 			.filter((r) => r.floor === 'og1')
 			.sort((a, b) => a.position_x - b.position_x),
 		eg: $visibleRooms.filter((r) => r.floor === 'eg').sort((a, b) => a.position_x - b.position_x),
+		essen: $visibleRooms.filter((r) => r.floor === 'essen').sort((a, b) => a.position_x - b.position_x),
 		ug: $visibleRooms.filter((r) => r.floor === 'ug').sort((a, b) => a.position_x - b.position_x)
 	});
 

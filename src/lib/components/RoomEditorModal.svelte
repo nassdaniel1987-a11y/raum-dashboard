@@ -393,6 +393,7 @@
 							<option value="og2">2️⃣ 2. OG</option>
 							<option value="og1">1️⃣ 1. OG</option>
 							<option value="eg">🚪 Erdgeschoss</option>
+							<option value="essen">🍽️ Essen</option>
 							<option value="ug">⬇️ Untergeschoss</option>
 						</select>
 					</div>
