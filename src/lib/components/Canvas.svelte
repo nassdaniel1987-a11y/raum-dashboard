@@ -505,8 +505,6 @@
 		max-width: 380px;
 		height: auto;
 		max-height: 280px;
-		/* Verhindert Größenänderungen während Animation */
-		contain: layout;
 	}
 
 	.room-wrapper-page.selected {
