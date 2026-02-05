@@ -36,6 +36,7 @@
 		{ id: 'copy', icon: '📄', label: 'Tag kopieren', color: 'blue' },
 		{ id: 'paste', icon: '📋', label: 'Tag einfügen', color: 'blue', disabled: () => copiedDay === null },
 		{ id: 'scheduler', icon: '📅', label: 'Tagesplaner', color: 'purple' },
+		{ id: 'reload', icon: '🔄', label: 'Aktualisieren', color: 'gray' },
 	];
 
 	// Aktive Räume (offen) für Personen-Panel
@@ -187,6 +188,11 @@
 					onOpenScheduler();
 				}
 				break;
+
+			case 'reload':
+				closeMenu();
+				window.location.reload();
+				break;
 		}
 	}
 
@@ -196,7 +202,8 @@
 			green: 'rgba(34, 197, 94, 0.9)',
 			red: 'rgba(239, 68, 68, 0.9)',
 			purple: 'rgba(168, 85, 247, 0.9)',
-			orange: 'rgba(249, 115, 22, 0.9)'
+			orange: 'rgba(249, 115, 22, 0.9)',
+			gray: 'rgba(107, 114, 128, 0.9)'
 		};
 		return colors[color] || colors.blue;
 	}
