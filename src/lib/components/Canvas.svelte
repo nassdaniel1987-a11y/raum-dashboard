@@ -338,14 +338,15 @@
 			›
 		</button>
 
-		<!-- Fortschrittsbalken -->
+		<!-- Fortschrittsbalken (wird bei jedem Seitenwechsel neu gestartet) -->
 		{#if autoPageEnabled}
 			<div class="progress-bar">
-				<div
-					class="progress-fill"
-					style="animation-duration: {pageDuration}s;"
-					class:paused={!autoPageEnabled}
-				></div>
+				{#key currentPage}
+					<div
+						class="progress-fill"
+						style="animation-duration: {pageDuration}s;"
+					></div>
+				{/key}
 			</div>
 		{/if}
 	{/if}
@@ -612,11 +613,6 @@
 		height: 100%;
 		background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8));
 		animation: progressFill linear forwards;
-		animation-iteration-count: infinite;
-	}
-
-	.progress-fill.paused {
-		animation-play-state: paused;
 	}
 
 	@keyframes progressFill {
