@@ -685,6 +685,64 @@ export async function reorderHighlights(highlights: DailyHighlight[]) {
 	}
 }
 
+// ========== TAGES-RESET (Zeiten zurücksetzen bei Tageswechsel) ==========
+async function resetDailyTimes(weekday: number) {
+	console.log(`🔄 Tages-Reset: Lösche Zeiten für Wochentag ${weekday}`);
+
+	// Alle daily_configs für diesen Wochentag: open_time und close_time auf null setzen
+	const { error } = await supabase
+		.from('daily_configs')
+		.update({ open_time: null, close_time: null })
+		.eq('weekday', weekday);
+
+	if (error) {
+		console.error('[Tages-Reset] Fehler:', error);
+		return;
+	}
+
+	// Lokalen Store aktualisieren
+	dailyConfigs.update((map) => {
+		const newMap = new Map(map);
+		for (const [key, config] of newMap) {
+			if (config.weekday === weekday) {
+				newMap.set(key, { ...config, open_time: null, close_time: null });
+			}
+		}
+		return newMap;
+	});
+
+	// Alle manual_override Flags zurücksetzen für den neuen Tag
+	const { error: statusError } = await supabase
+		.from('room_status')
+		.update({ manual_override: false })
+		.eq('manual_override', true);
+
+	if (!statusError) {
+		roomStatuses.update((map) => {
+			const newMap = new Map(map);
+			for (const [id, status] of newMap) {
+				if (status.manual_override) {
+					newMap.set(id, { ...status, manual_override: false });
+				}
+			}
+			return newMap;
+		});
+	}
+
+	console.log('✅ Tages-Reset abgeschlossen');
+}
+
+function checkDailyReset() {
+	const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+	const lastResetDate = localStorage.getItem('lastDailyResetDate');
+
+	if (lastResetDate !== today) {
+		const weekday = new Date().getDay() || 7; // 1=Mo ... 7=So
+		localStorage.setItem('lastDailyResetDate', today);
+		resetDailyTimes(weekday);
+	}
+}
+
 // ========== AUTOMATIK-SERVICE ==========
 if (typeof window !== 'undefined') {
 	const AUTOMATION_INTERVAL_MS = 10000;
@@ -800,6 +858,10 @@ if (typeof window !== 'undefined') {
 	const startAutomation = () => {
 		if (intervalId) clearInterval(intervalId);
 		if ((window as any).clearAutomationInterval) (window as any).clearAutomationInterval();
+
+		// Tages-Reset prüfen (einmal beim Start + stündlich)
+		checkDailyReset();
+		setInterval(checkDailyReset, 60 * 60 * 1000);
 
 		runAutomation();
 		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
