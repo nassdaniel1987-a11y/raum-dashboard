@@ -462,7 +462,7 @@
 	/* ✅ Personen-Badge - Hängendes Schild unten mittig */
 	.person-badge {
 		position: absolute;
-		bottom: -20px; /* Hängt unter der Kachel */
+		top: 100%; /* Startet direkt unter der Kachel */
 		left: 50%; /* Mittig */
 		transform: translateX(-50%);
 		z-index: 15; /* Über allen anderen Elementen */
@@ -473,7 +473,7 @@
 
 	/* ✅ Badge-Position anpassen wenn Aktivitäts-Bild vorhanden */
 	.room-card.has-activity-image .person-badge {
-		bottom: -30px; /* ✅ Tiefer positioniert - hängt am Polaroid-Rahmen des Bildes */
+		top: calc(100% + 4px);
 	}
 
 	/* ✅ Status-Badge - Hängend in der Mitte (Absperrband-Stil) */
