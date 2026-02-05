@@ -271,11 +271,16 @@
 
 	<!-- ✅ Personen-Indikator - Hängendes Schild unten (immer sichtbar wenn Person gesetzt) -->
 	{#if room.person}
+		{@const persons = room.person.split(',').map(p => p.trim()).filter(p => p)}
 		<div class="person-badge" title="Person: {room.person}">
 			<div class="badge-chain"></div>
 			<div class="badge-content" style="background: {currentTheme.personBadgeGradient}; border-color: {currentTheme.personBadgeBorder};">
 				<span class="person-icon">👤</span>
-				<span class="person-name">{room.person}</span>
+				<div class="person-names">
+					{#each persons as person}
+						<span class="person-name">{person}</span>
+					{/each}
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -556,12 +561,20 @@
 		line-height: 1;
 	}
 
+	.person-names {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1px;
+	}
+
 	.person-name {
 		max-width: 180px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+		line-height: 1.3;
 	}
 
 	/* ✅ Button Container - kompakter */
