@@ -5,19 +5,33 @@
 		initialZoom = 1,
 		initialX = 0,
 		initialY = 0,
+		initialRotation = 0,
+		frameSize = 'medium',
 		onUpdate
 	} = $props<{
 		imageSrc: string;
 		initialZoom?: number;
 		initialX?: number;
 		initialY?: number;
-		onUpdate?: (data: { zoom: number; x: number; y: number }) => void;
+		initialRotation?: number;
+		frameSize?: 'small' | 'medium' | 'large';
+		onUpdate?: (data: { zoom: number; x: number; y: number; rotation: number }) => void;
 	}>();
+
+	// Tatsaechliche Pixelgroessen wie in RoomCard
+	const frameSizes = {
+		small: 80,
+		medium: 120,
+		large: 180
+	};
+
+	let actualFrameSize = $derived(frameSizes[frameSize]);
 
 	// State - Position in PROZENT (wie RoomCard es erwartet)
 	let zoom = $state(initialZoom);
 	let posX = $state(initialX); // Prozent
 	let posY = $state(initialY); // Prozent
+	let rotation = $state(initialRotation); // Grad (0, 90, 180, 270)
 	let isDragging = $state(false);
 	let dragStartPos = $state({ x: 0, y: 0 });
 	let dragStartPercent = $state({ x: 0, y: 0 });
@@ -30,7 +44,7 @@
 
 	// Update parent when values change
 	$effect(() => {
-		onUpdate?.({ zoom, x: posX, y: posY });
+		onUpdate?.({ zoom, x: posX, y: posY, rotation });
 	});
 
 	// Wenn Zoom sich ändert, Position begrenzen
@@ -64,6 +78,15 @@
 		zoom = 1;
 		posX = 0;
 		posY = 0;
+		rotation = 0;
+	}
+
+	function rotateRight() {
+		rotation = (rotation + 90) % 360;
+	}
+
+	function rotateLeft() {
+		rotation = (rotation - 90 + 360) % 360;
 	}
 
 	// Drag handlers - konvertiert Pixel-Bewegung in Prozent
@@ -134,10 +157,13 @@
 
 <div class="editor-container">
 	<!-- Vorschau im Polaroid-Stil (wie in der echten Kachel) -->
-	<div class="preview-label">Vorschau (so sieht es in der Kachel aus):</div>
+	<div class="preview-label">
+		Vorschau (1:1 wie in der Kachel - {actualFrameSize}px):
+	</div>
 
-	<div class="polaroid-frame">
-		<div
+	<div class="frame-container">
+		<div class="polaroid-frame" style="--frame-size: {actualFrameSize}px;">
+			<div
 			class="image-viewport"
 			bind:this={containerRef}
 			onpointerdown={handlePointerDown}
@@ -152,7 +178,7 @@
 				src={imageSrc}
 				alt="Aktivitätsbild"
 				class="preview-image"
-				style="transform: translate({posX}%, {posY}%) scale({zoom}); transform-origin: center;"
+				style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
 				draggable="false"
 			/>
 
@@ -160,6 +186,7 @@
 			{#if zoom > 1 && !isDragging}
 				<div class="drag-hint">Ziehen zum Verschieben</div>
 			{/if}
+			</div>
 		</div>
 	</div>
 
@@ -183,10 +210,18 @@
 			<button class="zoom-btn" onclick={zoomIn} disabled={zoom >= MAX_ZOOM}>+</button>
 		</div>
 
-		<!-- Reset Button -->
-		<button class="reset-btn" onclick={reset}>
-			↺ Zurücksetzen
-		</button>
+		<!-- Rotation + Reset -->
+		<div class="action-buttons">
+			<button class="action-btn" onclick={rotateLeft} title="Nach links drehen">
+				↶ 90°
+			</button>
+			<button class="action-btn" onclick={rotateRight} title="Nach rechts drehen">
+				↷ 90°
+			</button>
+			<button class="reset-btn" onclick={reset}>
+				↺ Reset
+			</button>
+		</div>
 	</div>
 
 	<!-- Hinweis -->
@@ -206,12 +241,20 @@
 		font-size: 12px;
 		color: rgba(255, 255, 255, 0.6);
 		margin-bottom: 4px;
+		text-align: center;
 	}
 
-	/* Polaroid-Rahmen wie in RoomCard */
+	.frame-container {
+		display: flex;
+		justify-content: center;
+		padding: 16px;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 12px;
+	}
+
+	/* Polaroid-Rahmen wie in RoomCard - exakt passend zur Bildgroesse */
 	.polaroid-frame {
-		width: 100%;
-		max-width: 300px;
+		display: inline-block;
 		margin: 0 auto;
 		padding: 6px;
 		padding-bottom: 10px;
@@ -222,8 +265,9 @@
 
 	.image-viewport {
 		position: relative;
-		width: 100%;
-		height: 180px;
+		width: var(--frame-size, 180px);
+		height: var(--frame-size, 180px);
+		margin: 0 auto;
 		overflow: hidden;
 		border-radius: 2px;
 		background: rgba(0, 0, 0, 0.05);
@@ -343,8 +387,30 @@
 		font-weight: 600;
 	}
 
+	.action-buttons {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.action-btn {
+		padding: 8px 14px;
+		border: none;
+		border-radius: 8px;
+		background: rgba(59, 130, 246, 0.3);
+		color: white;
+		font-size: 13px;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.action-btn:hover {
+		background: rgba(59, 130, 246, 0.5);
+	}
+
 	.reset-btn {
-		padding: 8px 20px;
+		padding: 8px 14px;
 		border: none;
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.1);

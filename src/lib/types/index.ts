@@ -27,6 +27,7 @@ export interface ImagePosition {
 	x: number; // Position in % (horizontal)
 	y: number; // Position in % (vertikal)
 	zoom: number; // Zoom level (0.5 - 3.0)
+	rotation?: number; // Rotation in Grad (0, 90, 180, 270)
 }
 
 export interface DailyConfig {

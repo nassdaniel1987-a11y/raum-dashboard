@@ -240,7 +240,7 @@
 						loading="lazy"
 						decoding="async"
 						style={room.config.activity_image_position
-							? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}); transform-origin: center;`
+							? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}) rotate(${room.config.activity_image_position.rotation ?? 0}deg); transform-origin: center;`
 							: ''}
 					/>
 				</div>
