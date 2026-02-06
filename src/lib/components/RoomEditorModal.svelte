@@ -43,6 +43,9 @@
 	// ✅ Drag & Drop State
 	let isDragging = $state(false);
 
+	// ✅ Bild-Verarbeitungs-Status
+	let processingImage = $state(false);
+
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
 		if (!timeString) return null;
 		const [hours, minutes] = timeString.split(':').map(Number);
@@ -110,12 +113,21 @@
 	}
 
 	// ✅ Gemeinsame Funktion für File-Verarbeitung (Input + Drag & Drop)
+	const MAX_FILE_SIZE_MB = 10;
+	const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 	async function processImageFile(file: File) {
 		if (!file.type.startsWith('image/')) {
 			toasts.show('Nur Bilddateien erlaubt!', 'error');
 			return;
 		}
 
+		if (file.size > MAX_FILE_SIZE_BYTES) {
+			toasts.show(`Datei zu groß! Max. ${MAX_FILE_SIZE_MB}MB erlaubt (${Math.round(file.size / 1024 / 1024)}MB)`, 'error');
+			return;
+		}
+
+		processingImage = true;
 		activityImageFile = file;
 
 		// Lade Bild um Dimensionen zu bekommen
@@ -139,8 +151,17 @@
 					console.error('Error resizing image:', error);
 					activityImagePreview = e.target?.result as string;
 				}
+				processingImage = false;
+			};
+			img.onerror = () => {
+				processingImage = false;
+				toasts.show('Bild konnte nicht geladen werden!', 'error');
 			};
 			img.src = e.target?.result as string;
+		};
+		reader.onerror = () => {
+			processingImage = false;
+			toasts.show('Fehler beim Lesen der Datei!', 'error');
 		};
 		reader.readAsDataURL(file);
 	}
@@ -522,6 +543,7 @@
 						<div
 							class="drop-zone"
 							class:dragging={isDragging}
+							class:processing={processingImage}
 							ondragover={handleDragOver}
 							ondragleave={handleDragLeave}
 							ondrop={handleDrop}
@@ -529,16 +551,22 @@
 							tabindex="0"
 						>
 							<div class="drop-zone-content">
-								<span class="drop-icon">{isDragging ? '📥' : '🖼️'}</span>
-								<span class="drop-text">
-									{isDragging ? 'Bild hier ablegen' : 'Bild hierher ziehen'}
-								</span>
+								{#if processingImage}
+									<span class="drop-icon spinning">⏳</span>
+									<span class="drop-text">Bild wird verarbeitet...</span>
+								{:else}
+									<span class="drop-icon">{isDragging ? '📥' : '🖼️'}</span>
+									<span class="drop-text">
+										{isDragging ? 'Bild hier ablegen' : 'Bild hierher ziehen'}
+									</span>
+								{/if}
 							</div>
 							<input
 								type="file"
 								accept="image/*"
 								onchange={handleActivityImageSelect}
 								class="file-input-hidden"
+								disabled={processingImage}
 							/>
 						</div>
 
@@ -617,13 +645,15 @@
 								</button>
 							</div>
 
-							<!-- Einfacher Bild-Editor -->
+							<!-- Einfacher Bild-Editor (1:1 Vorschau) -->
 							<SimpleImageEditor
 								imageSrc={activityImagePreview}
+								frameSize={activityImageSize}
 								initialZoom={activityImagePosition?.zoom ?? 1}
 								initialX={activityImagePosition?.x ?? 0}
 								initialY={activityImagePosition?.y ?? 0}
-								onUpdate={(data) => activityImagePosition = { zoom: data.zoom, x: data.x, y: data.y }}
+								initialRotation={activityImagePosition?.rotation ?? 0}
+								onUpdate={(data) => activityImagePosition = { zoom: data.zoom, x: data.x, y: data.y, rotation: data.rotation }}
 							/>
 						</div>
 					{/if}
@@ -919,6 +949,21 @@
 
 	.drop-icon {
 		font-size: 32px;
+	}
+
+	.drop-icon.spinning {
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+
+	.drop-zone.processing {
+		border-color: rgba(249, 115, 22, 0.6);
+		background: rgba(249, 115, 22, 0.1);
+		cursor: wait;
 	}
 
 	.drop-text {
