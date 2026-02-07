@@ -235,6 +235,132 @@ export const themes: Record<string, ThemeConfig> = {
 		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/w.png'
 	},
 
+	wald: {
+		id: 'wald',
+		name: '🌲 Wald',
+		emoji: '🌲',
+		colors: {
+			primary: '#22c55e',
+			secondary: '#15803d',
+			accent: '#4ade80',
+			background: '#0d1f0d',
+			headerBg: '#1a2e1a',
+			toolbarBg: '#1a2e1a',
+			cardBg: '#1a3a2a',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(74, 222, 128, 0.9)',
+			closedBadge: 'rgba(185, 28, 28, 0.9)',
+			timeBadge: 'rgba(163, 230, 53, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/wald%20(1).png'
+	},
+
+	sonnenuntergang: {
+		id: 'sonnenuntergang',
+		name: '🌅 Sonnenuntergang',
+		emoji: '🌅',
+		colors: {
+			primary: '#f97316',
+			secondary: '#c2574a',
+			accent: '#fb923c',
+			background: '#1a0a1e',
+			headerBg: '#2a1028',
+			toolbarBg: '#2a1028',
+			cardBg: '#4a1942',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(251, 146, 60, 0.9)',
+			closedBadge: 'rgba(159, 18, 57, 0.9)',
+			timeBadge: 'rgba(253, 186, 116, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/sonnenuntergang%20(1).png'
+	},
+
+	morgengrauen: {
+		id: 'morgengrauen',
+		name: '🌄 Morgengrauen',
+		emoji: '🌄',
+		colors: {
+			primary: '#818cf8',
+			secondary: '#6366f1',
+			accent: '#a5b4fc',
+			background: '#0a0e2a',
+			headerBg: '#1a1a3a',
+			toolbarBg: '#1a1a3a',
+			cardBg: '#2a2a5a',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(129, 140, 248, 0.9)',
+			closedBadge: 'rgba(127, 29, 29, 0.9)',
+			timeBadge: 'rgba(196, 181, 253, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/Morgengraun%20(1).png'
+	},
+
+	bergsee: {
+		id: 'bergsee',
+		name: '🏔️ Bergsee',
+		emoji: '🏔️',
+		colors: {
+			primary: '#38bdf8',
+			secondary: '#0284c7',
+			accent: '#7dd3fc',
+			background: '#1a1e2a',
+			headerBg: '#1e2a3a',
+			toolbarBg: '#1e2a3a',
+			cardBg: '#2a3a4a',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(56, 189, 248, 0.9)',
+			closedBadge: 'rgba(153, 27, 27, 0.9)',
+			timeBadge: 'rgba(125, 211, 252, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/Bergsee%20(1).png'
+	},
+
+	lavendel: {
+		id: 'lavendel',
+		name: '💜 Lavendel',
+		emoji: '💜',
+		colors: {
+			primary: '#a78bfa',
+			secondary: '#7c3aed',
+			accent: '#c4b5fd',
+			background: '#1a0f2a',
+			headerBg: '#221538',
+			toolbarBg: '#221538',
+			cardBg: '#2e1f4a',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(167, 139, 250, 0.9)',
+			closedBadge: 'rgba(159, 18, 57, 0.9)',
+			timeBadge: 'rgba(196, 181, 253, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/Lavendel%20(1).png'
+	},
+
+	aurora: {
+		id: 'aurora',
+		name: '🌌 Nordlicht',
+		emoji: '🌌',
+		colors: {
+			primary: '#2dd4bf',
+			secondary: '#0d9488',
+			accent: '#5eead4',
+			background: '#0a0f1a',
+			headerBg: '#0f1a2a',
+			toolbarBg: '#0f1a2a',
+			cardBg: '#0a3a3a',
+			textPrimary: '#ffffff',
+			textSecondary: 'rgba(255, 255, 255, 0.9)',
+			openBadge: 'rgba(45, 212, 191, 0.9)',
+			closedBadge: 'rgba(153, 27, 27, 0.9)',
+			timeBadge: 'rgba(94, 234, 212, 0.95)'
+		},
+		backgroundImageUrl: 'https://yxmdhkpnyjmhmggbptjm.supabase.co/storage/v1/object/public/theme-backgrounds/Aurora%20(1).png'
+	},
+
 	musik: {
 		id: 'musik',
 		name: '🎵 Musik',
