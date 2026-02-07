@@ -3,6 +3,7 @@ import type { Room, RoomStatus, DailyConfig, AppSettings, RoomWithConfig, DailyH
 import { supabase } from '$lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { applyTheme } from '$lib/themes';
+import { parseTime } from '$lib/utils/time';
 
 // ===== ADMIN MODE =====
 export const isEditMode = writable(false);
@@ -221,49 +222,48 @@ export function unsubscribeFromRealtimeUpdates() {
 
 // ===== DATA LOADING =====
 export async function loadAllData() {
-	const { data: roomsData } = await supabase.from('rooms').select('*').order('created_at');
+	const { data: roomsData, error: roomsError } = await supabase.from('rooms').select('*').order('created_at');
+	if (roomsError) console.error('[loadAllData] Fehler beim Laden der Räume:', roomsError);
 	if (roomsData) rooms.set(roomsData);
 
-	const { data: statusesData } = await supabase.from('room_status').select('*');
+	const { data: statusesData, error: statusesError } = await supabase.from('room_status').select('*');
+	if (statusesError) console.error('[loadAllData] Fehler beim Laden der Status:', statusesError);
 	if (statusesData) {
 		const statusMap = new Map();
 		statusesData.forEach((s) => statusMap.set(s.room_id, s));
 		roomStatuses.set(statusMap);
 	}
 
-	const { data: configsData } = await supabase.from('daily_configs').select('*');
+	const { data: configsData, error: configsError } = await supabase.from('daily_configs').select('*');
+	if (configsError) console.error('[loadAllData] Fehler beim Laden der Configs:', configsError);
 	if (configsData) {
 		const configMap = new Map();
 		configsData.forEach((c) => configMap.set(`${c.room_id}-${c.weekday}`, c));
 		dailyConfigs.set(configMap);
 	}
 
-	const { data: settingsData } = await supabase
+	const { data: settingsData, error: settingsError } = await supabase
 		.from('app_settings')
 		.select('*')
 		.eq('id', 1)
 		.single();
+	if (settingsError) console.error('[loadAllData] Fehler beim Laden der Settings:', settingsError);
 	if (settingsData) {
 		appSettings.set(settingsData);
 	}
 
-	const { data: highlightsData } = await supabase
+	const { data: highlightsData, error: highlightsError } = await supabase
 		.from('daily_highlights')
 		.select('*')
 		.order('weekday')
 		.order('sort_order');
+	if (highlightsError) console.error('[loadAllData] Fehler beim Laden der Highlights:', highlightsError);
 	if (highlightsData) {
 		dailyHighlights.set(highlightsData);
 	}
 }
 
 // ===== UTILITY FUNCTIONS =====
-function parseTime(timeString: string | null | undefined): number | null {
-	if (!timeString) return null;
-	const [hours, minutes] = timeString.split(':').map(Number);
-	if (isNaN(hours) || isNaN(minutes)) return null;
-	return hours * 60 + minutes;
-}
 
 // ✅ KORRIGIERT: Hilfsfunktion für sicheres Erstellen von RoomStatus
 function createRoomStatus(roomId: string, isOpen: boolean, manualOverride: boolean): RoomStatus {
@@ -677,12 +677,14 @@ export async function reorderHighlights(highlights: DailyHighlight[]) {
 		sort_order: index + 1
 	}));
 
-	for (const update of updates) {
-		await supabase
-			.from('daily_highlights')
-			.update({ sort_order: update.sort_order })
-			.eq('id', update.id);
-	}
+	await Promise.all(
+		updates.map((update) =>
+			supabase
+				.from('daily_highlights')
+				.update({ sort_order: update.sort_order })
+				.eq('id', update.id)
+		)
+	);
 }
 
 // ========== TAGES-RESET (Zeiten zurücksetzen bei Tageswechsel) ==========
@@ -854,24 +856,28 @@ if (typeof window !== 'undefined') {
 	};
 
 	let intervalId: ReturnType<typeof setInterval> | null = null;
+	let dailyResetIntervalId: ReturnType<typeof setInterval> | null = null;
+
+	const stopAllIntervals = () => {
+		if (intervalId) {
+			clearInterval(intervalId);
+			intervalId = null;
+		}
+		if (dailyResetIntervalId) {
+			clearInterval(dailyResetIntervalId);
+			dailyResetIntervalId = null;
+		}
+	};
 
 	const startAutomation = () => {
-		if (intervalId) clearInterval(intervalId);
-		if ((window as any).clearAutomationInterval) (window as any).clearAutomationInterval();
+		stopAllIntervals();
 
 		// Tages-Reset prüfen (einmal beim Start + stündlich)
 		checkDailyReset();
-		setInterval(checkDailyReset, 60 * 60 * 1000);
+		dailyResetIntervalId = setInterval(checkDailyReset, 60 * 60 * 1000);
 
 		runAutomation();
 		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
-
-		(window as any).clearAutomationInterval = () => {
-			if (intervalId) {
-				clearInterval(intervalId);
-				intervalId = null;
-			}
-		};
 	};
 
 	setTimeout(startAutomation, 3000);

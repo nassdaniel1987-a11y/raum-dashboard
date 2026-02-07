@@ -1,17 +1,5 @@
 // Theme-Definitionen für das Raum-Dashboard
 
-// Hilfsfunktion um die vollständige Supabase Storage URL zu generieren
-// WICHTIG: Ersetze 'YOUR_PROJECT_URL' mit deiner tatsächlichen Supabase Project URL
-const SUPABASE_STORAGE_URL = 'YOUR_PROJECT_URL/storage/v1/object/public/theme-backgrounds';
-
-function getBackgroundUrl(filename: string | null): string | null {
-	if (!filename) return null;
-	// Wenn bereits eine vollständige URL, direkt zurückgeben
-	if (filename.startsWith('http')) return filename;
-	// Sonst Supabase Storage URL generieren
-	return `${SUPABASE_STORAGE_URL}/${filename}`;
-}
-
 export interface ThemeColors {
 	primary: string;
 	secondary: string;

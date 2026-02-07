@@ -72,7 +72,7 @@ export interface RoomWithConfig extends Room {
 	isOpen: boolean;
 }
 
-export type Theme = 'space' | 'dino' | 'pokemon' | 'minecraft' | 'ocean';
+export type Theme = 'default' | 'space' | 'dino' | 'ocean' | 'pokemon' | 'minecraft' | 'pippi' | 'candyland' | 'basketball' | 'weihnachten' | 'musik';
 
 export interface Position {
 	x: number;

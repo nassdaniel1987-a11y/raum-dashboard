@@ -5,6 +5,7 @@
 	import type { RoomWithConfig } from '$lib/types';
 	import { get } from 'svelte/store';
 	import { getCardTheme } from '$lib/cardThemes';
+	import { parseTime } from '$lib/utils/time';
 
 	// Svelte 5 Props Syntax
 	let { room, onEdit, onSelect, isSelected = false } = $props<{
@@ -87,14 +88,6 @@
 			console.error('Error deleting room config:', error);
 			toasts.show('✕ Fehler beim Löschen', 'error');
 		}
-	}
-
-	// ✅ NEU: Status-Berechnung für Indikatoren
-	function parseTime(timeStr: string | null | undefined): number | null {
-		if (!timeStr) return null;
-		// ✅ FIX: Unterstütze sowohl "HH:MM" als auch "HH:MM:SS" (PostgreSQL time format)
-		const [hours, minutes] = timeStr.split(':').map(Number);
-		return hours * 60 + minutes;
 	}
 
 	let roomStatus = $derived(() => {
