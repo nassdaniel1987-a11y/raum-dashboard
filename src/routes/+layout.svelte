@@ -103,27 +103,6 @@
 		touch-action: manipulation;
 	}
 
-	/* Theme-spezifische Anpassungen */
-	:global(.theme-space body) {
-		/* Weltraum-Theme hat schon gute Defaults */
-	}
-
-	:global(.theme-dino body) {
-		/* Dschungel-Effekt für Dino-Theme */
-	}
-
-	:global(.theme-ocean body) {
-		/* Wellen-Effekt für Ozean-Theme */
-	}
-
-	:global(.theme-pokemon body) {
-		/* Energie-Effekt für Pokémon-Theme */
-	}
-
-	:global(.theme-minecraft body) {
-		/* Block-Pattern für Minecraft-Theme */
-	}
-
 	/* Vollbild-Optimierungen */
 	:global(html:fullscreen) {
 		overflow: hidden;
