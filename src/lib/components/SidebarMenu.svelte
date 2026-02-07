@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -47,6 +47,38 @@
 	let nightModeEnabled = $state($appSettings?.night_mode_enabled ?? true);
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
+
+	// Globale Schriftgrößen
+	let globalTitleFontSize = $state(42);
+	let globalTextFontSize = $state(28);
+	let fontSizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Schriftgrößen aus den aktuellen Configs laden wenn sich der Tag ändert
+	$effect(() => {
+		const weekday = $viewWeekday;
+		const configs = $dailyConfigs;
+		let titleSum = 0;
+		let textSum = 0;
+		let count = 0;
+		for (const [, config] of configs) {
+			if (config.weekday === weekday) {
+				titleSum += config.title_font_size || 42;
+				textSum += config.text_font_size || 28;
+				count++;
+			}
+		}
+		if (count > 0) {
+			globalTitleFontSize = Math.round(titleSum / count);
+			globalTextFontSize = Math.round(textSum / count);
+		}
+	});
+
+	function updateGlobalFontSizes() {
+		if (fontSizeDebounceTimer) clearTimeout(fontSizeDebounceTimer);
+		fontSizeDebounceTimer = setTimeout(() => {
+			bulkUpdateFontSizes($viewWeekday, globalTitleFontSize, globalTextFontSize);
+		}, 300);
+	}
 
 	// Läufer (Ansprechpartner) - aus appSettings
 	let runnerName = $state($appSettings?.runner_name || '');
@@ -524,7 +556,29 @@
 						</div>
 					</section>
 
-					<!-- Größen -->
+					<!-- Schriftgrößen -->
+					<section class="section">
+						<h3>Schriftgrößen (alle Kacheln)</h3>
+						<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt für alle Räume am {weekdayNames[$viewWeekday]}</p>
+
+						<div class="slider-item">
+							<label>Titel</label>
+							<div class="slider-control">
+								<input type="range" min="20" max="60" step="1" bind:value={globalTitleFontSize} oninput={updateGlobalFontSizes} />
+								<span class="value">{globalTitleFontSize}px</span>
+							</div>
+						</div>
+
+						<div class="slider-item">
+							<label>Inhalt</label>
+							<div class="slider-control">
+								<input type="range" min="14" max="48" step="1" bind:value={globalTextFontSize} oninput={updateGlobalFontSizes} />
+								<span class="value">{globalTextFontSize}px</span>
+							</div>
+						</div>
+					</section>
+
+				<!-- Größen -->
 					<section class="section">
 						<h3>Größen</h3>
 						<div class="slider-item">

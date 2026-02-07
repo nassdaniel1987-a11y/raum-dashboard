@@ -574,6 +574,46 @@ export async function deleteRoomConfigForDay(roomId: string, day: number) {
 	});
 }
 
+// ========== SCHRIFTGRÖSSEN VERWALTUNG ==========
+
+export async function bulkUpdateFontSizes(weekday: number, titleFontSize: number, textFontSize: number) {
+	const $configs = get(dailyConfigs);
+
+	// Alle Config-Keys für diesen Wochentag sammeln
+	const keysToUpdate: string[] = [];
+	const roomIds: string[] = [];
+	for (const [key, config] of $configs) {
+		if (config.weekday === weekday) {
+			keysToUpdate.push(key);
+			roomIds.push(config.room_id);
+		}
+	}
+
+	if (roomIds.length === 0) return;
+
+	// Lokalen State sofort aktualisieren (optimistic update)
+	dailyConfigs.update(map => {
+		const newMap = new Map(map);
+		for (const key of keysToUpdate) {
+			const config = newMap.get(key);
+			if (config) {
+				newMap.set(key, { ...config, title_font_size: titleFontSize, text_font_size: textFontSize });
+			}
+		}
+		return newMap;
+	});
+
+	// DB-Update für alle Configs dieses Tages
+	const { error } = await supabase
+		.from('daily_configs')
+		.update({ title_font_size: titleFontSize, text_font_size: textFontSize })
+		.eq('weekday', weekday);
+
+	if (error) {
+		console.error('[bulkUpdateFontSizes] Fehler:', error);
+	}
+}
+
 // ========== RUNNER (Ansprechpartner) VERWALTUNG ==========
 
 export async function updateRunnerName(name: string) {
