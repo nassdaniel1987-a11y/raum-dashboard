@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms, rooms } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms, rooms, dailyConfigs } from '$lib/stores/appState';
 	import { supabase } from '$lib/supabase/client';
 	import { toasts } from '$lib/stores/toastStore';
 	import { fade, fly, slide } from 'svelte/transition';
@@ -22,14 +22,15 @@
 	let newRoomName = $state('');
 	let newRoomFloor = $state('eg');
 
-	// Personen-Übersicht State
+	// Raumübersicht State
 	let showPersonsPanel = $state(false);
 	let personInputs = $state<Record<string, string>>({});
+	let activityInputs = $state<Record<string, string>>({});
 	let saveTimeouts = $state<Record<string, ReturnType<typeof setTimeout>>>({});
 
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
-		{ id: 'persons', icon: '👥', label: 'Besetzung', color: 'orange' },
+		{ id: 'persons', icon: '👥', label: 'Raumübersicht', color: 'orange' },
 		{ id: 'new-room', icon: '➕', label: 'Neuer Raum', color: 'blue' },
 		{ id: 'open-all', icon: '🔓', label: 'Alle öffnen', color: 'green' },
 		{ id: 'close-all', icon: '🔒', label: 'Alle schließen', color: 'red' },
@@ -39,8 +40,8 @@
 		{ id: 'reload', icon: '🔄', label: 'Aktualisieren', color: 'gray' },
 	];
 
-	// Aktive Räume (offen) für Personen-Panel
-	let activeRooms = $derived($visibleRooms.filter(r => r.isOpen).sort((a, b) => {
+	// Alle Räume des Tages für Raumübersicht-Panel
+	let activeRooms = $derived($visibleRooms.sort((a, b) => {
 		// Sortiere nach Stockwerk, dann nach Position
 		const floorOrder = ['dach', 'og2', 'og1', 'eg', 'essen', 'ug', 'extern'];
 		const floorDiff = floorOrder.indexOf(a.floor) - floorOrder.indexOf(b.floor);
@@ -79,10 +80,12 @@
 
 	function openPersonsPanel() {
 		showPersonsPanel = true;
-		// Initialisiere Input-Werte mit aktuellen Personen
+		// Initialisiere Input-Werte mit aktuellen Personen und Aktivitäten
 		personInputs = {};
+		activityInputs = {};
 		for (const room of activeRooms) {
 			personInputs[room.id] = room.person || '';
+			activityInputs[room.id] = room.config?.activity || '';
 		}
 	}
 
@@ -108,14 +111,50 @@
 	function handlePersonInput(roomId: string, value: string) {
 		personInputs[roomId] = value;
 
-		// Debounce: Vorheriges Timeout löschen
-		if (saveTimeouts[roomId]) {
-			clearTimeout(saveTimeouts[roomId]);
-		}
+		const key = `person-${roomId}`;
+		if (saveTimeouts[key]) clearTimeout(saveTimeouts[key]);
 
-		// Auto-Save nach 500ms Verzögerung
-		saveTimeouts[roomId] = setTimeout(() => {
+		saveTimeouts[key] = setTimeout(() => {
 			savePersonForRoom(roomId, value);
+		}, 500);
+	}
+
+	async function saveActivityForRoom(roomId: string, activity: string) {
+		const weekday = get(viewWeekday);
+		const configKey = `${roomId}-${weekday}`;
+
+		try {
+			const { error } = await supabase
+				.from('daily_configs')
+				.update({ activity: activity || null })
+				.eq('room_id', roomId)
+				.eq('weekday', weekday);
+
+			if (error) throw error;
+
+			// Lokalen Store aktualisieren
+			dailyConfigs.update(map => {
+				const newMap = new Map(map);
+				const config = newMap.get(configKey);
+				if (config) {
+					newMap.set(configKey, { ...config, activity: activity || null });
+				}
+				return newMap;
+			});
+		} catch (err) {
+			console.error('Fehler beim Speichern der Aktivität:', err);
+			toasts.show('Fehler beim Speichern!', 'error');
+		}
+	}
+
+	function handleActivityInput(roomId: string, value: string) {
+		activityInputs[roomId] = value;
+
+		const key = `activity-${roomId}`;
+		if (saveTimeouts[key]) clearTimeout(saveTimeouts[key]);
+
+		saveTimeouts[key] = setTimeout(() => {
+			saveActivityForRoom(roomId, value);
 		}, 500);
 	}
 
@@ -233,34 +272,43 @@
 		<!-- Speed Dial Actions (jetzt nach unten) -->
 		{#if isOpen}
 			{#if showPersonsPanel}
-				<!-- Personen-Übersicht Panel -->
+				<!-- Raumübersicht Panel -->
 				<div class="persons-panel" transition:slide={{ duration: 200 }}>
 					<div class="panel-header">
 						<span class="panel-icon">👥</span>
-						<span class="panel-title">Besetzung</span>
+						<span class="panel-title">Raumübersicht</span>
 						<button class="panel-close" onclick={() => showPersonsPanel = false}>✕</button>
 					</div>
 
 					{#if activeRooms.length === 0}
 						<div class="empty-state">
-							<p>Keine offenen Räume</p>
-							<span class="hint">Öffne zuerst Räume, um Personen zuzuweisen</span>
+							<p>Keine Räume für diesen Tag</p>
+							<span class="hint">Es gibt noch keine Raumkonfigurationen</span>
 						</div>
 					{:else}
 						<div class="rooms-list">
 							{#each activeRooms as room (room.id)}
-								<div class="room-item">
+								<div class="room-item" class:room-closed={!room.isOpen}>
 									<div class="room-info">
 										<span class="room-name">{room.name}</span>
 										<span class="room-floor">{getFloorLabel(room.floor)}</span>
 									</div>
-									<input
-										type="text"
-										class="person-input"
-										value={personInputs[room.id] || ''}
-										placeholder="Person eingeben..."
-										oninput={(e) => handlePersonInput(room.id, (e.target as HTMLInputElement).value)}
-									/>
+									<div class="room-inputs">
+										<input
+											type="text"
+											class="person-input"
+											value={activityInputs[room.id] || ''}
+											placeholder="Inhalt..."
+											oninput={(e) => handleActivityInput(room.id, (e.target as HTMLInputElement).value)}
+										/>
+										<input
+											type="text"
+											class="person-input person-field"
+											value={personInputs[room.id] || ''}
+											placeholder="Person..."
+											oninput={(e) => handlePersonInput(room.id, (e.target as HTMLInputElement).value)}
+										/>
+									</div>
 								</div>
 							{/each}
 						</div>
@@ -439,13 +487,13 @@
 		transform: rotate(90deg);
 	}
 
-	/* Personen-Panel */
+	/* Raumübersicht-Panel */
 	.persons-panel {
 		background: rgba(30, 35, 50, 0.98);
 		border-radius: 16px;
-		min-width: 300px;
-		max-width: 350px;
-		max-height: 400px;
+		min-width: 340px;
+		max-width: 400px;
+		max-height: 500px;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		display: flex;
@@ -502,11 +550,17 @@
 	.room-item {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 10px;
 		padding: 10px 12px;
 		background: rgba(255, 255, 255, 0.05);
 		border-radius: 10px;
 		margin-bottom: 8px;
+		border-left: 3px solid rgba(34, 197, 94, 0.7);
+	}
+
+	.room-item.room-closed {
+		border-left-color: rgba(239, 68, 68, 0.5);
+		opacity: 0.7;
 	}
 
 	.room-item:last-child {
@@ -514,14 +568,14 @@
 	}
 
 	.room-info {
-		flex: 0 0 100px;
+		flex: 0 0 80px;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 	}
 
 	.room-name {
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 600;
 		color: white;
 		white-space: nowrap;
@@ -534,15 +588,23 @@
 		color: rgba(255, 255, 255, 0.5);
 	}
 
-	.person-input {
+	.room-inputs {
 		flex: 1;
-		padding: 8px 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.person-input {
+		width: 100%;
+		padding: 6px 8px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
+		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.1);
 		color: white;
-		font-size: 13px;
+		font-size: 12px;
 		transition: all 0.2s;
+		box-sizing: border-box;
 	}
 
 	.person-input::placeholder {
@@ -553,6 +615,14 @@
 		outline: none;
 		border-color: rgba(249, 115, 22, 0.6);
 		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.person-field {
+		border-color: rgba(59, 130, 246, 0.3);
+	}
+
+	.person-field:focus {
+		border-color: rgba(59, 130, 246, 0.6);
 	}
 
 	.empty-state {
@@ -714,17 +784,13 @@
 		}
 
 		.persons-panel {
-			min-width: 280px;
-			max-width: 300px;
-			max-height: 350px;
+			min-width: 300px;
+			max-width: 340px;
+			max-height: 420px;
 		}
 
 		.room-info {
-			flex: 0 0 80px;
-		}
-
-		.room-name {
-			font-size: 12px;
+			flex: 0 0 70px;
 		}
 	}
 
