@@ -64,6 +64,7 @@ export interface AppSettings {
 	night_end: string; // HH:MM format
 	current_theme: string;
 	runner_name: string | null; // Läufer/Ansprechpartner im Haus
+	last_daily_reset: string | null; // YYYY-MM-DD - wann wurden die Zeiten zuletzt zurückgesetzt
 }
 
 export interface RoomWithConfig extends Room {
