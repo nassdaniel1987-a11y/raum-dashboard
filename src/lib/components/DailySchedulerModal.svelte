@@ -22,6 +22,11 @@
 	let localOpenTimes = $state(new Map<string, string>());
 	let localCloseTimes = $state(new Map<string, string>());
 
+	// ✅ Auto-Save State
+	let saveTimeouts = $state<Record<string, ReturnType<typeof setTimeout>>>({});
+	let savingRooms = $state<Set<string>>(new Set());
+	let savedRooms = $state<Set<string>>(new Set());
+
 	// ✅ FIX: Reaktiv mit $effect statt einmalig
 	$effect(() => {
 		const openMap = new Map<string, string>();
@@ -38,7 +43,6 @@
 
 	let message = $state('');
 	let messageType = $state<'success' | 'error' | ''>('');
-	let saving = $state(false);
 
 	// Hilfsfunktion zum Parsen der Zeit
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
@@ -48,76 +52,76 @@
 		return hours * 60 + minutes;
 	};
 
-	async function handleSaveAll() {
-		saving = true;
+	// ✅ Auto-Save für einzelnen Raum
+	async function saveRoomTimes(roomId: string) {
+		const openTime = localOpenTimes.get(roomId) || '';
+		const closeTime = localCloseTimes.get(roomId) || '';
 		const now = get(currentTime);
 		const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-		const configUpdates: any[] = [];
-		const statusUpdates: any[] = [];
+		// Zeige Speicher-Status
+		savingRooms = new Set([...savingRooms, roomId]);
 
-		for (const [roomId, openTime] of localOpenTimes.entries()) {
-			const closeTime = localCloseTimes.get(roomId);
+		const configKey = `${roomId}-${weekday}`;
+		const existingConfig = $dailyConfigs.get(configKey);
 
-			// ✅ FIX: Leere Strings zu null konvertieren, nicht zu String "null"
-			const closeTimeValue = (closeTime && closeTime !== '') ? closeTime : null;
+		const configUpdate = {
+			room_id: roomId,
+			weekday: weekday,
+			activity: existingConfig?.activity || null,
+			title_font_size: existingConfig?.title_font_size || 42,
+			text_font_size: existingConfig?.text_font_size || 28,
+			text_color: existingConfig?.text_color || '#FFFFFF',
+			title_alignment: existingConfig?.title_alignment || 'center',
+			text_alignment: existingConfig?.text_alignment || 'center',
+			is_locked: existingConfig?.is_locked || false,
+			open_time: openTime || null,
+			close_time: closeTime || null
+		};
 
-			// 1. Config-Update vorbereiten - ✅ WICHTIG: Alle Felder beibehalten!
-			const configKey = `${roomId}-${weekday}`;
-			const existingConfig = $dailyConfigs.get(configKey);
+		try {
+			const { error } = await supabase
+				.from('daily_configs')
+				.upsert(configUpdate, { onConflict: 'room_id,weekday' });
 
-			configUpdates.push({
-				room_id: roomId,
-				weekday: weekday,
-				activity: existingConfig?.activity || null,
-				title_font_size: existingConfig?.title_font_size || 42,
-				text_font_size: existingConfig?.text_font_size || 28,
-				text_color: existingConfig?.text_color || '#FFFFFF',
-				title_alignment: existingConfig?.title_alignment || 'center',
-				text_alignment: existingConfig?.text_alignment || 'center',
-				is_locked: existingConfig?.is_locked || false,
-				open_time: openTime || null,
-				close_time: closeTimeValue
-			});
+			if (error) throw error;
 
-			// 2. Status-Update vorbereiten
+			// Status-Update wenn Öffnungszeit in der Zukunft liegt
 			const openTimeParsed = parseTimeLocal(openTime);
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
-				statusUpdates.push({
+				await supabase.from('room_status').upsert({
 					room_id: roomId,
 					is_open: false,
 					manual_override: false
-				});
-			}
-		}
-
-		try {
-			// Configs speichern
-			if (configUpdates.length > 0) {
-				const { error } = await supabase
-					.from('daily_configs')
-					.upsert(configUpdates, { onConflict: 'room_id,weekday' });
-
-				if (error) {
-					console.error('Fehler beim Speichern:', error);
-					throw error;
-				}
-			}
-			// Status sofort aktualisieren
-			if (statusUpdates.length > 0) {
-				await supabase.from('room_status').upsert(statusUpdates, { onConflict: 'room_id' });
+				}, { onConflict: 'room_id' });
 			}
 
-			// ✅ Warte kurz damit Realtime-Updates greifen können
-			await new Promise(resolve => setTimeout(resolve, 500));
+			// Zeige kurz "Gespeichert" Feedback
+			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
+			savedRooms = new Set([...savedRooms, roomId]);
+			setTimeout(() => {
+				savedRooms = new Set([...savedRooms].filter(id => id !== roomId));
+			}, 1500);
 
-			showMessage('Tagesplan gespeichert!', 'success');
 		} catch (error) {
 			console.error('Fehler beim Speichern:', error);
+			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
 			showMessage('Fehler beim Speichern!', 'error');
-		} finally {
-			saving = false;
 		}
+	}
+
+	// ✅ Debounced Save - wartet 800ms nach letzter Eingabe
+	function scheduleSave(roomId: string) {
+		// Vorheriges Timeout löschen
+		if (saveTimeouts[roomId]) {
+			clearTimeout(saveTimeouts[roomId]);
+		}
+
+		// Neues Timeout setzen
+		saveTimeouts[roomId] = setTimeout(() => {
+			saveRoomTimes(roomId);
+			delete saveTimeouts[roomId];
+		}, 800);
 	}
 
 	function showMessage(text: string, type: 'success' | 'error') {
@@ -126,14 +130,11 @@
 		setTimeout(() => {
 			message = '';
 			messageType = '';
-			if (type === 'success') {
-				onClose();
-			}
 		}, 3000);
 	}
 
 	// Räume nach Stockwerk sortieren mit $derived
-	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'ug', 'extern'];
+	const floorOrder: string[] = ['dach', 'og2', 'og1', 'eg', 'essen', 'ug', 'extern'];
 	let sortedRooms = $derived(allRooms.slice().sort((a, b) => {
 		const floorA = floorOrder.indexOf(a.floor);
 		const floorB = floorOrder.indexOf(b.floor);
@@ -148,6 +149,7 @@
 		const newMap = new Map(localOpenTimes);
 		newMap.set(roomId, value);
 		localOpenTimes = newMap;
+		scheduleSave(roomId);
 	}
 
 	// Funktion zum Aktualisieren der Schließzeit für einen Raum
@@ -155,6 +157,7 @@
 		const newMap = new Map(localCloseTimes);
 		newMap.set(roomId, value);
 		localCloseTimes = newMap;
+		scheduleSave(roomId);
 	}
 </script>
 
@@ -194,11 +197,16 @@
 			</div>
 			<div class="room-list">
 				{#each sortedRooms as room (room.id)}
-					<div class="room-row">
+					<div class="room-row" class:saving={savingRooms.has(room.id)} class:saved={savedRooms.has(room.id)}>
 						<div class="room-info">
 							<div class="room-color" style="background: {room.background_color}"></div>
 							<span class="room-name">{room.name}</span>
 							<span class="floor-badge">{room.floor.toUpperCase()}</span>
+							{#if savingRooms.has(room.id)}
+								<span class="save-indicator saving">⏳</span>
+							{:else if savedRooms.has(room.id)}
+								<span class="save-indicator saved">✓</span>
+							{/if}
 						</div>
 						<div class="time-input-wrapper">
 							<input
@@ -222,10 +230,8 @@
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-secondary" onclick={onClose}>Abbrechen</button>
-			<button class="btn btn-primary" onclick={handleSaveAll} disabled={saving}>
-				{saving ? 'Speichert...' : 'Tagesplan speichern'}
-			</button>
+			<span class="auto-save-hint">💾 Änderungen werden automatisch gespeichert</span>
+			<button class="btn btn-primary" onclick={onClose}>Fertig</button>
 		</div>
 	</div>
 </div>
@@ -384,6 +390,40 @@
 		color: rgba(255, 255, 255, 0.9);
 	}
 
+	.save-indicator {
+		font-size: 14px;
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	.save-indicator.saving {
+		animation: pulse 0.8s ease-in-out infinite;
+	}
+
+	.save-indicator.saved {
+		color: #22c55e;
+		animation: fadeIn 0.3s ease-out;
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 0.5; }
+		50% { opacity: 1; }
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; transform: scale(0.8); }
+		to { opacity: 1; transform: scale(1); }
+	}
+
+	.room-row.saving {
+		border-color: rgba(249, 115, 22, 0.4);
+	}
+
+	.room-row.saved {
+		border-color: rgba(34, 197, 94, 0.4);
+		background: rgba(34, 197, 94, 0.1);
+	}
+
 	.time-input-wrapper {
 		flex-shrink: 0;
 	}
@@ -411,8 +451,14 @@
 		border-top: 1px solid rgba(255, 255, 255, 0.1);
 		background: rgba(0, 0, 0, 0.3);
 		display: flex;
-		gap: 8px;
-		justify-content: flex-end;
+		gap: 16px;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.auto-save-hint {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.5);
 	}
 
 	.btn {
@@ -475,7 +521,12 @@
 		}
 
 		.modal-footer {
-			flex-direction: column-reverse;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.auto-save-hint {
+			text-align: center;
 		}
 
 		.btn {
