@@ -446,7 +446,7 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		? Math.max(0, ...existingRooms.map(r => r.position_x || 0))
 		: -100;
 
-	const { data } = await supabase
+	const { data: roomData } = await supabase
 		.from('rooms')
 		.insert({
 			name,
@@ -458,23 +458,35 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 			height: 250,
 			theme: 'space',
 			image_url: null,
-			person: null // ✅ NEU: Person-Feld initialisieren
+			person: null
 		})
 		.select()
 		.single();
 
-	if (data) {
+	if (roomData) {
+		// ✅ Sofort lokalen Store aktualisieren (nicht auf Realtime warten)
+		rooms.update((list) => [...list, roomData as Room]);
+
 		// Room Status erstellen
-		await supabase.from('room_status').insert({
-			room_id: data.id,
+		const { data: statusData } = await supabase.from('room_status').insert({
+			room_id: roomData.id,
 			is_open: false,
 			manual_override: false
-		});
+		}).select().single();
 
-		// ✅ NEU: Daily Config nur für den aktuell angezeigten Tag erstellen
+		if (statusData) {
+			// ✅ Sofort lokalen Store aktualisieren
+			roomStatuses.update((map) => {
+				const newMap = new Map(map);
+				newMap.set(roomData.id, statusData);
+				return newMap;
+			});
+		}
+
+		// Daily Config nur für den aktuell angezeigten Tag erstellen
 		const currentViewDay = get(viewWeekday);
-		await supabase.from('daily_configs').insert({
-			room_id: data.id,
+		const { data: configData } = await supabase.from('daily_configs').insert({
+			room_id: roomData.id,
 			weekday: currentViewDay,
 			activity: null,
 			open_time: null,
@@ -482,7 +494,16 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 			title_font_size: 42,
 			text_font_size: 28,
 			text_color: '#FFFFFF'
-		});
+		}).select().single();
+
+		if (configData) {
+			// ✅ Sofort lokalen Store aktualisieren
+			dailyConfigs.update((map) => {
+				const newMap = new Map(map);
+				newMap.set(`${roomData.id}-${currentViewDay}`, configData);
+				return newMap;
+			});
+		}
 	}
 }
 
