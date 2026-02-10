@@ -795,14 +795,45 @@ async function resetDailyTimes(weekday: number) {
 	console.log('✅ Tages-Reset abgeschlossen');
 }
 
-function checkDailyReset() {
+async function checkDailyReset() {
 	const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-	const lastResetDate = localStorage.getItem('lastDailyResetDate');
+	const $settings = get(appSettings);
+
+	// Warte auf appSettings falls noch nicht geladen
+	if (!$settings) {
+		console.log('[Tages-Reset] Warte auf appSettings...');
+		return;
+	}
+
+	const lastResetDate = $settings.last_daily_reset;
 
 	if (lastResetDate !== today) {
-		const weekday = new Date().getDay() || 7; // 1=Mo ... 7=So
-		localStorage.setItem('lastDailyResetDate', today);
-		resetDailyTimes(weekday);
+		console.log(`[Tages-Reset] Letzter Reset: ${lastResetDate}, Heute: ${today}`);
+
+		// Atomares Update mit WHERE-Bedingung (verhindert Race Condition)
+		// Nur updaten wenn last_daily_reset NICHT heute ist
+		const { data, error } = await supabase
+			.from('app_settings')
+			.update({ last_daily_reset: today })
+			.eq('id', 1)
+			.neq('last_daily_reset', today)
+			.select()
+			.single();
+
+		if (error) {
+			// Fehler kann bedeuten: anderes Gerät hat bereits heute zurückgesetzt
+			console.log('[Tages-Reset] Bereits von anderem Gerät durchgeführt oder Fehler:', error.message);
+			return;
+		}
+
+		if (data) {
+			// Wir haben das Update "gewonnen" - jetzt Reset durchführen
+			const weekday = new Date().getDay(); // 0=So ... 6=Sa
+			await resetDailyTimes(weekday);
+
+			// Lokalen Store aktualisieren
+			appSettings.update(s => s ? { ...s, last_daily_reset: today } : s);
+		}
 	}
 }
 
