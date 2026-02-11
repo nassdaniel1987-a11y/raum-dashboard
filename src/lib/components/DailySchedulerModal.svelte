@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
-	import { rooms, dailyConfigs, viewWeekday, currentTime } from '$lib/stores/appState';
+	import { rooms, dailyConfigs, roomStatuses, viewWeekday, currentTime } from '$lib/stores/appState';
 	import { scale, fade, fly } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
@@ -159,6 +159,54 @@
 		localCloseTimes = newMap;
 		scheduleSave(roomId);
 	}
+
+	// ✅ Raum-Status (offen/geschlossen) ermitteln
+	function isRoomOpen(roomId: string): boolean {
+		return $roomStatuses.get(roomId)?.is_open ?? false;
+	}
+
+	// ✅ Raum direkt schließen/öffnen (ohne Zeitangabe)
+	async function toggleRoomStatus(roomId: string) {
+		const currentStatus = $roomStatuses.get(roomId);
+		const newIsOpen = !(currentStatus?.is_open ?? false);
+
+		savingRooms = new Set([...savingRooms, roomId]);
+
+		try {
+			const { error } = await supabase
+				.from('room_status')
+				.upsert({
+					room_id: roomId,
+					is_open: newIsOpen,
+					manual_override: true
+				}, { onConflict: 'room_id' });
+
+			if (error) throw error;
+
+			// Lokalen Store aktualisieren
+			roomStatuses.update((map) => {
+				const newMap = new Map(map);
+				newMap.set(roomId, {
+					room_id: roomId,
+					is_open: newIsOpen,
+					manual_override: true,
+					last_updated: new Date().toISOString()
+				});
+				return newMap;
+			});
+
+			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
+			savedRooms = new Set([...savedRooms, roomId]);
+			setTimeout(() => {
+				savedRooms = new Set([...savedRooms].filter(id => id !== roomId));
+			}, 1500);
+
+		} catch (error) {
+			console.error('Fehler beim Umschalten:', error);
+			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
+			showMessage('Fehler beim Umschalten!', 'error');
+		}
+	}
 </script>
 
 <div
@@ -192,6 +240,7 @@
 		<div class="modal-content">
 			<div class="room-list-header">
 				<span class="room-name-header">Raum</span>
+				<span class="room-status-header">Status</span>
 				<span class="room-time-header">Öffnet um</span>
 				<span class="room-time-header">Schließt um</span>
 			</div>
@@ -208,6 +257,15 @@
 								<span class="save-indicator saved">✓</span>
 							{/if}
 						</div>
+						<button
+							class="status-btn"
+							class:open={isRoomOpen(room.id)}
+							class:closed={!isRoomOpen(room.id)}
+							onclick={() => toggleRoomStatus(room.id)}
+							title={isRoomOpen(room.id) ? 'Raum schließen' : 'Raum öffnen'}
+						>
+							{isRoomOpen(room.id) ? '🔓 Offen' : '🔒 Zu'}
+						</button>
 						<div class="time-input-wrapper">
 							<input
 								type="time"
@@ -324,7 +382,7 @@
 
 	.room-list-header {
 		display: grid;
-		grid-template-columns: 1fr auto auto;
+		grid-template-columns: 1fr auto auto auto;
 		gap: 16px;
 		padding: 12px 12px;
 		font-weight: 600;
@@ -337,6 +395,11 @@
 		z-index: 1;
 	}
 
+	.room-status-header {
+		width: 90px;
+		text-align: center;
+	}
+
 	.room-list {
 		display: flex;
 		flex-direction: column;
@@ -346,7 +409,7 @@
 
 	.room-row {
 		display: grid;
-		grid-template-columns: 1fr auto auto;
+		grid-template-columns: 1fr auto auto auto;
 		gap: 16px;
 		align-items: center;
 		padding: 12px;
@@ -354,6 +417,37 @@
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 8px;
 		margin-bottom: 8px;
+	}
+
+	.status-btn {
+		padding: 6px 12px;
+		border: none;
+		border-radius: 6px;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		min-width: 90px;
+	}
+
+	.status-btn.open {
+		background: rgba(34, 197, 94, 0.2);
+		color: #22c55e;
+		border: 1px solid rgba(34, 197, 94, 0.4);
+	}
+
+	.status-btn.open:hover {
+		background: rgba(34, 197, 94, 0.3);
+	}
+
+	.status-btn.closed {
+		background: rgba(239, 68, 68, 0.2);
+		color: #ef4444;
+		border: 1px solid rgba(239, 68, 68, 0.4);
+	}
+
+	.status-btn.closed:hover {
+		background: rgba(239, 68, 68, 0.3);
 	}
 
 	.room-info {
@@ -510,6 +604,10 @@
 
 		.room-list-header {
 			display: none;
+		}
+
+		.status-btn {
+			width: 100%;
 		}
 
 		.time-input-wrapper {
