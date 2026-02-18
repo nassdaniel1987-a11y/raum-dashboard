@@ -9,6 +9,10 @@
   directory = ".netlify/functions"
   node_bundler = "esbuild"
 
+[[scheduled_functions]]
+  function = "keep-alive"
+  cron = "0 0 * * 0"
+
 # Headers für bessere Performance
 [[headers]]
   for = "/*"
