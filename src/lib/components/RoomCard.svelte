@@ -360,6 +360,15 @@
 		transition: all 0.1s;
 	}
 
+	/* ✅ Dauerhafter grüner Rahmen für alle geöffneten Räume */
+	.room-card.open::after {
+		opacity: 1;
+		border: 2px solid rgba(34, 197, 94, 0.6);
+		box-shadow:
+			0 0 12px rgba(34, 197, 94, 0.3),
+			inset 0 0 8px rgba(34, 197, 94, 0.1);
+	}
+
 	/* ✅ STATUS-INDIKATOREN: Bald offen (Gelb pulsierend) */
 	.room-card.status-opening-soon::after {
 		opacity: 1;
