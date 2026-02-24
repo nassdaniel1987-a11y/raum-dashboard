@@ -363,10 +363,10 @@
 	/* ✅ Dauerhafter grüner Rahmen für alle geöffneten Räume */
 	.room-card.open::after {
 		opacity: 1;
-		border: 2px solid rgba(34, 197, 94, 0.6);
+		border: 3px solid rgba(34, 197, 94, 0.9);
 		box-shadow:
-			0 0 12px rgba(34, 197, 94, 0.3),
-			inset 0 0 8px rgba(34, 197, 94, 0.1);
+			0 0 20px rgba(34, 197, 94, 0.5),
+			inset 0 0 12px rgba(34, 197, 94, 0.2);
 	}
 
 	/* ✅ STATUS-INDIKATOREN: Bald offen (Gelb pulsierend) */
