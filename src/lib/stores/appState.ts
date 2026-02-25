@@ -774,25 +774,25 @@ async function resetDailyTimes(weekday: number) {
 		return newMap;
 	});
 
-	// Alle manual_override Flags zurücksetzen für den neuen Tag
+	// Alle Räume schließen + manual_override zurücksetzen für den neuen Tag
+	// Räume öffnen sich dann automatisch um 08:00 durch den Automatik-Service
 	const { error: statusError } = await supabase
 		.from('room_status')
-		.update({ manual_override: false })
-		.eq('manual_override', true);
+		.update({ is_open: false, manual_override: false });
 
 	if (!statusError) {
 		roomStatuses.update((map) => {
 			const newMap = new Map(map);
 			for (const [id, status] of newMap) {
-				if (status.manual_override) {
-					newMap.set(id, { ...status, manual_override: false });
-				}
+				newMap.set(id, { ...status, is_open: false, manual_override: false });
 			}
 			return newMap;
 		});
+	} else {
+		console.error('[Tages-Reset] Fehler beim Schließen der Räume:', statusError);
 	}
 
-	console.log('✅ Tages-Reset abgeschlossen');
+	console.log('✅ Tages-Reset abgeschlossen - alle Räume geschlossen, öffnen um 08:00 automatisch');
 }
 
 async function checkDailyReset() {
@@ -841,6 +841,9 @@ async function checkDailyReset() {
 if (typeof window !== 'undefined') {
 	const AUTOMATION_INTERVAL_MS = 10000;
 
+	// Standard-Öffnungszeit: 08:00 (alle Räume öffnen sich automatisch)
+	const DEFAULT_OPEN_MINUTES = 8 * 60; // 08:00 = 480 Minuten seit Mitternacht
+
 	const runAutomation = () => {
 		const $rooms = get(rooms);
 		const $statuses = get(roomStatuses);
@@ -884,27 +887,31 @@ if (typeof window !== 'undefined') {
 			let newManualOverride = isManual;
 
 			if (isNightModeActive) {
+				// Nachtmodus: Alle Räume schließen (außer manuell überschrieben)
 				if (currentIsOpen && !isManual) {
 					needsUpdate = true;
 					newIsOpen = false;
 					newManualOverride = false;
 				}
-			} else {
-				// Auto-Open: Raum öffnen wenn open_time erreicht ist
-				// ✅ NUR innerhalb des ersten Zeitfensters (60 Sekunden), danach manual_override respektieren
-				if (!currentIsOpen) {
-					const openTime = parseTime(config?.open_time);
+			} else if (config) {
+				// Nur Räume mit Config für den heutigen Tag
+				const openTime = parseTime(config.open_time);
+				const closeTime = parseTime(config.close_time);
 
-					if (openTime !== null && now >= openTime) {
-						const minutesSinceOpen = now - openTime;
+				// Effektive Öffnungszeit: eigene open_time oder Standard 08:00
+				const effectiveOpenTime = openTime !== null ? openTime : DEFAULT_OPEN_MINUTES;
 
-						// Nur auto-open innerhalb der ersten 1 Minute nach open_time
-						// Danach: Respektiere manual_override (Benutzer hat manuell geschlossen)
-						if (minutesSinceOpen < 1 && !isManual) {
-							needsUpdate = true;
-							newIsOpen = true;
-							newManualOverride = false;
-						}
+				if (currentIsOpen && !isManual && closeTime !== null && now >= closeTime) {
+					// Auto-Close: close_time erreicht → Raum schließen
+					needsUpdate = true;
+					newIsOpen = false;
+					newManualOverride = false;
+				} else if (!currentIsOpen && !isManual) {
+					// Auto-Open: Öffnungszeit erreicht UND noch vor Schließzeit (falls gesetzt)
+					if (now >= effectiveOpenTime && (closeTime === null || now < closeTime)) {
+						needsUpdate = true;
+						newIsOpen = true;
+						newManualOverride = false;
 					}
 				}
 			}
