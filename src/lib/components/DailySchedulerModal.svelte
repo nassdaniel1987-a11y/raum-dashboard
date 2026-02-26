@@ -165,6 +165,40 @@
 		return $roomStatuses.get(roomId)?.is_open ?? false;
 	}
 
+	// ✅ Alle Zeiten für ALLE Wochentage löschen (manueller Reset)
+	let clearing = $state(false);
+	async function clearAllTimes() {
+		if (!confirm('Alle eingestellten Zeiten für alle Tage löschen?')) return;
+
+		clearing = true;
+		try {
+			const { error } = await supabase
+				.from('daily_configs')
+				.update({ open_time: null, close_time: null })
+				.gte('weekday', 0);
+
+			if (error) throw error;
+
+			// Lokalen Store aktualisieren
+			dailyConfigs.update((map) => {
+				const newMap = new Map(map);
+				for (const [key, config] of newMap) {
+					if (config.open_time !== null || config.close_time !== null) {
+						newMap.set(key, { ...config, open_time: null, close_time: null });
+					}
+				}
+				return newMap;
+			});
+
+			showMessage('Alle Zeiten gelöscht!', 'success');
+		} catch (error) {
+			console.error('Fehler beim Löschen:', error);
+			showMessage('Fehler beim Löschen!', 'error');
+		} finally {
+			clearing = false;
+		}
+	}
+
 	// ✅ Raum direkt schließen/öffnen (ohne Zeitangabe)
 	async function toggleRoomStatus(roomId: string) {
 		const currentStatus = $roomStatuses.get(roomId);
@@ -289,7 +323,12 @@
 
 		<div class="modal-footer">
 			<span class="auto-save-hint">💾 Änderungen werden automatisch gespeichert</span>
-			<button class="btn btn-primary" onclick={onClose}>Fertig</button>
+			<div class="footer-buttons">
+				<button class="btn btn-danger" onclick={clearAllTimes} disabled={clearing}>
+					{clearing ? '⏳ Lösche...' : '🗑️ Alle Zeiten löschen'}
+				</button>
+				<button class="btn btn-primary" onclick={onClose}>Fertig</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -588,6 +627,23 @@
 		opacity: 0.4;
 		cursor: not-allowed;
 	}
+	.btn-danger {
+		background: rgba(239, 68, 68, 0.2);
+		border-color: rgba(239, 68, 68, 0.4);
+		color: #ef4444;
+	}
+	.btn-danger:hover:not(:disabled) {
+		background: rgba(239, 68, 68, 0.3);
+		border-color: rgba(239, 68, 68, 0.5);
+	}
+	.btn-danger:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	.footer-buttons {
+		display: flex;
+		gap: 8px;
+	}
 
 	/* Responsive */
 	@media (max-width: 768px) {
@@ -625,6 +681,11 @@
 
 		.auto-save-hint {
 			text-align: center;
+		}
+
+		.footer-buttons {
+			flex-direction: column;
+			width: 100%;
 		}
 
 		.btn {
