@@ -812,16 +812,14 @@ async function checkDailyReset() {
 		console.log(`[Tages-Reset] Letzter Reset: ${lastResetDate}, Heute: ${today}`);
 
 		// Atomares Update mit WHERE-Bedingung (verhindert Race Condition)
-		// ✅ FIX: NULL-sicherer Filter (PostgreSQL: NULL <> 'wert' = NULL, nicht TRUE)
-		const filterCondition = lastResetDate === null
-			? 'last_daily_reset.is.null'
-			: `last_daily_reset.neq.${today}`;
-
+		// ✅ FIX: Beide Fälle in einem OR abdecken:
+		// - last_daily_reset IS NULL (erster Start oder nach DB-Reset)
+		// - last_daily_reset != heute (normaler Tageswechsel)
 		const { data, error } = await supabase
 			.from('app_settings')
 			.update({ last_daily_reset: today })
 			.eq('id', 1)
-			.or(filterCondition)
+			.or(`last_daily_reset.is.null,last_daily_reset.neq.${today}`)
 			.select()
 			.single();
 
