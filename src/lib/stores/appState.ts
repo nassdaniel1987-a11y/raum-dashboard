@@ -812,29 +812,29 @@ async function checkDailyReset() {
 		console.log(`[Tages-Reset] Letzter Reset: ${lastResetDate}, Heute: ${today}`);
 
 		// Atomares Update mit WHERE-Bedingung (verhindert Race Condition)
-		// ✅ FIX: Beide Fälle in einem OR abdecken:
-		// - last_daily_reset IS NULL (erster Start oder nach DB-Reset)
-		// - last_daily_reset != heute (normaler Tageswechsel)
+		// .select() statt .single() → gibt Array zurück, kein 406 bei 0 Rows
 		const { data, error } = await supabase
 			.from('app_settings')
 			.update({ last_daily_reset: today })
 			.eq('id', 1)
 			.or(`last_daily_reset.is.null,last_daily_reset.neq.${today}`)
-			.select()
-			.single();
+			.select();
 
 		if (error) {
-			// Fehler kann bedeuten: anderes Gerät hat bereits heute zurückgesetzt
-			console.log('[Tages-Reset] Bereits von anderem Gerät durchgeführt oder Fehler:', error.message);
+			console.error('[Tages-Reset] DB-Fehler:', error.message);
 			return;
 		}
 
-		if (data) {
+		if (data && data.length > 0) {
 			// Wir haben das Update "gewonnen" - jetzt Reset durchführen
+			console.log('[Tages-Reset] Reset wird durchgeführt...');
 			await resetDailyTimes();
-
-			// Lokalen Store aktualisieren
 			appSettings.update(s => s ? { ...s, last_daily_reset: today } : s);
+		} else {
+			// Anderes Gerät/Tab hat bereits heute zurückgesetzt
+			// → Daten neu laden damit lokaler Store aktuell ist (manual_override etc.)
+			console.log('[Tages-Reset] Bereits erledigt - lade aktuelle Daten...');
+			await loadAllData();
 		}
 	}
 }
