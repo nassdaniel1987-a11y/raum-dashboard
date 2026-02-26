@@ -901,14 +901,18 @@ if (typeof window !== 'undefined') {
 				// Effektive Öffnungszeit: eigene open_time oder Standard 08:00
 				const effectiveOpenTime = openTime !== null ? openTime : DEFAULT_OPEN_MINUTES;
 
-				if (currentIsOpen && !isManual && closeTime !== null && now >= closeTime) {
+				// close_time nur berücksichtigen wenn sie NACH der Öffnungszeit liegt
+				// Sonst ist es eine ungültige/veraltete Konfiguration
+				const validCloseTime = closeTime !== null && closeTime > effectiveOpenTime ? closeTime : null;
+
+				if (currentIsOpen && !isManual && validCloseTime !== null && now >= validCloseTime) {
 					// Auto-Close: close_time erreicht → Raum schließen
 					needsUpdate = true;
 					newIsOpen = false;
 					newManualOverride = false;
 				} else if (!currentIsOpen && !isManual) {
 					// Auto-Open: Öffnungszeit erreicht UND noch vor Schließzeit (falls gesetzt)
-					if (now >= effectiveOpenTime && (closeTime === null || now < closeTime)) {
+					if (now >= effectiveOpenTime && (validCloseTime === null || now < validCloseTime)) {
 						needsUpdate = true;
 						newIsOpen = true;
 						newManualOverride = false;
