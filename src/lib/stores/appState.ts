@@ -934,25 +934,27 @@ if (typeof window !== 'undefined') {
 		}
 
 		if (updates.length > 0) {
+			// ✅ Optimistisches Update: Lokalen Store SOFORT aktualisieren
+			// Damit die UI den neuen Status sofort zeigt (nicht auf DB-Antwort warten)
+			roomStatuses.update(map => {
+				const newMap = new Map(map);
+				for (const update of updates) {
+					newMap.set(update.room_id, createRoomStatus(
+						update.room_id,
+						update.is_open,
+						update.manual_override
+					));
+				}
+				return newMap;
+			});
+
+			// DB-Update im Hintergrund
 			supabase
 				.from('room_status')
 				.upsert(updates, { onConflict: 'room_id' })
 				.then(({ error }) => {
 					if (error) {
 						console.error("[AutoService] Fehler bei DB-Update:", error);
-					} else {
-						// ✅ KORRIGIERT: Lokale Updates mit last_updated
-						roomStatuses.update(map => {
-							const newMap = new Map(map);
-							for (const update of updates) {
-								newMap.set(update.room_id, createRoomStatus(
-									update.room_id,
-									update.is_open,
-									update.manual_override
-								));
-							}
-							return newMap;
-						});
 					}
 				});
 		}

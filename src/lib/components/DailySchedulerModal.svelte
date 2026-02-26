@@ -86,6 +86,14 @@
 
 			if (error) throw error;
 
+			// ✅ Lokalen dailyConfigs Store sofort aktualisieren (nicht auf Realtime warten)
+			// Damit der Auto-Service die neuen Zeiten sofort sieht
+			dailyConfigs.update((map) => {
+				const newMap = new Map(map);
+				newMap.set(configKey, { ...existingConfig, ...configUpdate } as any);
+				return newMap;
+			});
+
 			// Status-Update wenn Öffnungszeit in der Zukunft liegt
 			const openTimeParsed = parseTimeLocal(openTime);
 			if (openTimeParsed !== null && openTimeParsed > nowMinutes) {
