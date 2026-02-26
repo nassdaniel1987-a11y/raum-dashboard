@@ -94,6 +94,18 @@
 					is_open: false,
 					manual_override: false
 				}, { onConflict: 'room_id' });
+
+				// Lokalen Store sofort aktualisieren (nicht auf Realtime warten)
+				roomStatuses.update((map) => {
+					const newMap = new Map(map);
+					newMap.set(roomId, {
+						room_id: roomId,
+						is_open: false,
+						manual_override: false,
+						last_updated: new Date().toISOString()
+					});
+					return newMap;
+				});
 			}
 
 			// Zeige kurz "Gespeichert" Feedback
