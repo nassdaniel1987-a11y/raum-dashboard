@@ -749,25 +749,26 @@ export async function reorderHighlights(highlights: DailyHighlight[]) {
 }
 
 // ========== TAGES-RESET (Zeiten zurücksetzen bei Tageswechsel) ==========
-async function resetDailyTimes(weekday: number) {
-	console.log(`🔄 Tages-Reset: Lösche Zeiten für Wochentag ${weekday}`);
+async function resetDailyTimes() {
+	console.log('🔄 Tages-Reset: Lösche ALLE Zeiten für ALLE Wochentage (blanco)');
 
-	// Alle daily_configs für diesen Wochentag: open_time und close_time auf null setzen
+	// ALLE daily_configs: open_time und close_time auf null setzen (ALLE Wochentage)
+	// So ist der Tagesplaner jeden Morgen komplett leer - keine Zeiten von gestern oder letzter Woche
 	const { error } = await supabase
 		.from('daily_configs')
 		.update({ open_time: null, close_time: null })
-		.eq('weekday', weekday);
+		.gte('weekday', 0); // alle Wochentage (0-7) = alles
 
 	if (error) {
-		console.error('[Tages-Reset] Fehler:', error);
+		console.error('[Tages-Reset] Fehler beim Löschen der Zeiten:', error);
 		return;
 	}
 
-	// Lokalen Store aktualisieren
+	// Lokalen Store aktualisieren: ALLE Configs leeren
 	dailyConfigs.update((map) => {
 		const newMap = new Map(map);
 		for (const [key, config] of newMap) {
-			if (config.weekday === weekday) {
+			if (config.open_time !== null || config.close_time !== null) {
 				newMap.set(key, { ...config, open_time: null, close_time: null });
 			}
 		}
@@ -828,8 +829,7 @@ async function checkDailyReset() {
 
 		if (data) {
 			// Wir haben das Update "gewonnen" - jetzt Reset durchführen
-			const weekday = new Date().getDay(); // 0=So ... 6=Sa
-			await resetDailyTimes(weekday);
+			await resetDailyTimes();
 
 			// Lokalen Store aktualisieren
 			appSettings.update(s => s ? { ...s, last_daily_reset: today } : s);
