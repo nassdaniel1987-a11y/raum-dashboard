@@ -89,11 +89,12 @@
 		contain: layout style paint;
 	}
 
-	/* Mobile: contain entfernen damit Scrolling funktioniert */
+	/* Mobile: contain + transform entfernen damit Scrolling und position:fixed funktionieren */
 	@media (max-width: 480px) {
 		.dashboard {
 			overflow: auto;
-			contain: style paint;
+			transform: none;
+			contain: none;
 		}
 	}
 </style>
