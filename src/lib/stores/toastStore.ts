@@ -49,7 +49,7 @@ function createConfirmStore() {
 
 	return {
 		subscribe,
-		ask: (options: Omit<ConfirmDialog, 'id'>): Promise<boolean> => {
+		ask: (options: Omit<ConfirmDialog, 'id' | 'onConfirm' | 'onCancel'>): Promise<boolean> => {
 			return new Promise((resolve) => {
 				const id = Math.random().toString(36).substring(7);
 				const dialog: ConfirmDialog = {
