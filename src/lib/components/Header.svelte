@@ -430,4 +430,70 @@
 			height: 32px;
 		}
 	}
+
+	/* ===== MOBILE HANDY-ANSICHT ===== */
+	@media (max-width: 480px) {
+		.dashboard-header {
+			height: 44px;
+			padding: 0 8px;
+		}
+
+		.header-left {
+			display: none;
+		}
+
+		.header-center {
+			gap: 6px;
+		}
+
+		.day-nav-btn {
+			width: 28px;
+			height: 28px;
+			font-size: 14px;
+			border-radius: 6px;
+		}
+
+		.day-display {
+			min-width: 80px;
+		}
+
+		.weekday {
+			font-size: 13px;
+			letter-spacing: 0.5px;
+		}
+
+		.today-btn {
+			font-size: 8px;
+			padding: 1px 6px;
+		}
+
+		.separator {
+			display: none;
+		}
+
+		.date {
+			display: none;
+		}
+
+		.time {
+			font-size: 13px;
+		}
+
+		.header-right {
+			gap: 4px;
+		}
+
+		.icon-btn {
+			width: 32px;
+			height: 32px;
+			font-size: 14px;
+			border-radius: 6px;
+		}
+
+		.menu-btn {
+			font-size: 12px;
+			padding: 6px 10px;
+			border-radius: 6px;
+		}
+	}
 </style>

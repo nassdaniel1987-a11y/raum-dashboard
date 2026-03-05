@@ -801,4 +801,13 @@
 			right: 32px;
 		}
 	}
+
+	/* Mobile Handy */
+	@media (max-width: 480px) {
+		.fab-container {
+			top: auto;
+			bottom: 16px;
+			right: 12px;
+		}
+	}
 </style>
