@@ -805,15 +805,8 @@
 	/* Mobile Handy */
 	@media (max-width: 480px) {
 		.fab-container {
-			top: auto;
-			bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+			bottom: 80px;
 			right: 12px;
-		}
-
-		.fab-main {
-			width: 50px;
-			height: 50px;
-			font-size: 22px;
 		}
 	}
 </style>
