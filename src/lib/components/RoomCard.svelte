@@ -206,6 +206,7 @@
 		</div>
 	{/if}
 
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="card-content"
 		class:long-pressing={isLongPressing}
@@ -264,7 +265,7 @@
 
 	<!-- ✅ Personen-Indikator - Hängendes Schild unten (immer sichtbar wenn Person gesetzt) -->
 	{#if room.person}
-		{@const persons = room.person.split(',').map(p => p.trim()).filter(p => p)}
+		{@const persons = room.person.split(',').map((p: string) => p.trim()).filter((p: string) => p)}
 		<div class="person-badge" title="Person: {room.person}">
 			<div class="badge-chain"></div>
 			<div class="badge-content" style="background: {currentTheme.personBadgeGradient}; border-color: {currentTheme.personBadgeBorder};">
@@ -688,6 +689,7 @@
 		text-overflow: ellipsis;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 	}
 
@@ -705,6 +707,7 @@
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
+		line-clamp: 3;
 		-webkit-box-orient: vertical;
 	}
 
@@ -811,6 +814,7 @@
 		.room-activity {
 			font-size: 13px !important;
 			-webkit-line-clamp: 2;
+			line-clamp: 2;
 			padding: 2px;
 		}
 
