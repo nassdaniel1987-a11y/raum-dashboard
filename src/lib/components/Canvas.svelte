@@ -838,7 +838,7 @@
 		height: calc(100vh - 44px);
 		overflow-y: auto;
 		overflow-x: hidden;
-		padding: 8px 10px 24px 10px;
+		padding: 8px 10px 90px 10px;
 		box-sizing: border-box;
 		-webkit-overflow-scrolling: touch;
 	}
