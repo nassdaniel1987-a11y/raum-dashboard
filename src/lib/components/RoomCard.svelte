@@ -782,4 +782,88 @@
 			font-size: 13px;
 		}
 	}
+
+	/* ===== MOBILE HANDY-ANSICHT ===== */
+	@media (max-width: 480px) {
+		.room-card {
+			min-height: 60px;
+			border-radius: 12px;
+		}
+
+		.room-card::before {
+			border-radius: 12px;
+		}
+
+		.room-card::after {
+			border-radius: 12px;
+		}
+
+		.card-content {
+			padding: 6px 8px;
+			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+		}
+
+		.room-title {
+			font-size: 16px !important;
+			margin: 0 0 2px 0;
+		}
+
+		.room-activity {
+			font-size: 13px !important;
+			-webkit-line-clamp: 2;
+			padding: 2px;
+		}
+
+		.badge-tape {
+			padding: 3px 8px;
+			font-size: 10px;
+		}
+
+		.badge-content {
+			padding: 3px 8px;
+			font-size: 10px;
+			gap: 4px;
+		}
+
+		.person-icon {
+			font-size: 12px;
+		}
+
+		.person-name {
+			max-width: 120px;
+			font-size: 11px;
+		}
+
+		.icon-button {
+			min-width: 28px;
+			min-height: 28px;
+			padding: 3px 6px;
+			font-size: 12px;
+		}
+
+		.button-container {
+			top: 4px;
+			right: 4px;
+			gap: 3px;
+		}
+
+		/* Aktivitäts-Bilder kleiner auf Mobile */
+		.activity-image-container {
+			margin-top: 4px;
+			padding: 3px;
+			padding-bottom: 6px;
+		}
+
+		.activity-image-container.size-small .image-wrapper {
+			height: 50px;
+		}
+
+		.activity-image-container.size-medium .image-wrapper {
+			height: 80px;
+		}
+
+		.activity-image-container.size-large .image-wrapper {
+			height: 120px;
+		}
+	}
 </style>

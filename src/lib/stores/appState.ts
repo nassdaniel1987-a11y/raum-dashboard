@@ -19,11 +19,33 @@ export const currentTime = writable(new Date());
 // Der Tag, den der User gerade anschaut (standardmäßig der echte aktuelle Tag)
 export const viewWeekday = writable(new Date().getDay() || 7);
 
-// Update Zeit jede Sekunde
+// Update Zeit jede Sekunde + Tageswechsel erkennen
 if (typeof window !== 'undefined') {
 	setInterval(() => {
-		currentTime.set(new Date());
+		const now = new Date();
+		currentTime.set(now);
+
+		// Prüfe ob sich der Tag geändert hat (z.B. Mitternacht)
+		const newDay = now.getDay() || 7;
+		if (newDay !== get(currentWeekday)) {
+			currentWeekday.set(newDay);
+			viewWeekday.set(newDay);
+		}
 	}, 1000);
+
+	// Wenn die App aus dem Hintergrund zurückkommt (iPad auf/zu),
+	// sofort prüfen ob ein neuer Tag ist
+	document.addEventListener('visibilitychange', () => {
+		if (!document.hidden) {
+			const now = new Date();
+			currentTime.set(now);
+			const newDay = now.getDay() || 7;
+			if (newDay !== get(currentWeekday)) {
+				currentWeekday.set(newDay);
+				viewWeekday.set(newDay);
+			}
+		}
+	});
 }
 
 // ===== DATA STORES =====
@@ -988,4 +1010,13 @@ if (typeof window !== 'undefined') {
 	};
 
 	setTimeout(startAutomation, 3000);
+
+	// Wenn App aus dem Hintergrund zurückkommt → sofort Tages-Reset + Automation prüfen
+	document.addEventListener('visibilitychange', () => {
+		if (!document.hidden) {
+			console.log('[App] Aus Hintergrund zurück – prüfe Tages-Reset und Automation');
+			checkDailyReset();
+			runAutomation();
+		}
+	});
 }

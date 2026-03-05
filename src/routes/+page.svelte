@@ -88,4 +88,12 @@
 		/* Verhindert Layout-Shifts */
 		contain: layout style paint;
 	}
+
+	/* Mobile: contain entfernen damit Scrolling funktioniert */
+	@media (max-width: 480px) {
+		.dashboard {
+			overflow: auto;
+			contain: style paint;
+		}
+	}
 </style>

@@ -222,8 +222,31 @@
 		return animationType;
 	}
 
+	// Mobile-Erkennung
+	let isMobile = $state(false);
+
+	// Alle Räume gruppiert nach Stockwerk (für mobile Liste)
+	let allPageGroups = $derived(() => {
+		return pageDefinitions
+			.map(page => {
+				const rooms: RoomWithConfig[] = [];
+				for (const floor of page.floors) {
+					const floorRooms = roomsByFloor[floor as keyof typeof roomsByFloor];
+					if (floorRooms) rooms.push(...floorRooms);
+				}
+				return { ...page, rooms };
+			})
+			.filter(group => group.rooms.length > 0);
+	});
+
 	// Mount: Einstellungen laden & Auto-Start
 	onMount(() => {
+		// Mobile-Check
+		const checkMobile = () => {
+			isMobile = window.innerWidth <= 480;
+		};
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
 		const savedAnimation = localStorage.getItem('animationType');
@@ -272,8 +295,35 @@
 			<h2>Keine Räume vorhanden</h2>
 			<p>Erstelle deinen ersten Raum über das Menü unten rechts!</p>
 		</div>
+	{:else if isMobile}
+		<!-- ===== MOBILE: Scrollbare Liste ===== -->
+		<div class="mobile-list">
+			{#if $runnerNameStore}
+				<div class="mobile-runner">
+					<span>🏃</span>
+					<span class="mobile-runner-label">Ansprechpartner:</span>
+					<span class="mobile-runner-name">{$runnerNameStore}</span>
+				</div>
+			{/if}
+
+			{#each allPageGroups() as group}
+				<div class="mobile-floor-group">
+					<h3 class="mobile-floor-title">{group.label}</h3>
+					{#each group.rooms as room (room.id)}
+						<div class="mobile-room-wrapper">
+							<RoomCard
+								{room}
+								onEdit={handleEditRoom}
+								onSelect={handleSelectForSwap}
+								isSelected={$swapSelection.includes(room.id)}
+							/>
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
 	{:else}
-		<!-- Seiten-Container -->
+		<!-- ===== DESKTOP/TABLET: Seiten-Ansicht ===== -->
 		<div class="page-container" class:anim-book={animationType === 'book'} class:anim-slide={animationType === 'slide'} class:anim-fade={animationType === 'fade'} class:anim-cube={animationType === 'cube'}>
 			<!-- Seiteninhalt -->
 			{#key currentPage}
@@ -771,5 +821,77 @@
 			height: 32px;
 			font-size: 14px;
 		}
+	}
+
+	/* ===== MOBILE: Container-Override ===== */
+	@media (max-width: 480px) {
+		.canvas-container {
+			height: calc(100vh - 44px);
+			overflow: visible;
+			touch-action: pan-y;
+		}
+	}
+
+	/* ===== MOBILE LISTE ===== */
+	.mobile-list {
+		width: 100%;
+		height: calc(100vh - 44px);
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding: 8px 10px 24px 10px;
+		box-sizing: border-box;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.mobile-runner {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 6px 12px;
+		margin-bottom: 8px;
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(8px);
+		border-radius: 10px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		font-size: 13px;
+	}
+
+	.mobile-runner-label {
+		color: rgba(255, 255, 255, 0.7);
+		font-weight: 500;
+	}
+
+	.mobile-runner-name {
+		color: white;
+		font-weight: 700;
+	}
+
+	.mobile-floor-group {
+		margin-bottom: 12px;
+	}
+
+	.mobile-floor-title {
+		font-size: 14px;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.9);
+		margin: 0 0 6px 0;
+		padding: 4px 10px;
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(8px);
+		border-radius: 8px;
+		display: inline-block;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+	}
+
+	.mobile-room-wrapper {
+		margin-bottom: 10px;
+	}
+
+	.mobile-room-wrapper :global(.room-card) {
+		width: 100%;
+		min-height: 70px;
+		max-height: none;
 	}
 </style>
