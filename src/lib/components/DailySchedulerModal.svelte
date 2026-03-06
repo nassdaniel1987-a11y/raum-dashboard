@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase/client';
-	import { rooms, dailyConfigs, roomStatuses, viewWeekday, currentTime } from '$lib/stores/appState';
+	import { rooms, dailyConfigs, roomStatuses, viewWeekday, currentTime, markRoomAsUpdating } from '$lib/stores/appState';
 	import { scale, fade, fly } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
@@ -58,6 +58,9 @@
 		const closeTime = localCloseTimes.get(roomId) || '';
 		const now = get(currentTime);
 		const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+		// Sync-Lock setzen damit Realtime/Automation nicht überschreibt
+		markRoomAsUpdating(roomId);
 
 		// Zeige Speicher-Status
 		savingRooms = new Set([...savingRooms, roomId]);
@@ -224,7 +227,21 @@
 		const currentStatus = $roomStatuses.get(roomId);
 		const newIsOpen = !(currentStatus?.is_open ?? false);
 
+		// Sync-Lock setzen
+		markRoomAsUpdating(roomId);
 		savingRooms = new Set([...savingRooms, roomId]);
+
+		// Optimistisches Update: Store SOFORT aktualisieren
+		roomStatuses.update((map) => {
+			const newMap = new Map(map);
+			newMap.set(roomId, {
+				room_id: roomId,
+				is_open: newIsOpen,
+				manual_override: true,
+				last_updated: new Date().toISOString()
+			});
+			return newMap;
+		});
 
 		try {
 			const { error } = await supabase
@@ -237,18 +254,6 @@
 
 			if (error) throw error;
 
-			// Lokalen Store aktualisieren
-			roomStatuses.update((map) => {
-				const newMap = new Map(map);
-				newMap.set(roomId, {
-					room_id: roomId,
-					is_open: newIsOpen,
-					manual_override: true,
-					last_updated: new Date().toISOString()
-				});
-				return newMap;
-			});
-
 			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
 			savedRooms = new Set([...savedRooms, roomId]);
 			setTimeout(() => {
@@ -257,6 +262,14 @@
 
 		} catch (error) {
 			console.error('Fehler beim Umschalten:', error);
+			// Rollback bei Fehler
+			if (currentStatus) {
+				roomStatuses.update((map) => {
+					const newMap = new Map(map);
+					newMap.set(roomId, currentStatus);
+					return newMap;
+				});
+			}
 			savingRooms = new Set([...savingRooms].filter(id => id !== roomId));
 			showMessage('Fehler beim Umschalten!', 'error');
 		}

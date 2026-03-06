@@ -5,6 +5,23 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { applyTheme } from '$lib/themes';
 import { parseTime } from '$lib/utils/time';
 
+// ===== SYNC LOCK =====
+// Verhindert dass Realtime/Automation gerade gespeicherte Änderungen überschreiben
+const recentlyUpdatedRooms = new Map<string, number>(); // roomId → timestamp
+const SYNC_LOCK_MS = 5000; // 5 Sekunden Schutz nach manuellem Update
+
+export function markRoomAsUpdating(roomId: string) {
+	recentlyUpdatedRooms.set(roomId, Date.now());
+}
+
+function isRoomLocked(roomId: string): boolean {
+	const updatedAt = recentlyUpdatedRooms.get(roomId);
+	if (!updatedAt) return false;
+	if (Date.now() - updatedAt < SYNC_LOCK_MS) return true;
+	recentlyUpdatedRooms.delete(roomId);
+	return false;
+}
+
 // ===== ADMIN MODE =====
 export const isEditMode = writable(false);
 
@@ -141,9 +158,15 @@ export function subscribeToRealtimeUpdates() {
 			(payload) => {
 				console.log('📊 Room status change:', payload);
 				if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+					const roomId = payload.new.room_id;
+					// Sync-Lock: Wenn der Raum gerade manuell geändert wurde, ignorieren
+					if (isRoomLocked(roomId)) {
+						console.log(`🔒 Realtime-Update für ${roomId} ignoriert (Sync-Lock aktiv)`);
+						return;
+					}
 					roomStatuses.update((map) => {
 						const newMap = new Map(map);
-						newMap.set(payload.new.room_id, payload.new as RoomStatus);
+						newMap.set(roomId, payload.new as RoomStatus);
 						return newMap;
 					});
 				} else if (payload.eventType === 'DELETE') {
@@ -183,6 +206,11 @@ export function subscribeToRealtimeUpdates() {
 			console.log('📅 Config change:', payload);
 			if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
 				const config = payload.new as DailyConfig;
+				// Sync-Lock: Wenn der Raum gerade manuell geändert wurde, ignorieren
+				if (isRoomLocked(config.room_id)) {
+					console.log(`🔒 Config-Realtime für ${config.room_id} ignoriert (Sync-Lock aktiv)`);
+					return;
+				}
 				const key = `${config.room_id}-${config.weekday}`;
 				dailyConfigs.update((map) => {
 					const newMap = new Map(map);
@@ -302,6 +330,9 @@ export async function toggleRoomStatus(roomId: string) {
 	const currentStatus = get(roomStatuses).get(roomId);
 	const newStatus = !(currentStatus?.is_open ?? false);
 
+	// Sync-Lock setzen damit Realtime/Automation nicht überschreibt
+	markRoomAsUpdating(roomId);
+
 	// ✅ KORRIGIERT: Verwende Helper-Funktion
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
@@ -404,6 +435,9 @@ export async function bulkOpenAllRooms() {
 		manual_override: true
 	}));
 
+	// Sync-Lock für alle Räume
+	allRooms.forEach((room) => markRoomAsUpdating(room.id));
+
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
 		allRooms.forEach((room) => {
@@ -427,6 +461,9 @@ export async function bulkCloseAllRooms() {
 		is_open: false,
 		manual_override: true
 	}));
+
+	// Sync-Lock für alle Räume
+	allRooms.forEach((room) => markRoomAsUpdating(room.id));
 
 	roomStatuses.update((map) => {
 		const newMap = new Map(map);
@@ -899,6 +936,11 @@ if (typeof window !== 'undefined') {
 		const updates: StatusUpdate[] = [];
 
 		for (const room of $rooms) {
+			// Sync-Lock: Raum überspringen wenn gerade manuell geändert
+			if (isRoomLocked(room.id)) {
+				continue;
+			}
+
 			const status = $statuses.get(room.id);
 			const currentIsOpen = status?.is_open ?? false;
 			const isManual = status?.manual_override ?? false;
