@@ -6,7 +6,7 @@
 	import SimpleImageEditor from './SimpleImageEditor.svelte';
 	import type { RoomWithConfig, ImagePosition } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
-	import { viewWeekday, currentTime } from '$lib/stores/appState';
+	import { viewWeekday, currentTime, persons } from '$lib/stores/appState';
 	import { get } from 'svelte/store';
 
 	// Svelte 5 Props Syntax
@@ -20,7 +20,11 @@
 	let floor = $state(room.floor || 'eg');
 	let backgroundColor = $state(room.background_color);
 	let textColor = $state(room.config?.text_color || '#FFFFFF'); // ✅ NEU: Textfarbe
-	let person = $state(room.person || ''); // ✅ NEU: Person im Raum
+	let person = $state(room.person || '');
+	let selectedPersons = $state<string[]>(
+		room.person ? room.person.split(',').map((p: string) => p.trim()).filter((p: string) => p) : []
+	);
+	let showPersonPicker = $state(false);
 	let activity = $state(room.config?.activity || '');
 	let openTime = $state(room.config?.open_time || '');
 	let closeTime = $state(room.config?.close_time || '');
@@ -283,7 +287,7 @@
 					name,
 					floor,
 					background_color: backgroundColor,
-					person: person || null // ✅ NEU: Person speichern
+					person: selectedPersons.length > 0 ? selectedPersons.join(', ') : null
 				})
 				.eq('id', room.id);
 
@@ -420,8 +424,49 @@
 					</div>
 
 					<div class="input-group">
-						<label for="room-person-{room.id}">👤 Person im Raum</label>
-						<input id="room-person-{room.id}" type="text" bind:value={person} placeholder="z.B. Max Mustermann" />
+						<label>👤 Person im Raum</label>
+						<div class="editor-person-select">
+							<div class="editor-selected-persons">
+								{#if selectedPersons.length === 0}
+									<span class="editor-placeholder">Person(en) auswählen...</span>
+								{:else}
+									{#each selectedPersons as pName}
+										<span class="editor-person-tag">
+											{pName}
+											<button class="editor-tag-remove" onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}>✕</button>
+										</span>
+									{/each}
+								{/if}
+							</div>
+							<button class="editor-person-toggle" onclick={() => showPersonPicker = !showPersonPicker}>
+								{showPersonPicker ? '▲' : '▼'}
+							</button>
+						</div>
+						{#if showPersonPicker}
+							<div class="editor-person-dropdown">
+								{#if $persons.length === 0}
+									<p class="editor-dropdown-empty">Keine Personen angelegt. Bitte in Einstellungen → Personen eintragen.</p>
+								{:else}
+									{#each $persons as p (p.id)}
+										{@const isSelected = selectedPersons.includes(p.name)}
+										<button
+											class="editor-dropdown-item"
+											class:selected={isSelected}
+											onclick={() => {
+												if (isSelected) {
+													selectedPersons = selectedPersons.filter(n => n !== p.name);
+												} else {
+													selectedPersons = [...selectedPersons, p.name];
+												}
+											}}
+										>
+											<span class="editor-check">{isSelected ? '✓' : ''}</span>
+											{p.name}
+										</button>
+									{/each}
+								{/if}
+							</div>
+						{/if}
 						<p class="hint">💡 Optional: Zeigt an, wer aktuell in diesem Raum ist</p>
 					</div>
 				</div>
@@ -713,6 +758,118 @@
 </div>
 
 <style>
+	/* Person Multi-Select im Editor */
+	.editor-person-select {
+		display: flex;
+		align-items: stretch;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.05);
+		overflow: hidden;
+	}
+
+	.editor-selected-persons {
+		flex: 1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		padding: 8px 10px;
+		min-height: 38px;
+		align-items: center;
+	}
+
+	.editor-placeholder {
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 14px;
+	}
+
+	.editor-person-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: rgba(59, 130, 246, 0.3);
+		border: 1px solid rgba(59, 130, 246, 0.5);
+		border-radius: 4px;
+		font-size: 13px;
+		color: white;
+	}
+
+	.editor-tag-remove {
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		font-size: 11px;
+		padding: 0 2px;
+	}
+
+	.editor-tag-remove:hover {
+		color: rgba(239, 68, 68, 0.9);
+	}
+
+	.editor-person-toggle {
+		padding: 0 12px;
+		background: rgba(255, 255, 255, 0.08);
+		border: none;
+		border-left: 1px solid rgba(255, 255, 255, 0.15);
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		font-size: 10px;
+		transition: background 0.2s;
+	}
+
+	.editor-person-toggle:hover {
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.editor-person-dropdown {
+		margin-top: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 8px;
+		background: rgba(25, 30, 45, 0.98);
+		max-height: 180px;
+		overflow-y: auto;
+	}
+
+	.editor-dropdown-empty {
+		padding: 12px;
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 13px;
+		text-align: center;
+		margin: 0;
+	}
+
+	.editor-dropdown-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		border: none;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 14px;
+		cursor: pointer;
+		text-align: left;
+		transition: background 0.15s;
+	}
+
+	.editor-dropdown-item:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.editor-dropdown-item.selected {
+		background: rgba(59, 130, 246, 0.15);
+		color: white;
+	}
+
+	.editor-check {
+		width: 16px;
+		color: rgba(34, 197, 94, 0.9);
+		font-size: 14px;
+	}
+
 	.modal-backdrop {
 		position: fixed;
 		top: 0;

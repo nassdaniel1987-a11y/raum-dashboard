@@ -1,5 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
-import type { Room, RoomStatus, DailyConfig, AppSettings, RoomWithConfig, DailyHighlight } from '$lib/types';
+import type { Room, RoomStatus, DailyConfig, AppSettings, RoomWithConfig, DailyHighlight, Person } from '$lib/types';
 import { supabase } from '$lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { applyTheme } from '$lib/themes';
@@ -54,6 +54,7 @@ export const roomStatuses = writable<Map<string, RoomStatus>>(new Map());
 export const dailyConfigs = writable<Map<string, DailyConfig>>(new Map());
 export const appSettings = writable<AppSettings | null>(null);
 export const dailyHighlights = writable<DailyHighlight[]>([]);
+export const persons = writable<Person[]>([]);
 
 // ===== RUNNER (Ansprechpartner im Haus) =====
 export const runnerName = derived(appSettings, ($settings) => $settings?.runner_name || '');
@@ -129,6 +130,7 @@ let roomsChannel: RealtimeChannel | null = null;
 let configsChannel: RealtimeChannel | null = null;
 let settingsChannel: RealtimeChannel | null = null;
 let highlightsChannel: RealtimeChannel | null = null;
+let personsChannel: RealtimeChannel | null = null;
 
 export function subscribeToRealtimeUpdates() {
 	console.log('🔌 Subscribing to realtime updates...');
@@ -232,6 +234,24 @@ export function subscribeToRealtimeUpdates() {
 		.subscribe((status) => {
 			console.log('Highlights channel:', status);
 		});
+
+	personsChannel = supabase
+		.channel('persons-changes')
+		.on('postgres_changes', { event: '*', schema: 'public', table: 'persons' }, (payload) => {
+			console.log('👤 Person change:', payload);
+			if (payload.eventType === 'INSERT') {
+				persons.update((list) => [...list, payload.new as Person].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)));
+			} else if (payload.eventType === 'UPDATE') {
+				persons.update((list) =>
+					list.map((p) => (p.id === payload.new.id ? (payload.new as Person) : p)).sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+				);
+			} else if (payload.eventType === 'DELETE') {
+				persons.update((list) => list.filter((p) => p.id !== payload.old.id));
+			}
+		})
+		.subscribe((status) => {
+			console.log('Persons channel:', status);
+		});
 }
 
 export function unsubscribeFromRealtimeUpdates() {
@@ -240,6 +260,7 @@ export function unsubscribeFromRealtimeUpdates() {
 	configsChannel?.unsubscribe();
 	settingsChannel?.unsubscribe();
 	highlightsChannel?.unsubscribe();
+	personsChannel?.unsubscribe();
 }
 
 // ===== DATA LOADING =====
@@ -282,6 +303,16 @@ export async function loadAllData() {
 	if (highlightsError) console.error('[loadAllData] Fehler beim Laden der Highlights:', highlightsError);
 	if (highlightsData) {
 		dailyHighlights.set(highlightsData);
+	}
+
+	const { data: personsData, error: personsError } = await supabase
+		.from('persons')
+		.select('*')
+		.order('sort_order')
+		.order('name');
+	if (personsError) console.error('[loadAllData] Fehler beim Laden der Personen:', personsError);
+	if (personsData) {
+		persons.set(personsData);
 	}
 }
 
@@ -768,6 +799,62 @@ export async function reorderHighlights(highlights: DailyHighlight[]) {
 				.eq('id', update.id)
 		)
 	);
+}
+
+// ========== PERSONEN-VERWALTUNG ==========
+
+export async function createPerson(name: string) {
+	const currentPersons = get(persons);
+	const maxSortOrder = currentPersons.length > 0
+		? Math.max(...currentPersons.map(p => p.sort_order))
+		: 0;
+
+	const { data, error } = await supabase
+		.from('persons')
+		.insert({ name, sort_order: maxSortOrder + 1 })
+		.select()
+		.single();
+
+	if (error) {
+		console.error('Error creating person:', error);
+		throw error;
+	}
+
+	if (data) {
+		persons.update(list => [...list, data as Person].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)));
+	}
+
+	return data;
+}
+
+export async function updatePerson(id: string, name: string) {
+	const { error } = await supabase
+		.from('persons')
+		.update({ name })
+		.eq('id', id);
+
+	if (error) {
+		console.error('Error updating person:', error);
+		throw error;
+	}
+
+	persons.update(list =>
+		list.map(p => (p.id === id ? { ...p, name } : p))
+	);
+}
+
+export async function deletePerson(id: string) {
+	const { error } = await supabase
+		.from('persons')
+		.delete()
+		.eq('id', id);
+
+	if (error) {
+		console.error('Error deleting person:', error);
+		throw error;
+	}
+
+	persons.update(list => list.filter(p => p.id !== id));
 }
 
 // ========== TAGES-RESET (Zeiten zurücksetzen bei Tageswechsel) ==========

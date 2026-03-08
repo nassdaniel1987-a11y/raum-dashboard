@@ -85,6 +85,13 @@ export interface Size {
 	height: number;
 }
 
+export interface Person {
+	id: string;
+	name: string;
+	sort_order: number;
+	created_at: string;
+}
+
 export interface DailyHighlight {
 	id: string;
 	weekday: number; // 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa

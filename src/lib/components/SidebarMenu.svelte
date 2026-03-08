@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -21,7 +21,52 @@
 	}>();
 
 	// State
-	let activeTab = $state<'dashboard' | 'planning' | 'design' | 'system'>('dashboard');
+	let activeTab = $state<'dashboard' | 'planning' | 'persons' | 'design' | 'system'>('dashboard');
+
+	// Personen-Verwaltung State
+	let newPersonName = $state('');
+	let editingPersonId = $state<string | null>(null);
+	let editingPersonName = $state('');
+
+	async function handleCreatePerson() {
+		if (!newPersonName.trim()) return;
+		try {
+			await createPerson(newPersonName.trim());
+			newPersonName = '';
+		} catch (error) {
+			console.error('Fehler beim Erstellen:', error);
+		}
+	}
+
+	function startEditPerson(id: string, name: string) {
+		editingPersonId = id;
+		editingPersonName = name;
+	}
+
+	async function handleUpdatePerson() {
+		if (!editingPersonId || !editingPersonName.trim()) return;
+		try {
+			await updatePerson(editingPersonId, editingPersonName.trim());
+			editingPersonId = null;
+			editingPersonName = '';
+		} catch (error) {
+			console.error('Fehler beim Aktualisieren:', error);
+		}
+	}
+
+	function cancelEditPerson() {
+		editingPersonId = null;
+		editingPersonName = '';
+	}
+
+	async function handleDeletePerson(id: string, name: string) {
+		if (!confirm(`Person "${name}" wirklich löschen?`)) return;
+		try {
+			await deletePerson(id);
+		} catch (error) {
+			console.error('Fehler beim Löschen:', error);
+		}
+	}
 	let autoPageActive = $state(true);
 	let pageDuration = $state(8);
 	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
@@ -394,6 +439,9 @@
 			<button class="tab" class:active={activeTab === 'planning'} onclick={() => activeTab = 'planning'}>
 				Planung
 			</button>
+			<button class="tab" class:active={activeTab === 'persons'} onclick={() => activeTab = 'persons'}>
+				Personen
+			</button>
 			<button class="tab" class:active={activeTab === 'design'} onclick={() => activeTab = 'design'}>
 				Design
 			</button>
@@ -515,6 +563,59 @@
 						<button class="btn btn-danger full-width" onclick={deleteCurrentDay}>
 							Tag löschen
 						</button>
+					</section>
+				</div>
+
+			{:else if activeTab === 'persons'}
+				<div class="tab-content" transition:fade={{ duration: 150 }}>
+					<!-- Person hinzufügen -->
+					<section class="section">
+						<h3>Person hinzufügen</h3>
+						<div class="person-add-row">
+							<input
+								type="text"
+								bind:value={newPersonName}
+								placeholder="Name eingeben..."
+								onkeydown={(e) => e.key === 'Enter' && handleCreatePerson()}
+							/>
+							<button class="btn btn-success" onclick={handleCreatePerson} disabled={!newPersonName.trim()}>+</button>
+						</div>
+						<p class="hint-text">Namen, die hier eingetragen werden, stehen in der Raumzuordnung zur Auswahl</p>
+					</section>
+
+					<!-- Personen-Liste -->
+					<section class="section">
+						<h3>Alle Personen ({$persons.length})</h3>
+						{#if $persons.length === 0}
+							<p class="empty-hint">Noch keine Personen eingetragen</p>
+						{:else}
+							<div class="persons-list">
+								{#each $persons as person (person.id)}
+									<div class="person-list-item">
+										{#if editingPersonId === person.id}
+											<div class="person-edit-row">
+												<input
+													type="text"
+													bind:value={editingPersonName}
+													onkeydown={(e) => {
+														if (e.key === 'Enter') handleUpdatePerson();
+														if (e.key === 'Escape') cancelEditPerson();
+													}}
+												/>
+												<button class="icon-btn save" onclick={handleUpdatePerson} title="Speichern">&#10003;</button>
+												<button class="icon-btn cancel" onclick={cancelEditPerson} title="Abbrechen">&#10005;</button>
+											</div>
+										{:else}
+											<span class="person-list-name">{person.name}</span>
+											<div class="person-list-actions">
+												<button class="icon-btn edit" onclick={() => startEditPerson(person.id, person.name)} title="Bearbeiten">&#9998;</button>
+												<button class="icon-btn delete" onclick={() => handleDeletePerson(person.id, person.name)} title="Löschen">&#128465;</button>
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						{/if}
 					</section>
 				</div>
 
@@ -1317,6 +1418,151 @@
 
 	.content::-webkit-scrollbar-thumb:hover {
 		background: rgba(255, 255, 255, 0.3);
+	}
+
+	/* Personen-Verwaltung */
+	.person-add-row {
+		display: flex;
+		gap: 8px;
+	}
+
+	.person-add-row input {
+		flex: 1;
+		padding: 10px 12px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.08);
+		color: white;
+		font-size: 14px;
+	}
+
+	.person-add-row input:focus {
+		outline: none;
+		border-color: rgba(59, 130, 246, 0.6);
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.person-add-row input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.person-add-row .btn {
+		flex: 0 0 40px;
+		padding: 0;
+		font-size: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.persons-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.person-list-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8px 10px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 6px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		transition: background 0.2s;
+	}
+
+	.person-list-item:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.person-list-name {
+		font-size: 14px;
+		color: white;
+		font-weight: 500;
+	}
+
+	.person-list-actions {
+		display: flex;
+		gap: 4px;
+	}
+
+	.person-edit-row {
+		display: flex;
+		gap: 6px;
+		width: 100%;
+	}
+
+	.person-edit-row input {
+		flex: 1;
+		padding: 6px 10px;
+		border: 1px solid rgba(59, 130, 246, 0.5);
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 14px;
+	}
+
+	.person-edit-row input:focus {
+		outline: none;
+		border-color: rgba(59, 130, 246, 0.8);
+	}
+
+	.icon-btn {
+		width: 28px;
+		height: 28px;
+		border-radius: 4px;
+		border: none;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 14px;
+		transition: all 0.2s;
+	}
+
+	.icon-btn.edit {
+		background: rgba(59, 130, 246, 0.2);
+		color: rgba(59, 130, 246, 0.9);
+	}
+
+	.icon-btn.edit:hover {
+		background: rgba(59, 130, 246, 0.3);
+	}
+
+	.icon-btn.delete {
+		background: rgba(239, 68, 68, 0.2);
+		color: rgba(239, 68, 68, 0.9);
+	}
+
+	.icon-btn.delete:hover {
+		background: rgba(239, 68, 68, 0.3);
+	}
+
+	.icon-btn.save {
+		background: rgba(34, 197, 94, 0.2);
+		color: rgba(34, 197, 94, 0.9);
+	}
+
+	.icon-btn.save:hover {
+		background: rgba(34, 197, 94, 0.3);
+	}
+
+	.icon-btn.cancel {
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.icon-btn.cancel:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.empty-hint {
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 13px;
+		text-align: center;
+		padding: 12px 0;
+		margin: 0;
 	}
 
 	@media (max-width: 768px) {
