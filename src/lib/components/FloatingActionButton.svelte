@@ -27,7 +27,7 @@
 	let personSelections = $state<Record<string, string[]>>({});
 	let activityInputs = $state<Record<string, string>>({});
 	let saveTimeouts = $state<Record<string, ReturnType<typeof setTimeout>>>({});
-	let showPersonDropdown = $state<string | null>(null);
+	let expandedRoom = $state<string | null>(null);
 
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
@@ -81,8 +81,7 @@
 
 	function openPersonsPanel() {
 		showPersonsPanel = true;
-		showPersonDropdown = null;
-		// Initialisiere Auswahl mit aktuellen Personen und Aktivitäten
+		expandedRoom = null;
 		personSelections = {};
 		activityInputs = {};
 		for (const room of activeRooms) {
@@ -139,8 +138,8 @@
 		}, 300);
 	}
 
-	function toggleDropdown(roomId: string) {
-		showPersonDropdown = showPersonDropdown === roomId ? null : roomId;
+	function toggleExpanded(roomId: string) {
+		expandedRoom = expandedRoom === roomId ? null : roomId;
 	}
 
 	async function saveActivityForRoom(roomId: string, activity: string) {
@@ -313,59 +312,67 @@
 						<div class="rooms-list">
 							{#each activeRooms as room (room.id)}
 								<div class="room-item" class:room-closed={!room.isOpen}>
-									<div class="room-info">
-										<span class="room-name">{room.name}</span>
-										<span class="room-floor">{getFloorLabel(room.floor)}</span>
-									</div>
-									<div class="room-inputs">
+									<div class="room-header-row">
+										<div class="room-info">
+											<span class="room-name">{room.name}</span>
+											<span class="room-floor">{getFloorLabel(room.floor)}</span>
+										</div>
 										<input
 											type="text"
-											class="person-input"
+											class="activity-input"
 											value={activityInputs[room.id] || ''}
 											placeholder="Inhalt..."
 											oninput={(e) => handleActivityInput(room.id, (e.target as HTMLInputElement).value)}
 										/>
-										<!-- Person Multi-Select -->
-										<div class="person-select-container">
-											<button
-												class="person-select-trigger"
-												onclick={() => toggleDropdown(room.id)}
-											>
-												{#if (personSelections[room.id] || []).length === 0}
-													<span class="placeholder-text">Person auswählen...</span>
-												{:else}
-													<div class="selected-tags">
-														{#each personSelections[room.id] as name}
-															<span class="person-tag">
-																{name}
-																<button class="tag-remove" onclick={(e) => { e.stopPropagation(); removePersonFromRoom(room.id, name); }}>&#10005;</button>
-															</span>
-														{/each}
-													</div>
-												{/if}
-												<span class="dropdown-arrow">{showPersonDropdown === room.id ? '&#9650;' : '&#9660;'}</span>
-											</button>
-											{#if showPersonDropdown === room.id}
-												<div class="person-dropdown">
-													{#if $persons.length === 0}
-														<div class="dropdown-empty">Keine Personen angelegt. Bitte im Menü unter "Personen" eintragen.</div>
-													{:else}
-														{#each $persons as person (person.id)}
-															{@const isSelected = (personSelections[room.id] || []).includes(person.name)}
+									</div>
+
+									<!-- Zugewiesene Personen als Chips -->
+									<div class="person-row">
+										<button
+											class="person-expand-btn"
+											class:has-persons={(personSelections[room.id] || []).length > 0}
+											onclick={() => toggleExpanded(room.id)}
+										>
+											{#if (personSelections[room.id] || []).length === 0}
+												<span class="expand-icon">👤</span>
+												<span class="expand-label">Person zuweisen</span>
+											{:else}
+												<div class="assigned-chips">
+													{#each personSelections[room.id] as name}
+														<span class="assigned-chip">
+															{name}
 															<button
-																class="dropdown-item"
-																class:selected={isSelected}
-																onclick={() => togglePersonForRoom(room.id, person.name)}
-															>
-																<span class="check-icon">{isSelected ? '&#10003;' : ''}</span>
-																<span>{person.name}</span>
-															</button>
-														{/each}
-													{/if}
+																class="chip-remove"
+																onclick={(e) => { e.stopPropagation(); removePersonFromRoom(room.id, name); }}
+															>✕</button>
+														</span>
+													{/each}
 												</div>
 											{/if}
-										</div>
+											<span class="expand-arrow">{expandedRoom === room.id ? '▲' : '▼'}</span>
+										</button>
 									</div>
+
+									<!-- Aufklappbare Personen-Auswahl -->
+									{#if expandedRoom === room.id}
+										<div class="person-chips-grid" transition:slide={{ duration: 150 }}>
+											{#if $persons.length === 0}
+												<div class="chips-empty">Keine Personen angelegt.<br/>Bitte im Menü unter "Personen" eintragen.</div>
+											{:else}
+												{#each $persons as person (person.id)}
+													{@const isSelected = (personSelections[room.id] || []).includes(person.name)}
+													<button
+														class="person-chip"
+														class:chip-selected={isSelected}
+														onclick={() => togglePersonForRoom(room.id, person.name)}
+													>
+														<span class="chip-check">{isSelected ? '✓' : ''}</span>
+														<span class="chip-name">{person.name}</span>
+													</button>
+												{/each}
+											{/if}
+										</div>
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -606,11 +613,11 @@
 
 	.room-item {
 		display: flex;
-		align-items: center;
-		gap: 10px;
+		flex-direction: column;
+		gap: 6px;
 		padding: 10px 12px;
 		background: rgba(255, 255, 255, 0.05);
-		border-radius: 10px;
+		border-radius: 12px;
 		margin-bottom: 8px;
 		border-left: 3px solid rgba(34, 197, 94, 0.7);
 	}
@@ -624,6 +631,12 @@
 		margin-bottom: 0;
 	}
 
+	.room-header-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
 	.room-info {
 		flex: 0 0 80px;
 		display: flex;
@@ -632,7 +645,7 @@
 	}
 
 	.room-name {
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 600;
 		color: white;
 		white-space: nowrap;
@@ -645,170 +658,188 @@
 		color: rgba(255, 255, 255, 0.5);
 	}
 
-	.room-inputs {
+	.activity-input {
 		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.person-input {
-		width: 100%;
-		padding: 6px 8px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.1);
+		padding: 8px 10px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.08);
 		color: white;
-		font-size: 12px;
+		font-size: 13px;
 		transition: all 0.2s;
 		box-sizing: border-box;
 	}
 
-	.person-input::placeholder {
-		color: rgba(255, 255, 255, 0.4);
+	.activity-input::placeholder {
+		color: rgba(255, 255, 255, 0.35);
 	}
 
-	.person-input:focus {
+	.activity-input:focus {
 		outline: none;
-		border-color: rgba(249, 115, 22, 0.6);
-		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(249, 115, 22, 0.5);
+		background: rgba(255, 255, 255, 0.12);
 	}
 
-	/* Person Multi-Select */
-	.person-select-container {
-		position: relative;
-	}
-
-	.person-select-trigger {
+	/* Person Row */
+	.person-row {
 		width: 100%;
-		min-height: 30px;
-		padding: 4px 24px 4px 6px;
-		border: 1px solid rgba(59, 130, 246, 0.3);
-		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.person-expand-btn {
+		width: 100%;
+		min-height: 40px;
+		padding: 6px 10px;
+		border: 1px dashed rgba(59, 130, 246, 0.3);
+		border-radius: 8px;
+		background: rgba(59, 130, 246, 0.06);
 		color: white;
-		font-size: 12px;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 8px;
 		text-align: left;
 		position: relative;
 		transition: all 0.2s;
 		box-sizing: border-box;
 	}
 
-	.person-select-trigger:hover {
-		border-color: rgba(59, 130, 246, 0.5);
-		background: rgba(255, 255, 255, 0.13);
+	.person-expand-btn.has-persons {
+		border-style: solid;
+		border-color: rgba(59, 130, 246, 0.25);
+		background: rgba(59, 130, 246, 0.08);
 	}
 
-	.placeholder-text {
-		color: rgba(255, 255, 255, 0.4);
-		font-size: 12px;
+	.person-expand-btn:active {
+		transform: scale(0.98);
+		background: rgba(59, 130, 246, 0.15);
 	}
 
-	.dropdown-arrow {
+	.expand-icon {
+		font-size: 16px;
+	}
+
+	.expand-label {
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.45);
+	}
+
+	.expand-arrow {
 		position: absolute;
-		right: 6px;
+		right: 10px;
 		top: 50%;
 		transform: translateY(-50%);
-		font-size: 8px;
-		color: rgba(255, 255, 255, 0.5);
+		font-size: 9px;
+		color: rgba(255, 255, 255, 0.4);
 	}
 
-	.selected-tags {
+	.assigned-chips {
+		flex: 1;
 		display: flex;
 		flex-wrap: wrap;
-		gap: 3px;
+		gap: 5px;
+		padding-right: 20px;
 	}
 
-	.person-tag {
+	.assigned-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 3px;
-		padding: 2px 6px;
-		background: rgba(59, 130, 246, 0.3);
-		border: 1px solid rgba(59, 130, 246, 0.5);
-		border-radius: 4px;
-		font-size: 11px;
+		gap: 5px;
+		padding: 4px 10px;
+		background: rgba(59, 130, 246, 0.25);
+		border: 1px solid rgba(59, 130, 246, 0.4);
+		border-radius: 16px;
+		font-size: 12px;
 		color: white;
 		white-space: nowrap;
 	}
 
-	.tag-remove {
-		background: none;
+	.chip-remove {
+		background: rgba(255, 255, 255, 0.15);
 		border: none;
-		color: rgba(255, 255, 255, 0.7);
+		color: rgba(255, 255, 255, 0.8);
 		cursor: pointer;
-		font-size: 10px;
-		padding: 0 1px;
-		line-height: 1;
+		font-size: 11px;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.15s;
+		-webkit-tap-highlight-color: transparent;
 	}
 
-	.tag-remove:hover {
-		color: rgba(239, 68, 68, 0.9);
+	.chip-remove:active {
+		background: rgba(239, 68, 68, 0.5);
+		transform: scale(1.1);
 	}
 
-	.person-dropdown {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		margin-top: 2px;
-		background: rgba(25, 30, 45, 0.98);
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		border-radius: 6px;
-		max-height: 150px;
-		overflow-y: auto;
-		z-index: 100;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	/* Aufklappbare Chip-Auswahl */
+	.person-chips-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		padding: 8px 4px 4px;
 	}
 
-	.person-dropdown::-webkit-scrollbar {
-		width: 4px;
-	}
-
-	.person-dropdown::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 2px;
-	}
-
-	.dropdown-item {
-		width: 100%;
+	.person-chip {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 6px 8px;
-		border: none;
-		background: transparent;
-		color: rgba(255, 255, 255, 0.8);
-		font-size: 12px;
+		padding: 10px 14px;
+		border: 1.5px solid rgba(255, 255, 255, 0.15);
+		border-radius: 20px;
+		background: rgba(255, 255, 255, 0.06);
+		color: rgba(255, 255, 255, 0.75);
+		font-size: 13px;
 		cursor: pointer;
-		text-align: left;
-		transition: background 0.15s;
+		transition: all 0.15s;
+		-webkit-tap-highlight-color: transparent;
+		user-select: none;
 	}
 
-	.dropdown-item:hover {
+	.person-chip:active {
+		transform: scale(0.95);
+	}
+
+	.person-chip.chip-selected {
+		background: rgba(59, 130, 246, 0.25);
+		border-color: rgba(59, 130, 246, 0.6);
+		color: white;
+		font-weight: 500;
+	}
+
+	.chip-check {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 12px;
+		font-weight: 700;
 		background: rgba(255, 255, 255, 0.1);
+		color: transparent;
+		transition: all 0.15s;
+		flex-shrink: 0;
 	}
 
-	.dropdown-item.selected {
-		background: rgba(59, 130, 246, 0.2);
+	.chip-selected .chip-check {
+		background: rgba(34, 197, 94, 0.8);
 		color: white;
 	}
 
-	.check-icon {
-		width: 14px;
-		font-size: 12px;
-		color: rgba(34, 197, 94, 0.9);
+	.chip-name {
+		white-space: nowrap;
 	}
 
-	.dropdown-empty {
-		padding: 10px 8px;
-		color: rgba(255, 255, 255, 0.5);
-		font-size: 11px;
+	.chips-empty {
+		width: 100%;
+		padding: 12px 8px;
+		color: rgba(255, 255, 255, 0.45);
+		font-size: 12px;
 		text-align: center;
+		line-height: 1.5;
 	}
 
 	.empty-state {

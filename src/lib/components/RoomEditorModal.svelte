@@ -425,33 +425,41 @@
 
 					<div class="input-group">
 						<label>👤 Person im Raum</label>
-						<div class="editor-person-select">
-							<div class="editor-selected-persons">
-								{#if selectedPersons.length === 0}
-									<span class="editor-placeholder">Person(en) auswählen...</span>
-								{:else}
-									{#each selectedPersons as pName}
-										<span class="editor-person-tag">
-											{pName}
-											<button class="editor-tag-remove" onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}>✕</button>
-										</span>
-									{/each}
-								{/if}
+
+						<!-- Zugewiesene Personen -->
+						{#if selectedPersons.length > 0}
+							<div class="editor-assigned-row">
+								{#each selectedPersons as pName}
+									<span class="editor-assigned-chip">
+										{pName}
+										<button
+											class="editor-chip-remove"
+											onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}
+										>✕</button>
+									</span>
+								{/each}
 							</div>
-							<button class="editor-person-toggle" onclick={() => showPersonPicker = !showPersonPicker}>
-								{showPersonPicker ? '▲' : '▼'}
-							</button>
-						</div>
+						{/if}
+
+						<!-- Toggle-Button -->
+						<button
+							class="editor-picker-toggle"
+							onclick={() => showPersonPicker = !showPersonPicker}
+						>
+							{showPersonPicker ? '▲ Personen ausblenden' : '＋ Person zuweisen'}
+						</button>
+
+						<!-- Chip-Grid -->
 						{#if showPersonPicker}
-							<div class="editor-person-dropdown">
+							<div class="editor-chips-grid">
 								{#if $persons.length === 0}
-									<p class="editor-dropdown-empty">Keine Personen angelegt. Bitte in Einstellungen → Personen eintragen.</p>
+									<p class="editor-chips-empty">Keine Personen angelegt. Bitte in Einstellungen &rarr; Personen eintragen.</p>
 								{:else}
 									{#each $persons as p (p.id)}
 										{@const isSelected = selectedPersons.includes(p.name)}
 										<button
-											class="editor-dropdown-item"
-											class:selected={isSelected}
+											class="editor-person-chip"
+											class:chip-active={isSelected}
 											onclick={() => {
 												if (isSelected) {
 													selectedPersons = selectedPersons.filter(n => n !== p.name);
@@ -460,13 +468,14 @@
 												}
 											}}
 										>
-											<span class="editor-check">{isSelected ? '✓' : ''}</span>
-											{p.name}
+											<span class="editor-chip-check">{isSelected ? '✓' : ''}</span>
+											<span>{p.name}</span>
 										</button>
 									{/each}
 								{/if}
 							</div>
 						{/if}
+
 						<p class="hint">💡 Optional: Zeigt an, wer aktuell in diesem Raum ist</p>
 					</div>
 				</div>
@@ -758,116 +767,126 @@
 </div>
 
 <style>
-	/* Person Multi-Select im Editor */
-	.editor-person-select {
-		display: flex;
-		align-items: stretch;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.05);
-		overflow: hidden;
-	}
-
-	.editor-selected-persons {
-		flex: 1;
+	/* Person Chip-Auswahl im Editor */
+	.editor-assigned-row {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
-		padding: 8px 10px;
-		min-height: 38px;
-		align-items: center;
+		gap: 6px;
+		margin-bottom: 6px;
 	}
 
-	.editor-placeholder {
-		color: rgba(255, 255, 255, 0.4);
-		font-size: 14px;
-	}
-
-	.editor-person-tag {
+	.editor-assigned-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
-		padding: 3px 8px;
-		background: rgba(59, 130, 246, 0.3);
-		border: 1px solid rgba(59, 130, 246, 0.5);
-		border-radius: 4px;
-		font-size: 13px;
+		gap: 6px;
+		padding: 6px 12px;
+		background: rgba(59, 130, 246, 0.2);
+		border: 1px solid rgba(59, 130, 246, 0.4);
+		border-radius: 20px;
+		font-size: 14px;
 		color: white;
 	}
 
-	.editor-tag-remove {
-		background: none;
+	.editor-chip-remove {
+		background: rgba(255, 255, 255, 0.15);
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
+		color: rgba(255, 255, 255, 0.8);
 		cursor: pointer;
-		font-size: 11px;
-		padding: 0 2px;
+		font-size: 12px;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.15s;
+		-webkit-tap-highlight-color: transparent;
 	}
 
-	.editor-tag-remove:hover {
-		color: rgba(239, 68, 68, 0.9);
+	.editor-chip-remove:active {
+		background: rgba(239, 68, 68, 0.5);
+		transform: scale(1.1);
 	}
 
-	.editor-person-toggle {
-		padding: 0 12px;
-		background: rgba(255, 255, 255, 0.08);
-		border: none;
-		border-left: 1px solid rgba(255, 255, 255, 0.15);
+	.editor-picker-toggle {
+		width: 100%;
+		padding: 10px 14px;
+		border: 1px dashed rgba(59, 130, 246, 0.3);
+		border-radius: 10px;
+		background: rgba(59, 130, 246, 0.06);
 		color: rgba(255, 255, 255, 0.6);
+		font-size: 14px;
 		cursor: pointer;
-		font-size: 10px;
-		transition: background 0.2s;
+		transition: all 0.2s;
+		-webkit-tap-highlight-color: transparent;
 	}
 
-	.editor-person-toggle:hover {
-		background: rgba(255, 255, 255, 0.12);
+	.editor-picker-toggle:active {
+		background: rgba(59, 130, 246, 0.15);
+		transform: scale(0.98);
 	}
 
-	.editor-person-dropdown {
-		margin-top: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		border-radius: 8px;
-		background: rgba(25, 30, 45, 0.98);
-		max-height: 180px;
-		overflow-y: auto;
+	.editor-chips-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 10px 0 4px;
 	}
 
-	.editor-dropdown-empty {
-		padding: 12px;
-		color: rgba(255, 255, 255, 0.5);
+	.editor-chips-empty {
+		width: 100%;
+		color: rgba(255, 255, 255, 0.45);
 		font-size: 13px;
 		text-align: center;
 		margin: 0;
+		padding: 8px 0;
 	}
 
-	.editor-dropdown-item {
-		width: 100%;
+	.editor-person-chip {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 8px 12px;
-		border: none;
-		background: transparent;
-		color: rgba(255, 255, 255, 0.8);
+		padding: 12px 16px;
+		border: 1.5px solid rgba(255, 255, 255, 0.15);
+		border-radius: 24px;
+		background: rgba(255, 255, 255, 0.06);
+		color: rgba(255, 255, 255, 0.7);
 		font-size: 14px;
 		cursor: pointer;
-		text-align: left;
-		transition: background 0.15s;
+		transition: all 0.15s;
+		-webkit-tap-highlight-color: transparent;
+		user-select: none;
 	}
 
-	.editor-dropdown-item:hover {
-		background: rgba(255, 255, 255, 0.08);
+	.editor-person-chip:active {
+		transform: scale(0.95);
 	}
 
-	.editor-dropdown-item.selected {
-		background: rgba(59, 130, 246, 0.15);
+	.editor-person-chip.chip-active {
+		background: rgba(59, 130, 246, 0.2);
+		border-color: rgba(59, 130, 246, 0.5);
 		color: white;
+		font-weight: 500;
 	}
 
-	.editor-check {
-		width: 16px;
-		color: rgba(34, 197, 94, 0.9);
-		font-size: 14px;
+	.editor-chip-check {
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 13px;
+		font-weight: 700;
+		background: rgba(255, 255, 255, 0.1);
+		color: transparent;
+		transition: all 0.15s;
+		flex-shrink: 0;
+	}
+
+	.chip-active .editor-chip-check {
+		background: rgba(34, 197, 94, 0.8);
+		color: white;
 	}
 
 	.modal-backdrop {
