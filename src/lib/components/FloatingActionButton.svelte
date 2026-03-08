@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms, rooms, dailyConfigs } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, viewWeekday, copyDayConfigs, visibleRooms, rooms, dailyConfigs, persons } from '$lib/stores/appState';
 	import { supabase } from '$lib/supabase/client';
 	import { toasts } from '$lib/stores/toastStore';
 	import { fade, fly, slide } from 'svelte/transition';
@@ -24,9 +24,10 @@
 
 	// Raumübersicht State
 	let showPersonsPanel = $state(false);
-	let personInputs = $state<Record<string, string>>({});
+	let personSelections = $state<Record<string, string[]>>({});
 	let activityInputs = $state<Record<string, string>>({});
 	let saveTimeouts = $state<Record<string, ReturnType<typeof setTimeout>>>({});
+	let showPersonDropdown = $state<string | null>(null);
 
 	// Actions - Reihenfolge für nach-unten-Menü (wichtigste zuerst)
 	const actions = [
@@ -80,27 +81,30 @@
 
 	function openPersonsPanel() {
 		showPersonsPanel = true;
-		// Initialisiere Input-Werte mit aktuellen Personen und Aktivitäten
-		personInputs = {};
+		showPersonDropdown = null;
+		// Initialisiere Auswahl mit aktuellen Personen und Aktivitäten
+		personSelections = {};
 		activityInputs = {};
 		for (const room of activeRooms) {
-			personInputs[room.id] = room.person || '';
+			personSelections[room.id] = room.person
+				? room.person.split(',').map((p: string) => p.trim()).filter((p: string) => p)
+				: [];
 			activityInputs[room.id] = room.config?.activity || '';
 		}
 	}
 
-	async function savePersonForRoom(roomId: string, personName: string) {
+	async function savePersonsForRoom(roomId: string, selectedNames: string[]) {
+		const personString = selectedNames.length > 0 ? selectedNames.join(', ') : null;
 		try {
 			const { error } = await supabase
 				.from('rooms')
-				.update({ person: personName || null })
+				.update({ person: personString })
 				.eq('id', roomId);
 
 			if (error) throw error;
 
-			// Basis-Store "rooms" aktualisieren (visibleRooms ist derived und aktualisiert sich automatisch)
 			rooms.update(roomList =>
-				roomList.map(r => r.id === roomId ? { ...r, person: personName || null } : r)
+				roomList.map(r => r.id === roomId ? { ...r, person: personString } : r)
 			);
 		} catch (err) {
 			console.error('Fehler beim Speichern:', err);
@@ -108,15 +112,35 @@
 		}
 	}
 
-	function handlePersonInput(roomId: string, value: string) {
-		personInputs[roomId] = value;
+	function togglePersonForRoom(roomId: string, personName: string) {
+		const current = personSelections[roomId] || [];
+		const idx = current.indexOf(personName);
+		if (idx >= 0) {
+			personSelections[roomId] = current.filter((_, i) => i !== idx);
+		} else {
+			personSelections[roomId] = [...current, personName];
+		}
 
 		const key = `person-${roomId}`;
 		if (saveTimeouts[key]) clearTimeout(saveTimeouts[key]);
-
 		saveTimeouts[key] = setTimeout(() => {
-			savePersonForRoom(roomId, value);
-		}, 500);
+			savePersonsForRoom(roomId, personSelections[roomId]);
+		}, 300);
+	}
+
+	function removePersonFromRoom(roomId: string, personName: string) {
+		const current = personSelections[roomId] || [];
+		personSelections[roomId] = current.filter(p => p !== personName);
+
+		const key = `person-${roomId}`;
+		if (saveTimeouts[key]) clearTimeout(saveTimeouts[key]);
+		saveTimeouts[key] = setTimeout(() => {
+			savePersonsForRoom(roomId, personSelections[roomId]);
+		}, 300);
+	}
+
+	function toggleDropdown(roomId: string) {
+		showPersonDropdown = showPersonDropdown === roomId ? null : roomId;
 	}
 
 	async function saveActivityForRoom(roomId: string, activity: string) {
@@ -301,13 +325,46 @@
 											placeholder="Inhalt..."
 											oninput={(e) => handleActivityInput(room.id, (e.target as HTMLInputElement).value)}
 										/>
-										<input
-											type="text"
-											class="person-input person-field"
-											value={personInputs[room.id] || ''}
-											placeholder="Person..."
-											oninput={(e) => handlePersonInput(room.id, (e.target as HTMLInputElement).value)}
-										/>
+										<!-- Person Multi-Select -->
+										<div class="person-select-container">
+											<button
+												class="person-select-trigger"
+												onclick={() => toggleDropdown(room.id)}
+											>
+												{#if (personSelections[room.id] || []).length === 0}
+													<span class="placeholder-text">Person auswählen...</span>
+												{:else}
+													<div class="selected-tags">
+														{#each personSelections[room.id] as name}
+															<span class="person-tag">
+																{name}
+																<button class="tag-remove" onclick={(e) => { e.stopPropagation(); removePersonFromRoom(room.id, name); }}>&#10005;</button>
+															</span>
+														{/each}
+													</div>
+												{/if}
+												<span class="dropdown-arrow">{showPersonDropdown === room.id ? '&#9650;' : '&#9660;'}</span>
+											</button>
+											{#if showPersonDropdown === room.id}
+												<div class="person-dropdown">
+													{#if $persons.length === 0}
+														<div class="dropdown-empty">Keine Personen angelegt. Bitte im Menü unter "Personen" eintragen.</div>
+													{:else}
+														{#each $persons as person (person.id)}
+															{@const isSelected = (personSelections[room.id] || []).includes(person.name)}
+															<button
+																class="dropdown-item"
+																class:selected={isSelected}
+																onclick={() => togglePersonForRoom(room.id, person.name)}
+															>
+																<span class="check-icon">{isSelected ? '&#10003;' : ''}</span>
+																<span>{person.name}</span>
+															</button>
+														{/each}
+													{/if}
+												</div>
+											{/if}
+										</div>
 									</div>
 								</div>
 							{/each}
@@ -617,12 +674,141 @@
 		background: rgba(255, 255, 255, 0.15);
 	}
 
-	.person-field {
-		border-color: rgba(59, 130, 246, 0.3);
+	/* Person Multi-Select */
+	.person-select-container {
+		position: relative;
 	}
 
-	.person-field:focus {
-		border-color: rgba(59, 130, 246, 0.6);
+	.person-select-trigger {
+		width: 100%;
+		min-height: 30px;
+		padding: 4px 24px 4px 6px;
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 12px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		text-align: left;
+		position: relative;
+		transition: all 0.2s;
+		box-sizing: border-box;
+	}
+
+	.person-select-trigger:hover {
+		border-color: rgba(59, 130, 246, 0.5);
+		background: rgba(255, 255, 255, 0.13);
+	}
+
+	.placeholder-text {
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 12px;
+	}
+
+	.dropdown-arrow {
+		position: absolute;
+		right: 6px;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 8px;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.selected-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 3px;
+	}
+
+	.person-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 6px;
+		background: rgba(59, 130, 246, 0.3);
+		border: 1px solid rgba(59, 130, 246, 0.5);
+		border-radius: 4px;
+		font-size: 11px;
+		color: white;
+		white-space: nowrap;
+	}
+
+	.tag-remove {
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.7);
+		cursor: pointer;
+		font-size: 10px;
+		padding: 0 1px;
+		line-height: 1;
+	}
+
+	.tag-remove:hover {
+		color: rgba(239, 68, 68, 0.9);
+	}
+
+	.person-dropdown {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		margin-top: 2px;
+		background: rgba(25, 30, 45, 0.98);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		max-height: 150px;
+		overflow-y: auto;
+		z-index: 100;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	}
+
+	.person-dropdown::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.person-dropdown::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 2px;
+	}
+
+	.dropdown-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 8px;
+		border: none;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 12px;
+		cursor: pointer;
+		text-align: left;
+		transition: background 0.15s;
+	}
+
+	.dropdown-item:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.dropdown-item.selected {
+		background: rgba(59, 130, 246, 0.2);
+		color: white;
+	}
+
+	.check-icon {
+		width: 14px;
+		font-size: 12px;
+		color: rgba(34, 197, 94, 0.9);
+	}
+
+	.dropdown-empty {
+		padding: 10px 8px;
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 11px;
+		text-align: center;
 	}
 
 	.empty-state {
