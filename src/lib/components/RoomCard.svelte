@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly, scale, fade } from 'svelte/transition';
+	// Transitions entfernt - verursachten Layout-Shifts bei Auto-Page auf iPad Safari
 	import { isEditMode, toggleRoomStatus, swapSelection, viewWeekday, deleteRoomConfigForDay, currentTime, cardTheme } from '$lib/stores/appState';
 	import { confirmDialog, toasts } from '$lib/stores/toastStore';
 	import type { RoomWithConfig } from '$lib/types';
@@ -167,13 +167,11 @@
 	class:has-activity-image={room.config?.activity_image_url}
 	style="{roomStyle}; border: {currentTheme.borderWidth} {currentTheme.borderStyle} {currentTheme.borderColor}; box-shadow: {currentTheme.boxShadow};"
 	onkeydown={(e) => e.key === 'Enter' && handleClick()}
-	in:scale={{ duration: 300, start: 0.8 }}
-	out:fade={{ duration: 200 }}
 	role="button"
 	tabindex="0"
 >
 	{#if room.image_url}
-		<img src={room.image_url} alt={room.name} class="card-bg-image" loading="lazy" decoding="async" />
+		<img src={room.image_url} alt={room.name} class="card-bg-image" loading="eager" />
 	{/if}
 
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
@@ -231,8 +229,7 @@
 						src={room.config.activity_image_url}
 						alt={room.config.activity || 'Aktivität'}
 						class="activity-image"
-						loading="lazy"
-						decoding="async"
+						loading="eager"
 						style={room.config.activity_image_position
 							? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}) rotate(${room.config.activity_image_position.rotation ?? 0}deg); transform-origin: center;`
 							: ''}
@@ -740,9 +737,9 @@
 	}
 
 	.image-wrapper {
-		position: relative; /* ✅ Für absolute positioning des Bildes */
+		position: relative;
 		width: 100%;
-		height: 100%;
+		height: 120px; /* Default: medium-Höhe, wird von Size-Klassen überschrieben */
 		overflow: hidden;
 		background: rgba(0, 0, 0, 0.05);
 		border-radius: 2px;
