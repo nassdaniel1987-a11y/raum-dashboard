@@ -5,12 +5,14 @@
 		subscribeToRealtimeUpdates,
 		unsubscribeFromRealtimeUpdates
 	} from '$lib/stores/appState';
+	import { initBlitzIntegration, stopBlitzPolling } from '$lib/stores/blitzStore';
 
 	let { children } = $props();
 
 	onMount(async () => {
 		await loadAllData();
 		subscribeToRealtimeUpdates();
+		await initBlitzIntegration();
 
 		// ✅ GEÄNDERT: Fullscreen nur bei explizitem User-Click
 		// Nicht automatisch, da Browser das blockieren
@@ -39,6 +41,7 @@
 
 		return () => {
 			unsubscribeFromRealtimeUpdates();
+			stopBlitzPolling();
 		};
 	});
 </script>

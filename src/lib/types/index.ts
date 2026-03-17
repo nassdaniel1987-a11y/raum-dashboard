@@ -92,6 +92,51 @@ export interface Person {
 	created_at: string;
 }
 
+// ============================
+// Blitz-Protokoll Integration
+// ============================
+
+export interface BlitzRoomMapping {
+	blitz_room_id: string;   // z.B. "treffpunkt_1"
+	blitz_label: string;     // z.B. "Treffpunkt 1"
+	room_id: string | null;  // Dashboard-Raum UUID
+	created_at: string;
+}
+
+export interface BlitzPersonMapping {
+	blitz_slug: string;      // z.B. "max"
+	blitz_name: string;      // z.B. "Max"
+	person_id: string | null; // Dashboard-Person UUID
+	created_at: string;
+}
+
+export interface BlitzSettings {
+	id: number;
+	enabled: boolean;
+	api_url: string | null;
+	polling_interval_seconds: number;
+	last_sync: string | null;
+	last_error: string | null;
+	created_at: string;
+}
+
+// API-Antwort vom Blitz-Protokoll
+export interface BlitzApiResponse {
+	datum: string;
+	raeume: { id: string; label: string }[];
+	zuweisungen_gesamt: Record<string, { name: string; slug: string }[]>;
+	anwesenheit: string[];
+	abwesend: string[];
+}
+
+export interface BlitzApiRaeume {
+	raeume: { id: string; label: string }[];
+}
+
+export interface BlitzApiPersonen {
+	personen: { name: string; slug: string }[];
+}
+
 export interface DailyHighlight {
 	id: string;
 	weekday: number; // 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa
