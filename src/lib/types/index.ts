@@ -99,7 +99,7 @@ export interface Person {
 export interface BlitzRoomMapping {
 	blitz_room_id: string;   // z.B. "treffpunkt_1"
 	blitz_label: string;     // z.B. "Treffpunkt 1"
-	room_id: string | null;  // Dashboard-Raum UUID
+	room_id: string;         // Dashboard-Raum UUID (1:n — pro Zuordnung eine Zeile)
 	created_at: string;
 }
 
