@@ -7,6 +7,7 @@
 		blitzData,
 		blitzLastError,
 		blitzSyncing,
+		blitzRunner,
 		updateBlitzSettings,
 		saveRoomMappings,
 		savePersonMapping,
@@ -175,6 +176,12 @@
 					<span>Anwesend: {$blitzData.anwesenheit?.length || 0}</span>
 					<span>Abwesend: {$blitzData.abwesend?.length || 0}</span>
 				</div>
+				{#if $blitzRunner}
+					<div class="info-box runner-info" transition:fade={{ duration: 150 }}>
+						<span class="runner-icon-small">🏃</span>
+						<span>Läufer: <strong>{$blitzRunner}</strong></span>
+					</div>
+				{/if}
 			{/if}
 		{/if}
 	</section>
@@ -431,6 +438,19 @@
 		margin-top: 8px;
 		font-size: 12px;
 		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.runner-info {
+		align-items: center;
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.runner-info strong {
+		color: #4ade80;
+	}
+
+	.runner-icon-small {
+		font-size: 14px;
 	}
 
 	/* Section Header (klappbar) */
