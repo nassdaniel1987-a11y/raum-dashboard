@@ -6,6 +6,7 @@
 	import { supabase } from '$lib/supabase/client';
 	import { fade, scale, slide } from 'svelte/transition';
 	import BlitzIntegration from './BlitzIntegration.svelte';
+	import { blitzSettings, blitzRunner } from '$lib/stores/blitzStore';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 
@@ -515,18 +516,26 @@
 					<!-- Läufer (Ansprechpartner) -->
 					<section class="section">
 						<h3>Läufer im Haus</h3>
-						<div class="runner-input">
-							<input
-								type="text"
-								bind:value={runnerName}
-								placeholder="Name eingeben..."
-								oninput={updateRunnerName}
-							/>
-							{#if runnerName}
-								<button class="clear-btn" onclick={() => { runnerName = ''; updateRunnerName(); }} title="Löschen">✕</button>
-							{/if}
-						</div>
-						<p class="hint-text">Wird auf allen Seiten als "Ansprechpartner im Haus" angezeigt</p>
+						{#if $blitzSettings?.enabled && $blitzRunner}
+							<div class="runner-blitz-info">
+								<span class="runner-blitz-badge">Blitz</span>
+								<span class="runner-blitz-name">{$blitzRunner}</span>
+							</div>
+							<p class="hint-text">Wird automatisch vom Blitz-Protokoll übernommen</p>
+						{:else}
+							<div class="runner-input">
+								<input
+									type="text"
+									bind:value={runnerName}
+									placeholder="Name eingeben..."
+									oninput={updateRunnerName}
+								/>
+								{#if runnerName}
+									<button class="clear-btn" onclick={() => { runnerName = ''; updateRunnerName(); }} title="Löschen">✕</button>
+								{/if}
+							</div>
+							<p class="hint-text">Wird auf allen Seiten als "Ansprechpartner im Haus" angezeigt</p>
+						{/if}
 					</section>
 
 					<!-- Raumsteuerung -->
@@ -1144,6 +1153,33 @@
 	}
 
 	/* Läufer Input */
+	.runner-blitz-info {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 14px;
+		border-radius: 8px;
+		background: rgba(74, 222, 128, 0.1);
+		border: 1px solid rgba(74, 222, 128, 0.25);
+	}
+
+	.runner-blitz-badge {
+		padding: 2px 8px;
+		border-radius: 4px;
+		background: rgba(74, 222, 128, 0.2);
+		color: #4ade80;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.runner-blitz-name {
+		font-size: 14px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
 	.runner-input {
 		display: flex;
 		align-items: center;

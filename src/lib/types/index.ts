@@ -127,6 +127,7 @@ export interface BlitzApiResponse {
 	zuweisungen_gesamt: Record<string, { name: string; slug: string }[]>;
 	anwesenheit: string[];
 	abwesend: string[];
+	laufer?: string | null; // Läufer/Ansprechpartner im Haus (optional vom Blitz)
 }
 
 export interface BlitzApiRaeume {

@@ -6,7 +6,7 @@ import type {
 	BlitzApiResponse
 } from '$lib/types';
 import { supabase } from '$lib/supabase/client';
-import { rooms, persons } from './appState';
+import { rooms, persons, appSettings } from './appState';
 
 // ===== BLITZ STORES =====
 export const blitzSettings = writable<BlitzSettings | null>(null);
@@ -58,6 +58,9 @@ export const blitzRoomPersons = derived(
 		return result;
 	}
 );
+
+// ===== DERIVED: Läufer vom Blitz =====
+export const blitzRunner = derived(blitzData, ($data) => $data?.laufer || null);
 
 // ===== DATEN LADEN =====
 
@@ -152,6 +155,31 @@ export async function applyBlitzPersonsToRooms(): Promise<void> {
 				.from('rooms')
 				.update({ person: newPersonValue })
 				.eq('id', roomId);
+		}
+	}
+
+	// Läufer vom Blitz übernehmen (wenn vorhanden)
+	await applyBlitzRunner();
+}
+
+// ===== LÄUFER VOM BLITZ ÜBERNEHMEN =====
+async function applyBlitzRunner(): Promise<void> {
+	const data = get(blitzData);
+	if (!data?.laufer) return;
+
+	const currentSettings = get(appSettings);
+	if (!currentSettings) return;
+
+	// Nur updaten wenn sich der Läufer geändert hat
+	if (currentSettings.runner_name !== data.laufer) {
+		const { error } = await supabase
+			.from('app_settings')
+			.update({ runner_name: data.laufer })
+			.eq('id', 1);
+
+		if (!error) {
+			appSettings.update(s => s ? { ...s, runner_name: data.laufer! } : s);
+			console.log(`[Blitz] Läufer aktualisiert: ${data.laufer}`);
 		}
 	}
 }
