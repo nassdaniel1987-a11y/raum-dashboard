@@ -60,7 +60,28 @@ export const blitzRoomPersons = derived(
 );
 
 // ===== DERIVED: Läufer vom Blitz =====
-export const blitzRunner = derived(blitzData, ($data) => $data?.laufer || null);
+// Liest die Person aus dem Blitz-Raum, der als "Läufer" markiert ist
+export const blitzRunner = derived(
+	[blitzData, blitzSettings, blitzPersonMappings, persons],
+	([$data, $settings, $personMappings, $persons]) => {
+		if (!$data?.zuweisungen_gesamt || !$settings?.runner_blitz_room_id) return null;
+
+		const runnerPersons = $data.zuweisungen_gesamt[$settings.runner_blitz_room_id];
+		if (!runnerPersons || runnerPersons.length === 0) return null;
+
+		// Personen-Namen auflösen (mit Mapping falls vorhanden)
+		const names = runnerPersons.map(bp => {
+			const mapping = $personMappings.find(m => m.blitz_slug === bp.slug);
+			if (mapping?.person_id) {
+				const dashPerson = $persons.find(p => p.id === mapping.person_id);
+				if (dashPerson) return dashPerson.name;
+			}
+			return bp.name;
+		});
+
+		return names.join(', ');
+	}
+);
 
 // ===== DATEN LADEN =====
 
@@ -164,22 +185,22 @@ export async function applyBlitzPersonsToRooms(): Promise<void> {
 
 // ===== LÄUFER VOM BLITZ ÜBERNEHMEN =====
 async function applyBlitzRunner(): Promise<void> {
-	const data = get(blitzData);
-	if (!data?.laufer) return;
+	const runnerName = get(blitzRunner);
+	if (!runnerName) return;
 
 	const currentSettings = get(appSettings);
 	if (!currentSettings) return;
 
 	// Nur updaten wenn sich der Läufer geändert hat
-	if (currentSettings.runner_name !== data.laufer) {
+	if (currentSettings.runner_name !== runnerName) {
 		const { error } = await supabase
 			.from('app_settings')
-			.update({ runner_name: data.laufer })
+			.update({ runner_name: runnerName })
 			.eq('id', 1);
 
 		if (!error) {
-			appSettings.update(s => s ? { ...s, runner_name: data.laufer! } : s);
-			console.log(`[Blitz] Läufer aktualisiert: ${data.laufer}`);
+			appSettings.update(s => s ? { ...s, runner_name: runnerName } : s);
+			console.log(`[Blitz] Läufer aktualisiert: ${runnerName}`);
 		}
 	}
 }
@@ -266,6 +287,11 @@ export async function savePersonMapping(blitzSlug: string, blitzName: string, da
 	}
 
 	await loadBlitzMappings();
+}
+
+// Setzt welcher Blitz-Raum der "Läufer" ist (oder null zum Entfernen)
+export async function saveRunnerBlitzRoom(blitzRoomId: string | null): Promise<void> {
+	await updateBlitzSettings({ runner_blitz_room_id: blitzRoomId } as Partial<BlitzSettings>);
 }
 
 export async function updateBlitzSettings(updates: Partial<BlitzSettings>): Promise<void> {

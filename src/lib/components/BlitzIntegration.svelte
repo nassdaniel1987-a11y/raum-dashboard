@@ -10,6 +10,7 @@
 		blitzRunner,
 		updateBlitzSettings,
 		saveRoomMappings,
+		saveRunnerBlitzRoom,
 		savePersonMapping,
 		fetchBlitzRaeume,
 		fetchBlitzPersonen,
@@ -102,6 +103,24 @@
 		}
 	}
 
+	// Läufer-Zuordnung toggle
+	async function handleRunnerToggle(blitzRoomId: string) {
+		const currentRunner = $blitzSettings?.runner_blitz_room_id;
+		try {
+			if (currentRunner === blitzRoomId) {
+				// Entfernen
+				await saveRunnerBlitzRoom(null);
+				toasts.show('Läufer-Zuordnung entfernt');
+			} else {
+				// Setzen
+				await saveRunnerBlitzRoom(blitzRoomId);
+				toasts.show('Läufer-Zuordnung gespeichert');
+			}
+		} catch {
+			toasts.show('Läufer-Zuordnung fehlgeschlagen', 'error');
+		}
+	}
+
 	// Hilfsfunktion: alle gemappten Dashboard-Raum-IDs für einen Blitz-Raum
 	function getRoomMappingIds(blitzRoomId: string): string[] {
 		return $blitzRoomMappings
@@ -170,18 +189,15 @@
 				</button>
 			</div>
 
-			{#if $blitzData}
+		{#if $blitzData}
 				<div class="info-box" transition:fade={{ duration: 150 }}>
 					<span>Datum: {$blitzData.datum}</span>
 					<span>Anwesend: {$blitzData.anwesenheit?.length || 0}</span>
 					<span>Abwesend: {$blitzData.abwesend?.length || 0}</span>
+					{#if $blitzRunner}
+						<span class="runner-info-inline">🏃 {$blitzRunner}</span>
+					{/if}
 				</div>
-				{#if $blitzRunner}
-					<div class="info-box runner-info" transition:fade={{ duration: 150 }}>
-						<span class="runner-icon-small">🏃</span>
-						<span>Läufer: <strong>{$blitzRunner}</strong></span>
-					</div>
-				{/if}
 			{/if}
 		{/if}
 	</section>
@@ -208,13 +224,23 @@
 							<div class="mapping-block">
 								<div class="mapping-header">
 									<span class="mapping-label">{raum.label}</span>
-									{#if mappedIds.length > 0}
+									{#if $blitzSettings?.runner_blitz_room_id === raum.id}
+										<span class="mapping-count runner-badge">🏃 Läufer</span>
+									{:else if mappedIds.length > 0}
 										<span class="mapping-count">{mappedIds.length} Raum{mappedIds.length !== 1 ? 'e' : ''}</span>
 									{:else}
 										<span class="mapping-count unlinked">nicht verknüpft</span>
 									{/if}
 								</div>
 								<div class="checkbox-list">
+									<label class="checkbox-item runner-option">
+										<input
+											type="checkbox"
+											checked={$blitzSettings?.runner_blitz_room_id === raum.id}
+											onchange={() => handleRunnerToggle(raum.id)}
+										/>
+										<span class="checkbox-text runner-text">🏃 Läufer im Haus</span>
+									</label>
 									{#each sortedRooms as room}
 										<label class="checkbox-item">
 											<input
@@ -440,17 +466,9 @@
 		color: rgba(255, 255, 255, 0.6);
 	}
 
-	.runner-info {
-		align-items: center;
-		color: rgba(255, 255, 255, 0.8);
-	}
-
-	.runner-info strong {
+	.runner-info-inline {
 		color: #4ade80;
-	}
-
-	.runner-icon-small {
-		font-size: 14px;
+		font-weight: 600;
 	}
 
 	/* Section Header (klappbar) */
@@ -543,6 +561,21 @@
 	.checkbox-text {
 		font-size: 12px;
 		color: rgba(255, 255, 255, 0.75);
+	}
+
+	.runner-option {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(74, 222, 128, 0.05);
+	}
+
+	.runner-text {
+		color: #4ade80 !important;
+		font-weight: 600;
+	}
+
+	.runner-badge {
+		color: #4ade80;
+		font-weight: 600;
 	}
 
 	.checkbox-list::-webkit-scrollbar {
