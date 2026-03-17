@@ -4,7 +4,8 @@
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
 	import { supabase } from '$lib/supabase/client';
-	import { fade, scale } from 'svelte/transition';
+	import { fade, scale, slide } from 'svelte/transition';
+	import BlitzIntegration from './BlitzIntegration.svelte';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 
@@ -21,7 +22,7 @@
 	}>();
 
 	// State
-	let activeTab = $state<'dashboard' | 'planning' | 'persons' | 'design' | 'system'>('dashboard');
+	let activeTab = $state<'dashboard' | 'planning' | 'persons' | 'design' | 'blitz' | 'system'>('dashboard');
 
 	// Personen-Verwaltung State
 	let newPersonName = $state('');
@@ -445,6 +446,9 @@
 			<button class="tab" class:active={activeTab === 'design'} onclick={() => activeTab = 'design'}>
 				Design
 			</button>
+			<button class="tab" class:active={activeTab === 'blitz'} onclick={() => activeTab = 'blitz'}>
+				Blitz
+			</button>
 			<button class="tab" class:active={activeTab === 'system'} onclick={() => activeTab = 'system'}>
 				System
 			</button>
@@ -708,6 +712,10 @@
 					</section>
 				</div>
 
+			{:else if activeTab === 'blitz'}
+				<div class="tab-content" transition:fade={{ duration: 150 }}>
+					<BlitzIntegration />
+				</div>
 			{:else if activeTab === 'system'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
 					<!-- Nachtruhe -->
