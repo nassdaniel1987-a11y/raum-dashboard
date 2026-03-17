@@ -117,6 +117,7 @@ export interface BlitzSettings {
 	polling_interval_seconds: number;
 	last_sync: string | null;
 	last_error: string | null;
+	runner_blitz_room_id: string | null; // Blitz-Raum-ID für Läufer/Ansprechpartner
 	created_at: string;
 }
 
@@ -127,7 +128,6 @@ export interface BlitzApiResponse {
 	zuweisungen_gesamt: Record<string, { name: string; slug: string }[]>;
 	anwesenheit: string[];
 	abwesend: string[];
-	laufer?: string | null; // Läufer/Ansprechpartner im Haus (optional vom Blitz)
 }
 
 export interface BlitzApiRaeume {
