@@ -455,15 +455,31 @@
 		padding: 6px 8px;
 		border: 1px solid rgba(255, 255, 255, 0.15);
 		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.08);
+		background: rgba(20, 25, 35, 0.95);
 		color: rgba(255, 255, 255, 0.8);
 		font-size: 12px;
 		cursor: pointer;
+		-webkit-appearance: none;
+		appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 8px center;
+		padding-right: 24px;
 	}
 
 	.mapping-select:focus {
 		outline: none;
-		border-color: rgba(255, 255, 255, 0.3);
+		border-color: rgba(59, 130, 246, 0.6);
+	}
+
+	.mapping-select option {
+		background: rgb(20, 25, 35);
+		color: rgba(255, 255, 255, 0.9);
+		padding: 6px 8px;
+	}
+
+	.mapping-select option:checked {
+		background: rgba(59, 130, 246, 0.4);
 	}
 
 	.btn {
