@@ -97,6 +97,22 @@
 		return mapping?.room_id || '';
 	}
 
+	// Etage als lesbaren Text
+	const floorLabels: Record<string, string> = {
+		'dach': 'Dach',
+		'og2': '2.OG',
+		'og1': '1.OG',
+		'eg': 'EG',
+		'essen': 'Essen',
+		'ug': 'UG',
+		'extern': 'Extern'
+	};
+
+	// Dashboard-Räume sortiert nach Name + Etage
+	const sortedRooms = $derived(
+		[...$rooms].sort((a, b) => a.name.localeCompare(b.name, 'de'))
+	);
+
 	// Hilfsfunktion: aktuelles Mapping für eine Blitz-Person finden
 	function getPersonMappingValue(blitzSlug: string): string {
 		const mapping = $blitzPersonMappings.find(m => m.blitz_slug === blitzSlug);
@@ -179,8 +195,8 @@
 									onchange={(e) => handleRoomMappingChange(raum.id, raum.label, e)}
 								>
 									<option value="">– Nicht verknüpft –</option>
-									{#each $rooms as room}
-										<option value={room.id}>{room.name}</option>
+									{#each sortedRooms as room}
+										<option value={room.id}>{room.name} ({floorLabels[room.floor] || room.floor})</option>
 									{/each}
 								</select>
 							</div>
