@@ -18,6 +18,7 @@ export const blitzSyncing = writable(false);
 
 // ===== DERIVED: Gemappte Personen pro Dashboard-Raum =====
 // Berechnet aus den Blitz-Daten + Mappings welche Dashboard-Personen in welchem Dashboard-Raum sind
+// Ein Blitz-Raum kann mehreren Dashboard-Räumen zugeordnet sein (1:n)
 export const blitzRoomPersons = derived(
 	[blitzData, blitzRoomMappings, blitzPersonMappings, persons],
 	([$data, $roomMappings, $personMappings, $persons]) => {
@@ -26,9 +27,9 @@ export const blitzRoomPersons = derived(
 		if (!$data?.zuweisungen_gesamt) return result;
 
 		for (const [blitzRoomId, blitzPersons] of Object.entries($data.zuweisungen_gesamt)) {
-			// Blitz-Raum → Dashboard-Raum finden
-			const roomMapping = $roomMappings.find(m => m.blitz_room_id === blitzRoomId);
-			if (!roomMapping?.room_id) continue;
+			// Blitz-Raum → ALLE zugeordneten Dashboard-Räume finden
+			const roomMappings = $roomMappings.filter(m => m.blitz_room_id === blitzRoomId);
+			if (roomMappings.length === 0) continue;
 
 			const personNames: string[] = [];
 			for (const bp of blitzPersons) {
@@ -46,7 +47,11 @@ export const blitzRoomPersons = derived(
 			}
 
 			if (personNames.length > 0) {
-				result.set(roomMapping.room_id, personNames);
+				// Gleiche Personen in ALLE zugeordneten Dashboard-Räume schreiben
+				for (const mapping of roomMappings) {
+					const existing = result.get(mapping.room_id) || [];
+					result.set(mapping.room_id, [...existing, ...personNames]);
+				}
 			}
 		}
 
@@ -184,18 +189,35 @@ export function stopBlitzPolling(): void {
 
 // ===== MAPPING VERWALTUNG =====
 
-export async function saveRoomMapping(blitzRoomId: string, blitzLabel: string, dashboardRoomId: string | null): Promise<void> {
-	const { error } = await supabase
+// Setzt die Dashboard-Räume für einen Blitz-Raum (ersetzt alle bisherigen)
+export async function saveRoomMappings(blitzRoomId: string, blitzLabel: string, dashboardRoomIds: string[]): Promise<void> {
+	// Alte Zuordnungen für diesen Blitz-Raum löschen
+	const { error: deleteError } = await supabase
 		.from('blitz_room_mapping')
-		.upsert({
+		.delete()
+		.eq('blitz_room_id', blitzRoomId);
+
+	if (deleteError) {
+		console.error('[Blitz] Alte Mappings löschen fehlgeschlagen:', deleteError.message);
+		throw deleteError;
+	}
+
+	// Neue Zuordnungen einfügen
+	if (dashboardRoomIds.length > 0) {
+		const rows = dashboardRoomIds.map(roomId => ({
 			blitz_room_id: blitzRoomId,
 			blitz_label: blitzLabel,
-			room_id: dashboardRoomId
-		});
+			room_id: roomId
+		}));
 
-	if (error) {
-		console.error('[Blitz] Raum-Mapping speichern fehlgeschlagen:', error.message);
-		throw error;
+		const { error: insertError } = await supabase
+			.from('blitz_room_mapping')
+			.insert(rows);
+
+		if (insertError) {
+			console.error('[Blitz] Neue Mappings speichern fehlgeschlagen:', insertError.message);
+			throw insertError;
+		}
 	}
 
 	await loadBlitzMappings();

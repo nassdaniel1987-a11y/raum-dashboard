@@ -8,7 +8,7 @@
 		blitzLastError,
 		blitzSyncing,
 		updateBlitzSettings,
-		saveRoomMapping,
+		saveRoomMappings,
 		savePersonMapping,
 		fetchBlitzRaeume,
 		fetchBlitzPersonen,
@@ -56,13 +56,23 @@
 		}
 	}
 
-	// Raum-Mapping speichern
-	async function handleRoomMappingChange(blitzRoomId: string, blitzLabel: string, event: Event) {
-		const select = event.target as HTMLSelectElement;
-		const dashboardRoomId = select.value || null;
+	// Raum-Mapping speichern (Checkbox toggle)
+	async function handleRoomToggle(blitzRoomId: string, blitzLabel: string, dashboardRoomId: string) {
+		const currentMappings = $blitzRoomMappings
+			.filter(m => m.blitz_room_id === blitzRoomId)
+			.map(m => m.room_id);
+
+		let newMappings: string[];
+		if (currentMappings.includes(dashboardRoomId)) {
+			// Entfernen
+			newMappings = currentMappings.filter(id => id !== dashboardRoomId);
+		} else {
+			// Hinzufügen
+			newMappings = [...currentMappings, dashboardRoomId];
+		}
+
 		try {
-			await saveRoomMapping(blitzRoomId, blitzLabel, dashboardRoomId);
-			toasts.show(`${blitzLabel} verknüpft`);
+			await saveRoomMappings(blitzRoomId, blitzLabel, newMappings);
 		} catch {
 			toasts.show('Verknüpfung fehlgeschlagen', 'error');
 		}
@@ -91,10 +101,11 @@
 		}
 	}
 
-	// Hilfsfunktion: aktuelles Mapping für einen Blitz-Raum finden
-	function getRoomMappingValue(blitzRoomId: string): string {
-		const mapping = $blitzRoomMappings.find(m => m.blitz_room_id === blitzRoomId);
-		return mapping?.room_id || '';
+	// Hilfsfunktion: alle gemappten Dashboard-Raum-IDs für einen Blitz-Raum
+	function getRoomMappingIds(blitzRoomId: string): string[] {
+		return $blitzRoomMappings
+			.filter(m => m.blitz_room_id === blitzRoomId)
+			.map(m => m.room_id);
 	}
 
 	// Etage als lesbaren Text
@@ -186,19 +197,28 @@
 						</button>
 					{:else}
 						{#each blitzRaeume as raum}
-							<div class="mapping-row">
-								<span class="mapping-label">{raum.label}</span>
-								<span class="mapping-arrow">→</span>
-								<select
-									class="mapping-select"
-									value={getRoomMappingValue(raum.id)}
-									onchange={(e) => handleRoomMappingChange(raum.id, raum.label, e)}
-								>
-									<option value="">– Nicht verknüpft –</option>
+							{@const mappedIds = getRoomMappingIds(raum.id)}
+							<div class="mapping-block">
+								<div class="mapping-header">
+									<span class="mapping-label">{raum.label}</span>
+									{#if mappedIds.length > 0}
+										<span class="mapping-count">{mappedIds.length} Raum{mappedIds.length !== 1 ? 'e' : ''}</span>
+									{:else}
+										<span class="mapping-count unlinked">nicht verknüpft</span>
+									{/if}
+								</div>
+								<div class="checkbox-list">
 									{#each sortedRooms as room}
-										<option value={room.id}>{room.name} ({floorLabels[room.floor] || room.floor})</option>
+										<label class="checkbox-item">
+											<input
+												type="checkbox"
+												checked={mappedIds.includes(room.id)}
+												onchange={() => handleRoomToggle(raum.id, raum.label, room.id)}
+											/>
+											<span class="checkbox-text">{room.name} ({floorLabels[room.floor] || room.floor})</span>
+										</label>
 									{/each}
-								</select>
+								</div>
 							</div>
 						{/each}
 					{/if}
@@ -444,58 +464,78 @@
 		margin-top: 12px;
 	}
 
-	.mapping-row {
+	.mapping-block {
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.mapping-header {
 		display: flex;
+		justify-content: space-between;
 		align-items: center;
-		gap: 8px;
+		padding: 10px 12px;
+		background: rgba(255, 255, 255, 0.05);
 	}
 
 	.mapping-label {
-		flex: 0 0 120px;
 		font-size: 13px;
-		color: rgba(255, 255, 255, 0.8);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.mapping-arrow {
-		flex: 0 0 20px;
-		text-align: center;
-		color: rgba(255, 255, 255, 0.4);
-		font-size: 12px;
-	}
-
-	.mapping-select {
-		flex: 1;
-		padding: 6px 8px;
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		border-radius: 6px;
-		background: rgba(20, 25, 35, 0.95);
-		color: rgba(255, 255, 255, 0.8);
-		font-size: 12px;
-		cursor: pointer;
-		-webkit-appearance: none;
-		appearance: none;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-		background-repeat: no-repeat;
-		background-position: right 8px center;
-		padding-right: 24px;
-	}
-
-	.mapping-select:focus {
-		outline: none;
-		border-color: rgba(59, 130, 246, 0.6);
-	}
-
-	.mapping-select option {
-		background: rgb(20, 25, 35);
+		font-weight: 600;
 		color: rgba(255, 255, 255, 0.9);
-		padding: 6px 8px;
 	}
 
-	.mapping-select option:checked {
-		background: rgba(59, 130, 246, 0.4);
+	.mapping-count {
+		font-size: 11px;
+		color: #4ade80;
+	}
+
+	.mapping-count.unlinked {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.checkbox-list {
+		max-height: 150px;
+		overflow-y: auto;
+		padding: 4px 0;
+	}
+
+	.checkbox-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 12px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+
+	.checkbox-item:hover {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.checkbox-item input[type="checkbox"] {
+		width: 16px;
+		height: 16px;
+		accent-color: #4ade80;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	.checkbox-text {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	.checkbox-list::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.checkbox-list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.checkbox-list::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.15);
+		border-radius: 3px;
 	}
 
 	.btn {
