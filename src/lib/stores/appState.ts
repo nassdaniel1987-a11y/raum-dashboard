@@ -28,8 +28,11 @@ if (typeof window !== 'undefined') {
 		// Prüfe ob sich der Tag geändert hat (z.B. Mitternacht)
 		const newDay = now.getDay() || 7;
 		if (newDay !== get(currentWeekday)) {
+			console.log(`[Tageswechsel] ${get(currentWeekday)} → ${newDay} - starte sofort Tages-Reset`);
 			currentWeekday.set(newDay);
 			viewWeekday.set(newDay);
+			// SOFORT Tages-Reset auslösen damit alle Zeiten/Personen gelöscht werden
+			checkDailyReset();
 		}
 	}, 1000);
 
@@ -41,8 +44,11 @@ if (typeof window !== 'undefined') {
 			currentTime.set(now);
 			const newDay = now.getDay() || 7;
 			if (newDay !== get(currentWeekday)) {
+				console.log(`[Tageswechsel] ${get(currentWeekday)} → ${newDay} (aus Hintergrund) - starte sofort Tages-Reset`);
 				currentWeekday.set(newDay);
 				viewWeekday.set(newDay);
+				// SOFORT Tages-Reset auslösen
+				checkDailyReset();
 			}
 		}
 	});
@@ -905,7 +911,8 @@ async function resetDailyTimes() {
 	// Räume öffnen sich dann automatisch um 08:00 durch den Automatik-Service
 	const { error: statusError } = await supabase
 		.from('room_status')
-		.update({ is_open: false, manual_override: false });
+		.update({ is_open: false, manual_override: false })
+		.neq('room_id', ''); // Filter: alle Räume (Supabase braucht einen Filter)
 
 	if (!statusError) {
 		roomStatuses.update((map) => {
@@ -1105,9 +1112,9 @@ if (typeof window !== 'undefined') {
 	const startAutomation = () => {
 		stopAllIntervals();
 
-		// Tages-Reset prüfen (einmal beim Start + stündlich)
+		// Tages-Reset prüfen (einmal beim Start + alle 5 Minuten als Sicherheitsnetz)
 		checkDailyReset();
-		dailyResetIntervalId = setInterval(checkDailyReset, 60 * 60 * 1000);
+		dailyResetIntervalId = setInterval(checkDailyReset, 5 * 60 * 1000);
 
 		runAutomation();
 		intervalId = setInterval(runAutomation, AUTOMATION_INTERVAL_MS);
