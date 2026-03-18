@@ -884,6 +884,23 @@ async function resetDailyTimes() {
 		return newMap;
 	});
 
+	// Personen-Zuordnungen aus allen Räumen löschen
+	// Verhindert, dass veraltete Zuordnungen von gestern/letzter Woche angezeigt werden
+	// Das Blitzprotokoll füllt die Räume dann frisch beim nächsten Sync
+	const { error: personError } = await supabase
+		.from('rooms')
+		.update({ person: null })
+		.not('person', 'is', null); // Nur Räume mit Zuordnung updaten
+
+	if (!personError) {
+		rooms.update((list) =>
+			list.map((room) => (room.person ? { ...room, person: null } : room))
+		);
+		console.log('[Tages-Reset] Personen-Zuordnungen gelöscht');
+	} else {
+		console.error('[Tages-Reset] Fehler beim Löschen der Personen:', personError);
+	}
+
 	// Alle Räume schließen + manual_override zurücksetzen für den neuen Tag
 	// Räume öffnen sich dann automatisch um 08:00 durch den Automatik-Service
 	const { error: statusError } = await supabase
@@ -902,7 +919,7 @@ async function resetDailyTimes() {
 		console.error('[Tages-Reset] Fehler beim Schließen der Räume:', statusError);
 	}
 
-	console.log('✅ Tages-Reset abgeschlossen - alle Räume geschlossen, öffnen um 08:00 automatisch');
+	console.log('✅ Tages-Reset abgeschlossen - alle Räume geschlossen, Personen gelöscht, öffnen um 08:00 automatisch');
 }
 
 async function checkDailyReset() {
