@@ -149,10 +149,16 @@ export function subscribeToRealtimeUpdates() {
 			(payload) => {
 				console.log('📊 Room status change:', payload);
 				if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+					// Map.set überschreibt automatisch → kein Duplikat-Problem
 					roomStatuses.update((map) => {
 						const newMap = new Map(map);
-						newMap.set(payload.new.room_id, payload.new as RoomStatus);
-						return newMap;
+						const existing = newMap.get(payload.new.room_id);
+						// Nur updaten wenn sich wirklich etwas geändert hat
+						if (!existing || existing.is_open !== payload.new.is_open || existing.manual_override !== payload.new.manual_override) {
+							newMap.set(payload.new.room_id, payload.new as RoomStatus);
+							return newMap;
+						}
+						return map;
 					});
 				} else if (payload.eventType === 'DELETE') {
 					roomStatuses.update((map) => {
@@ -172,7 +178,11 @@ export function subscribeToRealtimeUpdates() {
 		.on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, (payload) => {
 			console.log('🏠 Room change:', payload);
 			if (payload.eventType === 'INSERT') {
-				rooms.update((list) => [...list, payload.new as Room]);
+				// Duplikat-Check: createNewRoom fügt bereits lokal hinzu
+				rooms.update((list) => {
+					if (list.some(r => r.id === payload.new.id)) return list;
+					return [...list, payload.new as Room];
+				});
 			} else if (payload.eventType === 'UPDATE') {
 				rooms.update((list) =>
 					list.map((r) => (r.id === payload.new.id ? (payload.new as Room) : r))
@@ -228,7 +238,10 @@ export function subscribeToRealtimeUpdates() {
 		.on('postgres_changes', { event: '*', schema: 'public', table: 'daily_highlights' }, (payload) => {
 			console.log('🎯 Highlight change:', payload);
 			if (payload.eventType === 'INSERT') {
-				dailyHighlights.update((list) => [...list, payload.new as DailyHighlight]);
+				dailyHighlights.update((list) => {
+					if (list.some(h => h.id === payload.new.id)) return list;
+					return [...list, payload.new as DailyHighlight];
+				});
 			} else if (payload.eventType === 'UPDATE') {
 				dailyHighlights.update((list) =>
 					list.map((h) => (h.id === payload.new.id ? (payload.new as DailyHighlight) : h))
@@ -246,7 +259,10 @@ export function subscribeToRealtimeUpdates() {
 		.on('postgres_changes', { event: '*', schema: 'public', table: 'persons' }, (payload) => {
 			console.log('👤 Person change:', payload);
 			if (payload.eventType === 'INSERT') {
-				persons.update((list) => [...list, payload.new as Person].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)));
+				persons.update((list) => {
+					if (list.some(p => p.id === payload.new.id)) return list;
+					return [...list, payload.new as Person].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
+				});
 			} else if (payload.eventType === 'UPDATE') {
 				persons.update((list) =>
 					list.map((p) => (p.id === payload.new.id ? (payload.new as Person) : p)).sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
@@ -505,7 +521,7 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		? Math.max(0, ...existingRooms.map(r => r.position_x || 0))
 		: -100;
 
-	const { data: roomData } = await supabase
+	const { data: roomData, error: roomError } = await supabase
 		.from('rooms')
 		.insert({
 			name,
@@ -522,9 +538,18 @@ export async function createNewRoom(name: string, floor: string = 'eg') {
 		.select()
 		.single();
 
+	if (roomError) {
+		console.error('[createNewRoom] Fehler beim Erstellen:', roomError);
+		throw roomError;
+	}
+
 	if (roomData) {
 		// ✅ Sofort lokalen Store aktualisieren (nicht auf Realtime warten)
-		rooms.update((list) => [...list, roomData as Room]);
+		// Duplikat-Check falls Realtime schneller war
+		rooms.update((list) => {
+			if (list.some(r => r.id === roomData.id)) return list;
+			return [...list, roomData as Room];
+		});
 
 		// Room Status erstellen
 		const { data: statusData } = await supabase.from('room_status').insert({
