@@ -128,7 +128,9 @@ export async function fetchBlitzData(): Promise<void> {
 	blitzLastError.set(null);
 
 	try {
-		const response = await fetch('/api/blitz-data');
+		// Immer heutiges Datum mitsenden für aktuelle Tages-Daten
+		const today = new Date().toISOString().split('T')[0];
+		const response = await fetch(`/api/blitz-data?datum=${today}`);
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }));
@@ -139,10 +141,14 @@ export async function fetchBlitzData(): Promise<void> {
 		blitzData.set(data);
 
 		// Sync-Zeitpunkt in Supabase speichern
+		const now = new Date().toISOString();
 		await supabase
 			.from('blitz_settings')
-			.update({ last_sync: new Date().toISOString(), last_error: null })
+			.update({ last_sync: now, last_error: null })
 			.eq('id', 1);
+
+		// Store aktualisieren damit UI die neue Sync-Zeit zeigt
+		blitzSettings.update(s => s ? { ...s, last_sync: now, last_error: null } : s);
 
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Unbekannter Fehler';
@@ -153,6 +159,9 @@ export async function fetchBlitzData(): Promise<void> {
 			.from('blitz_settings')
 			.update({ last_error: message })
 			.eq('id', 1);
+
+		// Store aktualisieren damit UI den Fehler zeigt
+		blitzSettings.update(s => s ? { ...s, last_error: message } : s);
 	} finally {
 		blitzSyncing.set(false);
 	}
