@@ -172,7 +172,12 @@ export async function fetchBlitzData(): Promise<void> {
 export async function applyBlitzPersonsToRooms(): Promise<void> {
 	const mappedPersons = get(blitzRoomPersons);
 	const currentRooms = get(rooms);
+	const roomMappings = get(blitzRoomMappings);
 
+	// Alle Dashboard-Raum-IDs die per Blitz verknüpft sind
+	const allMappedRoomIds = new Set(roomMappings.map(m => m.room_id));
+
+	// Räume mit Blitz-Daten aktualisieren
 	for (const [roomId, personNames] of mappedPersons) {
 		const room = currentRooms.find(r => r.id === roomId);
 		if (!room) continue;
@@ -186,6 +191,19 @@ export async function applyBlitzPersonsToRooms(): Promise<void> {
 				.update({ person: newPersonValue })
 				.eq('id', roomId);
 		}
+	}
+
+	// Gemappte Räume leeren, die NICHT mehr in den Blitz-Daten stehen
+	for (const roomId of allMappedRoomIds) {
+		if (mappedPersons.has(roomId)) continue; // Hat noch Personen → überspringen
+
+		const room = currentRooms.find(r => r.id === roomId);
+		if (!room || !room.person) continue; // Schon leer → überspringen
+
+		await supabase
+			.from('rooms')
+			.update({ person: '' })
+			.eq('id', roomId);
 	}
 
 	// Läufer vom Blitz übernehmen (wenn vorhanden)
