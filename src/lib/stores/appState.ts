@@ -1047,22 +1047,21 @@ if (typeof window !== 'undefined') {
 			let newManualOverride = isManual;
 
 			if (isNightModeActive) {
-				// Nachtmodus: Alle Räume schließen (außer manuell überschrieben)
-				if (currentIsOpen && !isManual) {
+				// Nachtmodus: ALLE Räume schließen (auch manuell überschriebene)
+				if (currentIsOpen) {
 					needsUpdate = true;
 					newIsOpen = false;
-					newManualOverride = false;
+					newManualOverride = false; // Reset damit Räume nach Nachtruhe wieder öffnen
 				}
-			} else if (config) {
-				// Nur Räume mit Config für den heutigen Tag
-				const openTime = parseTime(config.open_time);
-				const closeTime = parseTime(config.close_time);
+			} else {
+				// Tagesbetrieb: Räume nach Config oder Standard-Öffnungszeit steuern
+				const openTime = config ? parseTime(config.open_time) : null;
+				const closeTime = config ? parseTime(config.close_time) : null;
 
 				// Effektive Öffnungszeit: eigene open_time oder Standard 08:00
 				const effectiveOpenTime = openTime !== null ? openTime : DEFAULT_OPEN_MINUTES;
 
 				// close_time nur berücksichtigen wenn sie NACH der Öffnungszeit liegt
-				// Sonst ist es eine ungültige/veraltete Konfiguration
 				const validCloseTime = closeTime !== null && closeTime > effectiveOpenTime ? closeTime : null;
 
 				if (currentIsOpen && !isManual && validCloseTime !== null && now >= validCloseTime) {
