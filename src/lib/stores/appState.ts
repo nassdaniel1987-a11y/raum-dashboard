@@ -1058,8 +1058,9 @@ if (typeof window !== 'undefined') {
 				const openTime = config ? parseTime(config.open_time) : null;
 				const closeTime = config ? parseTime(config.close_time) : null;
 
-				// Effektive Öffnungszeit: eigene open_time oder Standard 08:00
-				const effectiveOpenTime = openTime !== null ? openTime : DEFAULT_OPEN_MINUTES;
+				// Effektive Öffnungszeit: eigene open_time, oder Ende der Nachtruhe, oder Standard 08:00
+				const defaultOpen = nightEnd !== null ? nightEnd : DEFAULT_OPEN_MINUTES;
+				const effectiveOpenTime = openTime !== null ? openTime : defaultOpen;
 
 				// close_time nur berücksichtigen wenn sie NACH der Öffnungszeit liegt
 				const validCloseTime = closeTime !== null && closeTime > effectiveOpenTime ? closeTime : null;
