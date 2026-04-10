@@ -15,11 +15,12 @@
 	const allUIThemes = Object.values(uiThemes);
 
 	// Props
-	let { isOpen = false, onClose, onOpenScheduler, canvasRef } = $props<{
+	let { isOpen = false, onClose, onOpenScheduler, canvasRef, onCreateRoom = null } = $props<{
 		isOpen?: boolean;
 		onClose: () => void;
 		onOpenScheduler: () => void;
 		canvasRef?: any;
+		onCreateRoom?: ((name: string, floor: string) => void) | null;
 	}>();
 
 	// State
@@ -335,7 +336,11 @@
 			return;
 		}
 
-		await createNewRoom(newRoomName.trim(), newRoomFloor);
+		if (onCreateRoom) {
+			onCreateRoom(newRoomName.trim(), newRoomFloor);
+		} else {
+			await createNewRoom(newRoomName.trim(), newRoomFloor);
+		}
 		newRoomName = '';
 		showCreateForm = false;
 	}

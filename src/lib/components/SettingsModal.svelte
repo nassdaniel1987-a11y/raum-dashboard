@@ -142,6 +142,13 @@
 					<li>Einstellungen gelten für alle Geräte</li>
 				</ul>
 			</div>
+
+			<!-- Sandbox-Modus -->
+			<div class="setting-section sandbox-section">
+				<h3>🧪 Sandbox-Modus</h3>
+				<p class="hint">Experimentiere mit Designs und Layouts ohne das Live-System zu berühren. Startet mit deinen echten Räumen als Kopie — nichts wird gespeichert.</p>
+				<button class="btn-sandbox" onclick={() => { onClose(); window.location.href = '/sandbox'; }}>Sandbox öffnen →</button>
+			</div>
 		</div>
 
 		<div class="modal-footer">
@@ -460,5 +467,28 @@
 	.btn-primary:hover {
 		transform: translateY(-2px);
 		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+	}
+
+	.sandbox-section {
+		border-left: 4px solid #f59e0b;
+	}
+
+	.btn-sandbox {
+		display: inline-block;
+		margin-top: 12px;
+		padding: 10px 20px;
+		background: linear-gradient(135deg, #d97706, #f59e0b);
+		color: #1a1a1a;
+		font-weight: 700;
+		border: none;
+		border-radius: 10px;
+		font-size: 14px;
+		cursor: pointer;
+		transition: opacity 0.2s, transform 0.2s;
+	}
+
+	.btn-sandbox:hover {
+		opacity: 0.85;
+		transform: translateY(-1px);
 	}
 </style>
