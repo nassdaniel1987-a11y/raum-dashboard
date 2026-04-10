@@ -762,6 +762,15 @@
 						{/if}
 					</section>
 
+					<!-- Sandbox-Modus -->
+					<section class="section sandbox-section">
+						<h3>🧪 Sandbox-Modus</h3>
+						<p class="hint">Designs und Layouts testen ohne das Live-System zu berühren. Echte Räume als Kopie — nichts wird gespeichert.</p>
+						<button class="btn sandbox-btn full-width" onclick={() => window.location.href = '/sandbox'}>
+							Sandbox öffnen →
+						</button>
+					</section>
+
 					<!-- Raumverwaltung -->
 					{#if $isEditMode}
 						<section class="section">
@@ -1294,6 +1303,23 @@
 	.btn-success:hover {
 		background: rgba(34, 197, 94, 0.4);
 		border-color: rgba(34, 197, 94, 0.6);
+	}
+
+	.sandbox-section {
+		border-left: 3px solid #f59e0b;
+	}
+
+	.sandbox-btn {
+		background: linear-gradient(135deg, rgba(217, 119, 6, 0.4), rgba(245, 158, 11, 0.4));
+		border-color: rgba(245, 158, 11, 0.6);
+		color: #fde68a;
+		font-weight: 700;
+		margin-top: 10px;
+	}
+
+	.sandbox-btn:hover {
+		background: linear-gradient(135deg, rgba(217, 119, 6, 0.6), rgba(245, 158, 11, 0.6));
+		border-color: rgba(245, 158, 11, 0.8);
 	}
 
 	.btn-danger {
