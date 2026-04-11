@@ -36,6 +36,7 @@
 	import SandboxLayoutDeck from '$lib/sandbox/layouts/SandboxLayoutDeck.svelte';
 	import SandboxLayoutSplitscreen from '$lib/sandbox/layouts/SandboxLayoutSplitscreen.svelte';
 	import SandboxLayoutNeon from '$lib/sandbox/layouts/SandboxLayoutNeon.svelte';
+	import SandboxLayoutOrbital from '$lib/sandbox/layouts/SandboxLayoutOrbital.svelte';
 
 	let isLoading = $state(true);
 	let showMenu = $state(false);
@@ -141,8 +142,11 @@
 
 {#if isLoading}
 	<div class="sandbox-loading" transition:fade>
-		<div class="loading-spinner"></div>
-		<p>Lade Sandbox...</p>
+		<div class="loading-inner">
+			<div class="loading-label">SANDBOX</div>
+			<div class="loading-spinner"></div>
+			<div class="loading-sub">Initialisiere Labor...</div>
+		</div>
 	</div>
 {:else}
 
@@ -150,18 +154,26 @@
 		class="sandbox-badge"
 		bind:this={badgeEl}
 		onclick={() => (showPanel = !showPanel)}
-		title="Sandbox-Menü"
+		title="Sandbox-Menü öffnen"
+		aria-expanded={showPanel}
 	>
-		🧪
+		<span class="badge-ping"></span>
+		<span class="badge-label">LAB</span>
 	</button>
 
 	{#if showPanel}
-		<div class="sandbox-panel" bind:this={panelEl} transition:fade={{ duration: 150 }}>
+		<div class="sandbox-panel" bind:this={panelEl} transition:fade={{ duration: 180 }}>
+			<div class="panel-scanline" aria-hidden="true"></div>
+
 			<div class="panel-header">
-				<span class="panel-title">SANDBOX MODUS</span>
-				<span class="panel-hint">Kein DB-Schreibzugriff</span>
+				<div class="panel-header-top">
+					<span class="panel-status-dot"></span>
+					<span class="panel-title">SANDBOX // EXPERIMENTAL</span>
+				</div>
+				<span class="panel-hint">_ kein DB-Schreibzugriff aktiv</span>
 			</div>
 
+			<div class="panel-section-label">LAYOUT AUSWÄHLEN</div>
 			<div class="panel-layouts">
 				{#each LAYOUT_OPTIONS as opt}
 					<button
@@ -170,13 +182,22 @@
 						onclick={() => { sandboxLayout.setLayout(opt.id); showPanel = false; }}
 					>
 						<span class="panel-layout-icon">{opt.icon}</span>
-						<span class="panel-layout-name">{opt.label}</span>
-						<span class="panel-layout-desc">{opt.description}</span>
+						<div class="panel-layout-text">
+							<span class="panel-layout-name">{opt.label}</span>
+							<span class="panel-layout-desc">{opt.description}</span>
+						</div>
+						{#if $sandboxLayout === opt.id}
+							<span class="panel-active-pip" aria-hidden="true"></span>
+						{/if}
 					</button>
 				{/each}
 			</div>
 
-			<button class="panel-exit-btn" onclick={exitSandbox}>← Live-Dashboard</button>
+			<div class="panel-divider"></div>
+			<button class="panel-exit-btn" onclick={exitSandbox}>
+				<span class="exit-arrow">&#8617;</span>
+				Live-Dashboard
+			</button>
 		</div>
 	{/if}
 
@@ -206,6 +227,8 @@
 			<SandboxLayoutSplitscreen {handleEditRoom} />
 		{:else if $sandboxLayout === 'neon'}
 			<SandboxLayoutNeon {handleEditRoom} />
+		{:else if $sandboxLayout === 'orbital'}
+			<SandboxLayoutOrbital {handleEditRoom} />
 		{/if}
 	</div>
 
@@ -230,160 +253,382 @@
 {/if}
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Bebas+Neue&display=swap');
+
+	/* ── Design Tokens ── */
+	:root {
+		--lab-cyan: #00e5ff;
+		--lab-cyan-dim: rgba(0, 229, 255, 0.15);
+		--lab-cyan-glow: rgba(0, 229, 255, 0.4);
+		--lab-amber: #ffb300;
+		--lab-bg: rgba(4, 9, 14, 0.96);
+		--lab-border: rgba(0, 229, 255, 0.18);
+		--lab-text: rgba(200, 230, 240, 0.9);
+		--lab-text-dim: rgba(120, 170, 185, 0.5);
+		--lab-font-mono: 'DM Mono', 'Courier New', monospace;
+		--lab-font-display: 'Bebas Neue', sans-serif;
+	}
+
+	/* ── Loading Screen ── */
 	.sandbox-loading {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		height: 100vh;
+		gap: 20px;
+		background: #04090e;
+		font-family: var(--lab-font-mono);
+	}
+
+	.loading-inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		gap: 16px;
-		color: #fff;
-		font-size: 16px;
+	}
+
+	.loading-label {
+		font-family: var(--lab-font-display);
+		font-size: 32px;
+		letter-spacing: 6px;
+		color: var(--lab-cyan);
+		text-shadow: 0 0 20px var(--lab-cyan-glow), 0 0 60px rgba(0, 229, 255, 0.15);
+		animation: label-pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes label-pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.6; }
 	}
 
 	.loading-spinner {
-		width: 40px;
-		height: 40px;
-		border: 3px solid rgba(255, 255, 255, 0.2);
-		border-top-color: #f59e0b;
+		width: 36px;
+		height: 36px;
+		border: 2px solid rgba(0, 229, 255, 0.12);
+		border-top-color: var(--lab-cyan);
 		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
+		animation: spin 0.7s linear infinite;
+		box-shadow: 0 0 12px var(--lab-cyan-glow);
+	}
+
+	.loading-sub {
+		font-size: 11px;
+		letter-spacing: 2px;
+		color: var(--lab-text-dim);
+		text-transform: uppercase;
 	}
 
 	@keyframes spin {
 		to { transform: rotate(360deg); }
 	}
 
-	/* ── Mini Badge ── */
+	/* ── Mini Badge (LAB Indicator) ── */
 	.sandbox-badge {
 		position: fixed;
-		top: 12px;
-		left: 12px;
+		top: 10px;
+		left: 10px;
 		z-index: 300;
-		background: rgba(217, 119, 6, 0.88);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 20px;
-		padding: 5px 11px;
-		font-size: 16px;
-		line-height: 1;
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		padding: 5px 12px 5px 8px;
+		background: rgba(4, 9, 14, 0.85);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid var(--lab-border);
+		border-radius: 4px;
 		cursor: pointer;
-		transition: background 0.15s, transform 0.15s;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+		font-family: var(--lab-font-mono);
+		transition: border-color 0.2s, box-shadow 0.2s;
+		box-shadow:
+			0 0 0 1px rgba(0, 229, 255, 0.06),
+			0 4px 16px rgba(0, 0, 0, 0.6);
 	}
 
 	.sandbox-badge:hover {
-		background: rgba(217, 119, 6, 1);
-		transform: scale(1.08);
+		border-color: rgba(0, 229, 255, 0.5);
+		box-shadow:
+			0 0 0 1px rgba(0, 229, 255, 0.15),
+			0 0 20px rgba(0, 229, 255, 0.12),
+			0 4px 20px rgba(0, 0, 0, 0.7);
 	}
 
-	/* ── Dropdown Panel ── */
+	.badge-ping {
+		position: relative;
+		display: block;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--lab-cyan);
+		box-shadow: 0 0 6px var(--lab-cyan);
+		flex-shrink: 0;
+	}
+
+	.badge-ping::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
+		border-radius: 50%;
+		border: 1px solid var(--lab-cyan);
+		opacity: 0;
+		animation: radar-ping 2.4s ease-out infinite;
+	}
+
+	.badge-ping::after {
+		content: '';
+		position: absolute;
+		inset: -8px;
+		border-radius: 50%;
+		border: 1px solid var(--lab-cyan);
+		opacity: 0;
+		animation: radar-ping 2.4s ease-out 0.5s infinite;
+	}
+
+	@keyframes radar-ping {
+		0% { opacity: 0.7; transform: scale(0.5); }
+		100% { opacity: 0; transform: scale(1.8); }
+	}
+
+	.badge-label {
+		font-family: var(--lab-font-display);
+		font-size: 14px;
+		letter-spacing: 3px;
+		color: var(--lab-cyan);
+		text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+		line-height: 1;
+	}
+
+	/* ── Dropdown Panel (Terminal HUD) ── */
 	.sandbox-panel {
 		position: fixed;
-		top: 50px;
-		left: 12px;
+		top: 46px;
+		left: 10px;
 		z-index: 300;
-		background: rgba(20, 12, 3, 0.94);
-		backdrop-filter: blur(14px);
-		-webkit-backdrop-filter: blur(14px);
-		border: 1px solid rgba(217, 119, 6, 0.35);
-		border-radius: 14px;
-		padding: 14px;
-		min-width: 230px;
-		max-width: 280px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+		background: var(--lab-bg);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid var(--lab-border);
+		border-radius: 4px;
+		padding: 0;
+		min-width: 248px;
+		max-width: 290px;
+		box-shadow:
+			0 0 0 1px rgba(0, 229, 255, 0.06),
+			0 0 40px rgba(0, 229, 255, 0.06),
+			0 16px 48px rgba(0, 0, 0, 0.8);
+		font-family: var(--lab-font-mono);
+		overflow: hidden;
+	}
+
+	/* CRT scanline overlay */
+	.panel-scanline {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 1;
+		background: repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 2px,
+			rgba(0, 229, 255, 0.018) 2px,
+			rgba(0, 229, 255, 0.018) 4px
+		);
 	}
 
 	.panel-header {
-		margin-bottom: 10px;
-		padding-bottom: 10px;
-		border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+		position: relative;
+		z-index: 2;
+		padding: 12px 14px 10px;
+		border-bottom: 1px solid var(--lab-border);
+		background: rgba(0, 229, 255, 0.03);
+	}
+
+	.panel-header-top {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 3px;
+	}
+
+	.panel-status-dot {
+		display: block;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--lab-cyan);
+		box-shadow: 0 0 6px var(--lab-cyan);
+		flex-shrink: 0;
+		animation: dot-blink 3s ease-in-out infinite;
+	}
+
+	@keyframes dot-blink {
+		0%, 90%, 100% { opacity: 1; }
+		95% { opacity: 0.1; }
 	}
 
 	.panel-title {
-		display: block;
-		font-size: 10px;
-		font-weight: 800;
-		letter-spacing: 1.8px;
+		font-size: 9px;
+		font-weight: 500;
+		letter-spacing: 2.5px;
 		text-transform: uppercase;
-		color: #f59e0b;
+		color: var(--lab-cyan);
+		text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 	}
 
 	.panel-hint {
 		display: block;
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.4);
-		margin-top: 2px;
+		font-size: 10px;
+		color: var(--lab-text-dim);
+		padding-left: 14px;
+		font-style: italic;
+	}
+
+	.panel-section-label {
+		position: relative;
+		z-index: 2;
+		font-size: 8px;
+		letter-spacing: 2px;
+		color: var(--lab-text-dim);
+		text-transform: uppercase;
+		padding: 8px 14px 4px;
 	}
 
 	.panel-layouts {
+		position: relative;
+		z-index: 2;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
-		margin-bottom: 10px;
+		gap: 1px;
+		padding: 0 6px 6px;
+		max-height: 360px;
+		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(0, 229, 255, 0.2) transparent;
+	}
+
+	.panel-layouts::-webkit-scrollbar {
+		width: 3px;
+	}
+
+	.panel-layouts::-webkit-scrollbar-thumb {
+		background: rgba(0, 229, 255, 0.25);
+		border-radius: 2px;
 	}
 
 	.panel-layout-btn {
-		display: grid;
-		grid-template-columns: 22px 1fr;
-		grid-template-rows: auto auto;
-		column-gap: 8px;
+		display: flex;
+		align-items: center;
+		gap: 9px;
 		padding: 7px 8px;
-		border-radius: 8px;
+		border-radius: 3px;
 		border: 1px solid transparent;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.8);
+		color: var(--lab-text);
 		cursor: pointer;
 		text-align: left;
-		transition: background 0.12s, border-color 0.12s;
+		transition: background 0.15s, border-color 0.15s;
+		position: relative;
 	}
 
 	.panel-layout-btn:hover {
-		background: rgba(255, 255, 255, 0.07);
+		background: rgba(0, 229, 255, 0.05);
+		border-color: rgba(0, 229, 255, 0.12);
 	}
 
 	.panel-layout-btn.active {
-		background: rgba(217, 119, 6, 0.2);
-		border-color: rgba(217, 119, 6, 0.45);
+		background: rgba(0, 229, 255, 0.08);
+		border-color: rgba(0, 229, 255, 0.32);
+	}
+
+	.panel-layout-btn.active .panel-layout-name {
+		color: var(--lab-cyan);
+		text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 	}
 
 	.panel-layout-icon {
-		grid-row: 1 / 3;
-		align-self: center;
-		font-size: 15px;
+		font-size: 13px;
+		width: 18px;
 		text-align: center;
+		flex-shrink: 0;
+		opacity: 0.8;
+	}
+
+	.panel-layout-text {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.panel-layout-name {
-		font-size: 12px;
-		font-weight: 700;
-		color: #fff;
-		line-height: 1.3;
+		font-size: 11px;
+		font-weight: 500;
+		color: rgba(200, 230, 240, 0.95);
+		line-height: 1.2;
+		transition: color 0.15s, text-shadow 0.15s;
 	}
 
 	.panel-layout-desc {
-		font-size: 10px;
-		color: rgba(255, 255, 255, 0.38);
+		font-size: 9px;
+		color: var(--lab-text-dim);
 		line-height: 1.2;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.panel-active-pip {
+		display: block;
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--lab-cyan);
+		box-shadow: 0 0 5px var(--lab-cyan);
+		flex-shrink: 0;
+	}
+
+	.panel-divider {
+		position: relative;
+		z-index: 2;
+		height: 1px;
+		margin: 0 14px 8px;
+		background: var(--lab-border);
 	}
 
 	.panel-exit-btn {
-		width: 100%;
-		padding: 7px;
-		border-radius: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.05);
-		color: rgba(255, 255, 255, 0.6);
-		font-size: 12px;
-		font-weight: 600;
+		position: relative;
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+		width: calc(100% - 12px);
+		margin: 0 6px 8px;
+		padding: 8px;
+		border-radius: 3px;
+		border: 1px solid rgba(200, 230, 240, 0.1);
+		background: rgba(200, 230, 240, 0.03);
+		color: var(--lab-text-dim);
+		font-family: var(--lab-font-mono);
+		font-size: 10px;
+		letter-spacing: 1px;
+		font-weight: 500;
+		text-transform: uppercase;
 		cursor: pointer;
-		transition: background 0.15s, color 0.15s;
+		transition: background 0.15s, color 0.15s, border-color 0.15s;
 	}
 
 	.panel-exit-btn:hover {
-		background: rgba(255, 255, 255, 0.1);
-		color: #fff;
+		background: rgba(200, 230, 240, 0.07);
+		color: rgba(200, 230, 240, 0.9);
+		border-color: rgba(200, 230, 240, 0.2);
+	}
+
+	.exit-arrow {
+		font-size: 14px;
+		line-height: 1;
 	}
 
 	/* ── Dashboard ── */
