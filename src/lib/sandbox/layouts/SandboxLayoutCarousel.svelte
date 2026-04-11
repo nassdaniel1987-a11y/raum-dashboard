@@ -130,13 +130,11 @@
 		scheduleAuto();
 	}
 
-	// Keep panel in sync when simOverrides change
-	$effect(() => {
-		if (panelRoom) {
-			const updated = allRooms.find(r => r.id === panelRoom!.id);
-			if (updated) panelRoom = updated as RoomWithConfig & { isSimulated: boolean };
-		}
-	});
+	// Panel room status derived live from simOverrides (no $effect to avoid infinite loop)
+	let panelIsOpen = $derived(
+		panelRoom ? (simOverrides.has(panelRoom.id) ? simOverrides.get(panelRoom.id)! : panelRoom.isOpen) : false
+	);
+	let panelIsSimulated = $derived(panelRoom ? simOverrides.has(panelRoom.id) : false);
 
 	// ── Time helpers ──
 	function parseMinutes(t: string | null | undefined): number | null {
@@ -376,7 +374,7 @@
 			<!-- Color stripe -->
 			<div
 				class="panel-stripe"
-				style="background: {panelRoom.isOpen ? panelRoom.background_color : '#334155'};"
+				style="background: {panelIsOpen ? panelRoom.background_color : '#334155'};"
 			></div>
 
 			<div class="panel-content">
@@ -393,17 +391,17 @@
 
 				<!-- Status badge -->
 				{#if panelRoom}
-					{@const st = openStatus(panelRoom)}
+					{@const st = openStatus({ ...panelRoom, isOpen: panelIsOpen })}
 					<div class="panel-status-row">
-						<div class="panel-status-badge" class:open={panelRoom.isOpen} class:soon={st === 'soon'} class:closing={st === 'closing'}>
+						<div class="panel-status-badge" class:open={panelIsOpen} class:soon={st === 'soon'} class:closing={st === 'closing'}>
 							<span class="status-pip"></span>
 							{#if st === 'soon'}        Öffnet bald
 							{:else if st === 'closing'} Schließt bald
-							{:else if panelRoom.isOpen} Geöffnet
+							{:else if panelIsOpen}      Geöffnet
 							{:else}                     Geschlossen
 							{/if}
 						</div>
-						{#if panelRoom.isSimulated}
+						{#if panelIsSimulated}
 							<span class="panel-sim-tag">⚗️ Simuliert</span>
 						{/if}
 					</div>
@@ -416,13 +414,13 @@
 						<p class="sim-desc">Status lokal simulieren — keine Datenbankänderung.</p>
 						<button
 							class="sim-toggle-btn"
-							class:sim-open={!panelRoom.isOpen}
-							class:sim-close={panelRoom.isOpen}
-							onclick={() => toggleSim(panelRoom.id, panelRoom.isOpen)}
+							class:sim-open={!panelIsOpen}
+							class:sim-close={panelIsOpen}
+							onclick={() => toggleSim(panelRoom.id, panelIsOpen)}
 						>
-							{#if panelRoom.isSimulated}
+							{#if panelIsSimulated}
 								↩ Simulation zurücksetzen
-							{:else if panelRoom.isOpen}
+							{:else if panelIsOpen}
 								🔴 Als geschlossen simulieren
 							{:else}
 								🟢 Als geöffnet simulieren
@@ -461,7 +459,7 @@
 									<!-- Active segment -->
 									<div
 										class="timeline-fill"
-										class:fill-open={panelRoom.isOpen}
+										class:fill-open={panelIsOpen}
 										style="left: {openPct}%; width: {closePct - openPct}%;"
 									></div>
 									<!-- Now marker -->
