@@ -17,7 +17,7 @@
 	import type { Room, RoomStatus, RoomWithConfig } from '$lib/types';
 
 	import Header from '$lib/components/Header.svelte';
-	import Canvas from '$lib/components/Canvas.svelte';
+	import SandboxLayoutCarousel from '$lib/sandbox/layouts/SandboxLayoutCarousel.svelte';
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
@@ -204,7 +204,7 @@
 	<div class="dashboard">
 		<Header onOpenMenu={() => (showMenu = true)} {canvasRef} />
 		{#if $sandboxLayout === 'carousel'}
-			<Canvas {handleEditRoom} bind:this={canvasRef} />
+			<SandboxLayoutCarousel {handleEditRoom} />
 		{:else if $sandboxLayout === 'focus'}
 			<SandboxLayoutFocus {handleEditRoom} />
 		{:else if $sandboxLayout === 'grid'}
