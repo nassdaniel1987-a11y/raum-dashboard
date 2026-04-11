@@ -392,20 +392,22 @@
 				</div>
 
 				<!-- Status badge -->
-				<div class="panel-status-row">
+				{#if panelRoom}
 					{@const st = openStatus(panelRoom)}
-					<div class="panel-status-badge" class:open={panelRoom.isOpen} class:soon={st === 'soon'} class:closing={st === 'closing'}>
-						<span class="status-pip"></span>
-						{#if st === 'soon'}        Öffnet bald
-						{:else if st === 'closing'} Schließt bald
-						{:else if panelRoom.isOpen} Geöffnet
-						{:else}                     Geschlossen
+					<div class="panel-status-row">
+						<div class="panel-status-badge" class:open={panelRoom.isOpen} class:soon={st === 'soon'} class:closing={st === 'closing'}>
+							<span class="status-pip"></span>
+							{#if st === 'soon'}        Öffnet bald
+							{:else if st === 'closing'} Schließt bald
+							{:else if panelRoom.isOpen} Geöffnet
+							{:else}                     Geschlossen
+							{/if}
+						</div>
+						{#if panelRoom.isSimulated}
+							<span class="panel-sim-tag">⚗️ Simuliert</span>
 						{/if}
 					</div>
-					{#if panelRoom.isSimulated}
-						<span class="panel-sim-tag">⚗️ Simuliert</span>
-					{/if}
-				</div>
+				{/if}
 
 				<!-- ── Sandbox simulation toggle ── -->
 				<div class="panel-section">
