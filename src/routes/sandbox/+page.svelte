@@ -24,6 +24,11 @@
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
+	import { sandboxLayout, LAYOUT_OPTIONS } from '$lib/sandbox/layoutStore';
+	import SandboxLayoutFocus from '$lib/sandbox/layouts/SandboxLayoutFocus.svelte';
+	import SandboxLayoutGrid from '$lib/sandbox/layouts/SandboxLayoutGrid.svelte';
+	import SandboxLayoutCompact from '$lib/sandbox/layouts/SandboxLayoutCompact.svelte';
+	import SandboxLayoutSplit from '$lib/sandbox/layouts/SandboxLayoutSplit.svelte';
 
 	let isLoading = $state(true);
 	let showMenu = $state(false);
@@ -124,12 +129,37 @@
 	<div class="sandbox-banner" transition:fade>
 		<span class="sandbox-label">🧪 SANDBOX MODUS</span>
 		<span class="sandbox-hint">Kein DB-Schreibzugriff — nur lokale Änderungen</span>
+
+		<div class="layout-switcher">
+			{#each LAYOUT_OPTIONS as opt}
+				<button
+					class="layout-btn"
+					class:active={$sandboxLayout === opt.id}
+					onclick={() => sandboxLayout.setLayout(opt.id)}
+					title={opt.description}
+				>
+					<span class="layout-icon">{opt.icon}</span>
+					<span class="layout-label">{opt.label}</span>
+				</button>
+			{/each}
+		</div>
+
 		<button class="sandbox-exit-btn" onclick={exitSandbox}>← Live-Dashboard</button>
 	</div>
 
 	<div class="dashboard">
 		<Header onOpenMenu={() => (showMenu = true)} {canvasRef} />
-		<Canvas {handleEditRoom} bind:this={canvasRef} />
+		{#if $sandboxLayout === 'carousel'}
+			<Canvas {handleEditRoom} bind:this={canvasRef} />
+		{:else if $sandboxLayout === 'focus'}
+			<SandboxLayoutFocus {handleEditRoom} />
+		{:else if $sandboxLayout === 'grid'}
+			<SandboxLayoutGrid {handleEditRoom} />
+		{:else if $sandboxLayout === 'compact'}
+			<SandboxLayoutCompact {handleEditRoom} />
+		{:else if $sandboxLayout === 'split'}
+			<SandboxLayoutSplit {handleEditRoom} />
+		{/if}
 	</div>
 
 	<SidebarMenu
@@ -228,6 +258,58 @@
 
 	.sandbox-exit-btn:hover {
 		background: rgba(0, 0, 0, 0.35);
+	}
+
+	.layout-switcher {
+		display: flex;
+		gap: 3px;
+		background: rgba(0, 0, 0, 0.15);
+		border-radius: 6px;
+		padding: 2px;
+	}
+
+	.layout-btn {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px;
+		border-radius: 4px;
+		border: 1px solid transparent;
+		background: transparent;
+		color: #1a1a1a;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s;
+		white-space: nowrap;
+	}
+
+	.layout-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+	}
+
+	.layout-btn.active {
+		background: rgba(255, 255, 255, 0.5);
+		border-color: rgba(0, 0, 0, 0.2);
+	}
+
+	.layout-icon {
+		font-size: 13px;
+	}
+
+	@media (max-width: 900px) {
+		.layout-label {
+			display: none;
+		}
+		.layout-btn {
+			padding: 2px 6px;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.layout-switcher {
+			gap: 1px;
+		}
 	}
 
 	.dashboard {
