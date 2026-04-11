@@ -12,7 +12,8 @@ export type SandboxLayoutId =
 	| 'floorplan'
 	| 'deck'
 	| 'splitscreen'
-	| 'neon';
+	| 'neon'
+	| 'orbital';
 
 export interface LayoutOption {
 	id: SandboxLayoutId;
@@ -33,7 +34,8 @@ export const LAYOUT_OPTIONS: LayoutOption[] = [
 	{ id: 'floorplan',   label: 'Grundriss',    icon: '🏫',  description: 'Schematischer Gebäudeplan' },
 	{ id: 'deck',        label: 'Karten-Deck',  icon: '🃏',  description: 'Stapel — eine Karte nach der anderen' },
 	{ id: 'splitscreen', label: 'Splitscreen',  icon: '▐▌',  description: 'Liste + Detailansicht' },
-	{ id: 'neon',        label: 'Neon-Board',   icon: '⚡',  description: 'Retro Neon-Optik' }
+	{ id: 'neon',        label: 'Neon-Board',   icon: '⚡',  description: 'Retro Neon-Optik' },
+	{ id: 'orbital',     label: 'Orbital',      icon: '🪐',  description: 'Räume als Planetensystem' }
 ];
 
 const SESSION_KEY = 'sandbox_layout';
