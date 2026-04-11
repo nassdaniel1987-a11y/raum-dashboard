@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { rooms, roomStatuses, runnerName as runnerNameStore } from '$lib/stores/appState';
+	import { rooms, roomStatuses, runnerName as runnerNameStore, currentTime } from '$lib/stores/appState';
 	import type { RoomWithConfig } from '$lib/types';
 	import { onMount, onDestroy } from 'svelte';
-	import { fade } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 
 	let { handleEditRoom } = $props<{ handleEditRoom: (room: RoomWithConfig) => void }>();
 
-	// ── Page definitions (same as Canvas.svelte) ──
+	// ── Page definitions ──
 	const PAGE_DEFS = [
 		{ id: 'dach',   label: 'Dachgeschoss', emoji: '🏠', floors: ['dach'] },
 		{ id: 'og',     label: '1. & 2. OG',   emoji: '🪜', floors: ['og2', 'og1'] },
@@ -15,18 +15,43 @@
 		{ id: 'extern', label: 'Außenbereich',  emoji: '🌿', floors: ['extern'] }
 	];
 
-	// ── Derive rooms by floor ──
+	// ── Sandbox simulation: local overrides for open/closed status ──
+	// Key = room.id, Value = true (open) | false (closed) | undefined (use real status)
+	let simOverrides = $state(new Map<string, boolean>());
+
+	function toggleSim(id: string, currentIsOpen: boolean) {
+		const m = new Map(simOverrides);
+		// If already overridden, remove override (reset to real status)
+		if (m.has(id)) {
+			m.delete(id);
+		} else {
+			m.set(id, !currentIsOpen);
+		}
+		simOverrides = m;
+	}
+
+	function resetAllSim() {
+		simOverrides = new Map();
+	}
+
+	// ── Derive rooms, applying sim overrides ──
 	let allRooms = $derived(
-		$rooms.map((r) => ({
-			...r,
-			config: null,
-			status: $roomStatuses.get(r.id) ?? null,
-			isOpen: $roomStatuses.get(r.id)?.is_open ?? false
-		})) as RoomWithConfig[]
+		$rooms.map((r) => {
+			const realStatus = $roomStatuses.get(r.id);
+			const realIsOpen = realStatus?.is_open ?? false;
+			const simIsOpen = simOverrides.has(r.id) ? simOverrides.get(r.id)! : realIsOpen;
+			return {
+				...r,
+				config: null,
+				status: realStatus ?? null,
+				isOpen: simIsOpen,
+				isSimulated: simOverrides.has(r.id)
+			} as RoomWithConfig & { isSimulated: boolean };
+		})
 	);
 
 	let roomsByFloor = $derived(() => {
-		const map = new Map<string, RoomWithConfig[]>();
+		const map = new Map<string, (RoomWithConfig & { isSimulated: boolean })[]>();
 		for (const r of allRooms) {
 			if (!map.has(r.floor)) map.set(r.floor, []);
 			map.get(r.floor)!.push(r);
@@ -43,12 +68,12 @@
 		}))
 	);
 
-	// ── Pagination state ──
+	// ── Pagination ──
 	let currentIdx = $state(0);
 	let direction = $state<'next' | 'prev'>('next');
 	let isAnimating = $state(false);
 	let autoTimer: ReturnType<typeof setTimeout> | undefined;
-	const AUTO_DURATION = 9; // seconds
+	const AUTO_DURATION = 10;
 
 	function goTo(idx: number) {
 		if (isAnimating || idx === currentIdx) return;
@@ -56,7 +81,7 @@
 		isAnimating = true;
 		currentIdx = idx;
 		clearAutoTimer();
-		setTimeout(() => { isAnimating = false; }, 480);
+		setTimeout(() => { isAnimating = false; }, 450);
 		scheduleAuto();
 	}
 
@@ -92,23 +117,75 @@
 	onMount(() => { scheduleAuto(); });
 	onDestroy(() => { clearAutoTimer(); });
 
-	// ── Detail panel ──
-	let detailRoom = $state<RoomWithConfig | null>(null);
+	// ── Side panel detail ──
+	let panelRoom = $state<(RoomWithConfig & { isSimulated: boolean }) | null>(null);
 
-	function openDetail(room: RoomWithConfig) {
-		detailRoom = room;
-		clearAutoTimer(); // pause while detail is open
+	function openPanel(room: RoomWithConfig & { isSimulated: boolean }) {
+		panelRoom = room;
+		clearAutoTimer();
 	}
 
-	function closeDetail() {
-		detailRoom = null;
+	function closePanel() {
+		panelRoom = null;
 		scheduleAuto();
 	}
 
-	// ── Current page rooms ──
+	// Keep panel in sync when simOverrides change
+	$effect(() => {
+		if (panelRoom) {
+			const updated = allRooms.find(r => r.id === panelRoom!.id);
+			if (updated) panelRoom = updated as RoomWithConfig & { isSimulated: boolean };
+		}
+	});
+
+	// ── Time helpers ──
+	function parseMinutes(t: string | null | undefined): number | null {
+		if (!t) return null;
+		const [h, m] = t.split(':').map(Number);
+		if (isNaN(h) || isNaN(m)) return null;
+		return h * 60 + m;
+	}
+
+	function nowMinutes(): number {
+		const t = $currentTime;
+		return t.getHours() * 60 + t.getMinutes();
+	}
+
+	function formatTime(t: string | null | undefined): string {
+		if (!t) return '';
+		return t.substring(0, 5);
+	}
+
+	// Timeline percentage for open_time..close_time bar (7:00–20:00 range)
+	const DAY_START = 7 * 60;
+	const DAY_END   = 20 * 60;
+	const DAY_RANGE = DAY_END - DAY_START;
+
+	function timelinePos(minutes: number): number {
+		return Math.max(0, Math.min(100, ((minutes - DAY_START) / DAY_RANGE) * 100));
+	}
+
+	function nowTimelinePos(): number {
+		return timelinePos(nowMinutes());
+	}
+
+	function openStatus(room: RoomWithConfig): 'open' | 'closed' | 'soon' | 'closing' {
+		const open  = parseMinutes(room.config?.open_time);
+		const close = parseMinutes(room.config?.close_time);
+		const now   = nowMinutes();
+		if (!room.isOpen) {
+			if (open !== null && open - now > 0 && open - now <= 10) return 'soon';
+			return 'closed';
+		}
+		if (close !== null && close - now > 0 && close - now <= 10) return 'closing';
+		return 'open';
+	}
+
+	// ── Current page derived ──
 	let currentRooms = $derived(() => activePages()[currentIdx]?.rooms ?? []);
 	let currentPage  = $derived(() => activePages()[currentIdx]);
 	let openCount    = $derived(() => currentRooms().filter(r => r.isOpen).length);
+	let simCount     = $derived(() => simOverrides.size);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -119,13 +196,11 @@
 	role="region"
 	aria-label="Raumübersicht Karussell"
 >
-
-	<!-- ── Background ambient ── -->
+	<!-- Ambient glow -->
 	<div class="sc-ambient" aria-hidden="true"></div>
 
 	<!-- ── Top bar ── -->
 	<div class="sc-topbar">
-		<!-- Page tabs -->
 		<nav class="sc-tabs" aria-label="Etagen-Navigation">
 			{#each activePages() as page, i}
 				<button
@@ -137,87 +212,133 @@
 					<span class="tab-emoji">{page.emoji}</span>
 					<span class="tab-label">{page.label}</span>
 					{#if i === currentIdx}
-						<div class="tab-progress" style="animation-duration: {AUTO_DURATION}s;" aria-hidden="true"></div>
+						{#key currentIdx}
+							<div class="tab-progress" style="animation-duration: {AUTO_DURATION}s;" aria-hidden="true"></div>
+						{/key}
 					{/if}
 				</button>
 			{/each}
 		</nav>
 
-		<!-- Runner badge -->
-		{#if $runnerNameStore}
-			<div class="sc-runner">
-				<span class="runner-dot"></span>
-				<span class="runner-text">Ansprechpartner: <strong>{$runnerNameStore}</strong></span>
-			</div>
-		{/if}
+		<div class="sc-topbar-right">
+			<!-- Sim indicator -->
+			{#if simCount > 0}
+				<button class="sim-reset-btn" onclick={resetAllSim} title="Alle Simulationen zurücksetzen">
+					<span class="sim-icon">⚗️</span>
+					{simCount} simuliert
+					<span class="sim-reset-x">✕</span>
+				</button>
+			{/if}
+			<!-- Runner badge -->
+			{#if $runnerNameStore}
+				<div class="sc-runner">
+					<span class="runner-dot"></span>
+					<span class="runner-text">Ansprechpartner: <strong>{$runnerNameStore}</strong></span>
+				</div>
+			{/if}
+		</div>
 	</div>
 
-	<!-- ── Page content ── -->
+	<!-- ── Page ── -->
 	{#key currentIdx}
 		<div
 			class="sc-page"
 			class:sc-page-next={isAnimating && direction === 'next'}
 			class:sc-page-prev={isAnimating && direction === 'prev'}
 		>
-			<!-- Page headline -->
+			<!-- Floor headline -->
 			<div class="sc-headline">
-				<div class="headline-emoji" aria-hidden="true">{currentPage()?.emoji}</div>
+				<span class="headline-emoji" aria-hidden="true">{currentPage()?.emoji}</span>
 				<div class="headline-text">
 					<h2 class="headline-title">{currentPage()?.label}</h2>
 					<div class="headline-meta">
-						<span class="meta-open">{openCount()} offen</span>
+						<span class="meta-open">{openCount()} geöffnet</span>
 						<span class="meta-sep">·</span>
 						<span class="meta-total">{currentRooms().length} Räume</span>
 					</div>
 				</div>
 			</div>
 
-			<!-- Rooms grid -->
+			<!-- Grid -->
 			{#if currentRooms().length === 0}
 				<div class="sc-empty">Keine Räume auf dieser Etage.</div>
 			{:else}
-				<div class="sc-grid" class:sc-grid-1={currentRooms().length === 1} class:sc-grid-3plus={currentRooms().length >= 3}>
+				<div
+					class="sc-grid"
+					class:sc-grid-1={currentRooms().length === 1}
+					class:sc-grid-2={currentRooms().length === 2}
+				>
 					{#each currentRooms() as room (room.id)}
+						{@const status = openStatus(room)}
 						<button
 							class="sc-tile"
 							class:tile-open={room.isOpen}
-							onclick={() => openDetail(room)}
-							aria-label="{room.name} — {room.isOpen ? 'geöffnet' : 'geschlossen'}. Klicken für Details."
+							class:tile-soon={status === 'soon'}
+							class:tile-closing={status === 'closing'}
+							class:tile-simulated={room.isSimulated}
+							onclick={() => openPanel(room)}
+							aria-label="{room.name} — Details"
 						>
 							<!-- Background image -->
 							{#if room.image_url}
 								<img src={room.image_url} alt="" class="tile-bg" aria-hidden="true" />
 							{/if}
 
-							<!-- Color overlay based on status -->
-							<div class="tile-overlay" style="background: {room.isOpen ? room.background_color : '#374151'};" aria-hidden="true"></div>
+							<!-- Color wash -->
+							<div
+								class="tile-wash"
+								style="background: {room.isOpen ? room.background_color : '#1e293b'};"
+								aria-hidden="true"
+							></div>
 
-							<!-- Content -->
-							<div class="tile-content">
-								<!-- Status indicator top-right -->
-								<div class="tile-status-badge" class:open={room.isOpen}>
-									<span class="status-pip"></span>
-									{room.isOpen ? 'Offen' : 'Geschlossen'}
+							<div class="tile-inner">
+								<!-- Top row: status + sim indicator -->
+								<div class="tile-top">
+									<div class="tile-status-pill" class:open={room.isOpen} class:soon={status === 'soon'} class:closing={status === 'closing'}>
+										<span class="pill-dot"></span>
+										{#if status === 'soon'}   Öffnet bald
+										{:else if status === 'closing'} Schließt bald
+										{:else if room.isOpen}   Geöffnet
+										{:else}                  Geschlossen
+										{/if}
+									</div>
+									{#if room.isSimulated}
+										<span class="tile-sim-badge" title="Simuliert">⚗️</span>
+									{/if}
 								</div>
 
-								<div class="tile-body">
+								<!-- Center: room name -->
+								<div class="tile-mid">
 									<h3 class="tile-name">{room.name}</h3>
 									{#if room.config?.activity}
 										<p class="tile-activity">{room.config.activity}</p>
 									{/if}
+								</div>
+
+								<!-- Bottom row: person + open time -->
+								<div class="tile-bottom">
 									{#if room.person}
-										<div class="tile-person">
-											<span class="person-icon">👤</span>
-											{room.person.split(',')[0].trim()}
+										<div class="tile-person-badge">
+											<span class="person-avatar">👤</span>
+											<span class="person-name">{room.person.split(',')[0].trim()}</span>
+										</div>
+									{/if}
+									{#if room.config?.open_time && !room.isOpen}
+										<div class="tile-time-badge">
+											<span>⏰</span>
+											<span>Öffnet {formatTime(room.config.open_time)}</span>
+										</div>
+									{/if}
+									{#if room.config?.close_time && room.isOpen}
+										<div class="tile-time-badge closing">
+											<span>🔔</span>
+											<span>Bis {formatTime(room.config.close_time)}</span>
 										</div>
 									{/if}
 								</div>
-
-								<!-- Tap hint -->
-								<div class="tile-tap-hint" aria-hidden="true">Details →</div>
 							</div>
 
-							<!-- Open glow border -->
+							<!-- Open ring pulse -->
 							{#if room.isOpen}
 								<div class="tile-open-ring" aria-hidden="true"></div>
 							{/if}
@@ -228,70 +349,165 @@
 		</div>
 	{/key}
 
-	<!-- ── Nav arrows ── -->
+	<!-- Nav arrows -->
 	{#if activePages().length > 1}
-		<button class="sc-nav sc-nav-prev" onclick={prev} aria-label="Vorherige Etage">
-			<span aria-hidden="true">‹</span>
-		</button>
-		<button class="sc-nav sc-nav-next" onclick={next} aria-label="Nächste Etage">
-			<span aria-hidden="true">›</span>
-		</button>
+		<button class="sc-nav sc-nav-prev" onclick={prev} aria-label="Vorherige Etage">‹</button>
+		<button class="sc-nav sc-nav-next" onclick={next} aria-label="Nächste Etage">›</button>
 	{/if}
 
-	<!-- ── Detail panel (bottom sheet) ── -->
-	{#if detailRoom}
-		<!-- Backdrop -->
+	<!-- ── Side panel ── -->
+	{#if panelRoom}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="detail-backdrop" onclick={closeDetail} transition:fade={{ duration: 200 }} aria-hidden="true"></div>
+		<div
+			class="panel-backdrop"
+			onclick={closePanel}
+			transition:fade={{ duration: 180 }}
+			aria-hidden="true"
+		></div>
 
-		<div class="detail-sheet" role="dialog" aria-modal="true" aria-label="Raumdetails" transition:fade={{ duration: 220 }}>
-			<div class="sheet-handle" aria-hidden="true"></div>
+		<div
+			class="side-panel"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Raumdetails"
+			transition:fly={{ x: 340, duration: 300, opacity: 1 }}
+		>
+			<!-- Color stripe -->
+			<div
+				class="panel-stripe"
+				style="background: {panelRoom.isOpen ? panelRoom.background_color : '#334155'};"
+			></div>
 
-			<div class="sheet-body">
-				<!-- Room color accent -->
-				<div class="sheet-accent" style="background: {detailRoom.isOpen ? detailRoom.background_color : '#374151'};"></div>
-
-				<div class="sheet-info">
-					<div class="sheet-header">
-						<div>
-							<div class="sheet-floor">{PAGE_DEFS.find(p => p.floors.includes(detailRoom!.floor))?.label ?? detailRoom.floor}</div>
-							<h2 class="sheet-name">{detailRoom.name}</h2>
+			<div class="panel-content">
+				<!-- Header -->
+				<div class="panel-header">
+					<div class="panel-header-left">
+						<div class="panel-floor-label">
+							{PAGE_DEFS.find(p => p.floors.includes(panelRoom.floor))?.label ?? panelRoom.floor}
 						</div>
-						<div class="sheet-status" class:open={detailRoom.isOpen}>
-							<span class="sheet-status-pip"></span>
-							{detailRoom.isOpen ? 'Geöffnet' : 'Geschlossen'}
-						</div>
+						<h2 class="panel-room-name">{panelRoom.name}</h2>
 					</div>
+					<button class="panel-close" onclick={closePanel} aria-label="Schließen">✕</button>
+				</div>
 
-					{#if detailRoom.config?.activity || detailRoom.person}
-						<div class="sheet-details">
-							{#if detailRoom.config?.activity}
-								<div class="sheet-detail-row">
-									<span class="sheet-detail-icon">📌</span>
-									<span class="sheet-detail-text">{detailRoom.config.activity}</span>
-								</div>
-							{/if}
-							{#if detailRoom.person}
-								<div class="sheet-detail-row">
-									<span class="sheet-detail-icon">👤</span>
-									<span class="sheet-detail-text">{detailRoom.person}</span>
-								</div>
-							{/if}
-						</div>
+				<!-- Status badge -->
+				<div class="panel-status-row">
+					{@const st = openStatus(panelRoom)}
+					<div class="panel-status-badge" class:open={panelRoom.isOpen} class:soon={st === 'soon'} class:closing={st === 'closing'}>
+						<span class="status-pip"></span>
+						{#if st === 'soon'}        Öffnet bald
+						{:else if st === 'closing'} Schließt bald
+						{:else if panelRoom.isOpen} Geöffnet
+						{:else}                     Geschlossen
+						{/if}
+					</div>
+					{#if panelRoom.isSimulated}
+						<span class="panel-sim-tag">⚗️ Simuliert</span>
 					{/if}
+				</div>
 
-					<div class="sheet-actions">
+				<!-- ── Sandbox simulation toggle ── -->
+				<div class="panel-section">
+					<div class="section-label">🧪 Sandbox-Simulation</div>
+					<div class="sim-toggle-block">
+						<p class="sim-desc">Status lokal simulieren — keine Datenbankänderung.</p>
 						<button
-							class="sheet-edit-btn"
-							onclick={() => { handleEditRoom(detailRoom!); closeDetail(); }}
+							class="sim-toggle-btn"
+							class:sim-open={!panelRoom.isOpen}
+							class:sim-close={panelRoom.isOpen}
+							onclick={() => toggleSim(panelRoom.id, panelRoom.isOpen)}
 						>
-							✏️ Raum bearbeiten
-						</button>
-						<button class="sheet-close-btn" onclick={closeDetail} aria-label="Schließen">
-							✕
+							{#if panelRoom.isSimulated}
+								↩ Simulation zurücksetzen
+							{:else if panelRoom.isOpen}
+								🔴 Als geschlossen simulieren
+							{:else}
+								🟢 Als geöffnet simulieren
+							{/if}
 						</button>
 					</div>
+				</div>
+
+				<div class="panel-divider"></div>
+
+				<!-- ── Öffnungszeiten-Timeline ── -->
+				{#if panelRoom.config?.open_time}
+					<div class="panel-section">
+						<div class="section-label">🕐 Öffnungszeiten</div>
+						<div class="time-row">
+							<div class="time-chip open-chip">
+								<span class="time-chip-icon">🟢</span>
+								{formatTime(panelRoom.config.open_time)}
+							</div>
+							{#if panelRoom.config.close_time}
+								<div class="time-arrow">→</div>
+								<div class="time-chip close-chip">
+									<span class="time-chip-icon">🔴</span>
+									{formatTime(panelRoom.config.close_time)}
+								</div>
+							{/if}
+						</div>
+
+						<!-- Timeline bar -->
+						{#if panelRoom.config.open_time}
+							{@const openPct  = timelinePos(parseMinutes(panelRoom.config.open_time) ?? DAY_START)}
+							{@const closePct = timelinePos(parseMinutes(panelRoom.config.close_time) ?? DAY_END)}
+							{@const nowPct   = nowTimelinePos()}
+							<div class="timeline-wrap">
+								<div class="timeline-track">
+									<!-- Active segment -->
+									<div
+										class="timeline-fill"
+										class:fill-open={panelRoom.isOpen}
+										style="left: {openPct}%; width: {closePct - openPct}%;"
+									></div>
+									<!-- Now marker -->
+									<div class="timeline-now" style="left: {nowPct}%;"></div>
+								</div>
+								<div class="timeline-labels">
+									<span>07:00</span>
+									<span>20:00</span>
+								</div>
+							</div>
+						{/if}
+					</div>
+					<div class="panel-divider"></div>
+				{/if}
+
+				<!-- ── Person ── -->
+				{#if panelRoom.person}
+					<div class="panel-section">
+						<div class="section-label">👤 Person im Raum</div>
+						<div class="person-list">
+							{#each panelRoom.person.split(',').map(p => p.trim()).filter(p => p) as p}
+								<div class="person-chip">
+									<span class="person-avatar-lg">👤</span>
+									<span class="person-chip-name">{p}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+					<div class="panel-divider"></div>
+				{/if}
+
+				<!-- ── Aktivität ── -->
+				{#if panelRoom.config?.activity}
+					<div class="panel-section">
+						<div class="section-label">📌 Aktivität</div>
+						<p class="panel-activity">{panelRoom.config.activity}</p>
+					</div>
+					<div class="panel-divider"></div>
+				{/if}
+
+				<!-- ── Actions ── -->
+				<div class="panel-actions">
+					<button
+						class="panel-edit-btn"
+						onclick={() => { handleEditRoom(panelRoom); closePanel(); }}
+					>
+						✏️ Raum bearbeiten
+					</button>
 				</div>
 			</div>
 		</div>
@@ -299,20 +515,19 @@
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:wght@400;500;600&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
-	/* ── Tokens ── */
 	:root {
-		--sc-font-display: 'Fraunces', Georgia, serif;
-		--sc-font-body: 'DM Sans', sans-serif;
-		--sc-bg: transparent;
-		--sc-glass: rgba(10, 14, 22, 0.72);
-		--sc-border: rgba(255, 255, 255, 0.1);
-		--sc-text: rgba(240, 245, 255, 0.95);
-		--sc-text-dim: rgba(180, 200, 230, 0.55);
-		--sc-open: #4ade80;
-		--sc-open-glow: rgba(74, 222, 128, 0.3);
-		--sc-accent: #93c5fd;
+		--sc-display: 'Fraunces', Georgia, serif;
+		--sc-body:    'DM Sans', sans-serif;
+		--sc-mono:    'DM Mono', monospace;
+		--sc-glass:   rgba(8, 14, 26, 0.75);
+		--sc-border:  rgba(255, 255, 255, 0.09);
+		--sc-text:    rgba(235, 243, 255, 0.95);
+		--sc-dim:     rgba(160, 185, 220, 0.5);
+		--sc-open:    #4ade80;
+		--sc-accent:  #93c5fd;
+		--sc-sim:     #fbbf24;
 	}
 
 	/* ── Canvas ── */
@@ -323,18 +538,17 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		font-family: var(--sc-font-body);
+		font-family: var(--sc-body);
 	}
 
-	/* ── Ambient background glow ── */
 	.sc-ambient {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
 		z-index: 0;
 		background:
-			radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59, 130, 246, 0.07) 0%, transparent 60%),
-			radial-gradient(ellipse 60% 80% at 80% 90%, rgba(139, 92, 246, 0.06) 0%, transparent 60%);
+			radial-gradient(ellipse 70% 50% at 15% 5%, rgba(59, 130, 246, 0.08) 0%, transparent 55%),
+			radial-gradient(ellipse 50% 70% at 85% 95%, rgba(139, 92, 246, 0.07) 0%, transparent 55%);
 	}
 
 	/* ── Top bar ── */
@@ -344,212 +558,187 @@
 		display: flex;
 		align-items: stretch;
 		justify-content: space-between;
-		gap: 12px;
-		padding: 10px 16px 0;
+		gap: 10px;
+		padding: 10px 14px 0;
 		flex-shrink: 0;
 	}
 
-	/* ── Page tabs ── */
 	.sc-tabs {
 		display: flex;
-		gap: 4px;
+		gap: 3px;
 		flex: 1;
+		min-width: 0;
 	}
 
 	.sc-tab {
 		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 8px 14px 10px;
-		border-radius: 10px 10px 0 0;
+		gap: 5px;
+		padding: 7px 13px 9px;
+		border-radius: 9px 9px 0 0;
 		border: 1px solid var(--sc-border);
 		border-bottom: none;
-		background: rgba(255, 255, 255, 0.04);
-		color: var(--sc-text-dim);
+		background: rgba(255, 255, 255, 0.03);
+		color: var(--sc-dim);
 		cursor: pointer;
-		font-family: var(--sc-font-body);
+		font-family: var(--sc-body);
 		font-size: 12px;
 		font-weight: 500;
-		letter-spacing: 0.2px;
-		transition: background 0.2s, color 0.2s;
+		transition: background 0.18s, color 0.18s;
 		overflow: hidden;
+		white-space: nowrap;
 	}
 
-	.sc-tab:hover {
-		background: rgba(255, 255, 255, 0.08);
-		color: var(--sc-text);
-	}
+	.sc-tab:hover { background: rgba(255,255,255,0.07); color: var(--sc-text); }
 
 	.sc-tab-active {
-		background: rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.09);
 		color: var(--sc-text);
-		border-color: rgba(255, 255, 255, 0.18);
+		border-color: rgba(255, 255, 255, 0.15);
 	}
 
-	.tab-emoji {
-		font-size: 14px;
-		line-height: 1;
-	}
+	.tab-emoji { font-size: 13px; line-height: 1; }
+	.tab-label { overflow: hidden; text-overflow: ellipsis; }
 
-	.tab-label {
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	/* Progress bar inside active tab */
 	.tab-progress {
 		position: absolute;
-		bottom: 0;
-		left: 0;
+		bottom: 0; left: 0;
 		height: 2px;
 		background: var(--sc-accent);
-		animation: tab-progress linear forwards;
 		box-shadow: 0 0 6px var(--sc-accent);
+		animation: tab-prog linear forwards;
+	}
+	@keyframes tab-prog { from { width: 0; } to { width: 100%; } }
+
+	/* Top bar right */
+	.sc-topbar-right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+		padding-bottom: 2px;
 	}
 
-	@keyframes tab-progress {
-		from { width: 0%; }
-		to   { width: 100%; }
+	/* Sim reset button */
+	.sim-reset-btn {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		padding: 5px 11px;
+		border-radius: 8px;
+		border: 1px solid rgba(251, 191, 36, 0.35);
+		background: rgba(251, 191, 36, 0.1);
+		color: var(--sc-sim);
+		font-family: var(--sc-mono);
+		font-size: 11px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.15s;
 	}
+	.sim-reset-btn:hover { background: rgba(251,191,36,0.18); }
+	.sim-icon { font-size: 13px; }
+	.sim-reset-x { opacity: 0.6; margin-left: 2px; }
 
-	/* ── Runner badge ── */
+	/* Runner badge */
 	.sc-runner {
 		display: flex;
 		align-items: center;
-		gap: 7px;
-		padding: 6px 14px;
+		gap: 6px;
+		padding: 5px 12px;
 		background: var(--sc-glass);
 		border: 1px solid var(--sc-border);
 		border-radius: 8px;
-		font-size: 12px;
+		font-size: 11px;
 		color: var(--sc-text);
-		flex-shrink: 0;
-		align-self: center;
-		margin-bottom: 2px;
 	}
 
 	.runner-dot {
 		display: block;
-		width: 6px;
-		height: 6px;
+		width: 6px; height: 6px;
 		border-radius: 50%;
 		background: var(--sc-open);
-		box-shadow: 0 0 6px var(--sc-open);
+		box-shadow: 0 0 5px var(--sc-open);
 		flex-shrink: 0;
-		animation: runner-blink 3s ease-in-out infinite;
+		animation: blink-dot 3s ease-in-out infinite;
 	}
+	@keyframes blink-dot { 0%,85%,100% { opacity:1; } 90% { opacity:0.1; } }
 
-	@keyframes runner-blink {
-		0%, 85%, 100% { opacity: 1; }
-		90% { opacity: 0.1; }
-	}
+	.runner-text { color: var(--sc-dim); }
+	.runner-text strong { color: var(--sc-text); font-weight: 600; }
 
-	.runner-text {
-		color: rgba(200, 220, 245, 0.7);
-	}
-
-	.runner-text strong {
-		color: var(--sc-text);
-		font-weight: 600;
-	}
-
-	/* ── Page content ── */
+	/* ── Page ── */
 	.sc-page {
 		position: relative;
 		z-index: 5;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 0 16px 70px;
+		padding: 0 14px 66px;
 		overflow: hidden;
-		background: rgba(255, 255, 255, 0.05);
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		margin: 0 0 0 0;
+		background: rgba(255,255,255,0.04);
+		border-top: 1px solid rgba(255,255,255,0.08);
+		min-height: 0;
 	}
 
-	.sc-page-next {
-		animation: page-slide-next 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-	}
+	.sc-page-next { animation: slide-next 0.42s cubic-bezier(.25,.46,.45,.94) both; }
+	.sc-page-prev { animation: slide-prev 0.42s cubic-bezier(.25,.46,.45,.94) both; }
 
-	.sc-page-prev {
-		animation: page-slide-prev 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-	}
+	@keyframes slide-next { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:translateX(0); } }
+	@keyframes slide-prev { from { opacity:0; transform:translateX(-36px); } to { opacity:1; transform:translateX(0); } }
 
-	@keyframes page-slide-next {
-		from { opacity: 0; transform: translateX(40px); }
-		to   { opacity: 1; transform: translateX(0); }
-	}
-
-	@keyframes page-slide-prev {
-		from { opacity: 0; transform: translateX(-40px); }
-		to   { opacity: 1; transform: translateX(0); }
-	}
-
-	/* ── Page headline ── */
+	/* ── Floor headline ── */
 	.sc-headline {
 		display: flex;
 		align-items: center;
-		gap: 16px;
-		padding: 18px 4px 16px;
+		gap: 14px;
+		padding: 14px 4px 12px;
 		flex-shrink: 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-		margin-bottom: 18px;
+		border-bottom: 1px solid rgba(255,255,255,0.06);
+		margin-bottom: 14px;
 	}
 
-	.headline-emoji {
-		font-size: 36px;
-		line-height: 1;
-		filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-	}
+	.headline-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
 
 	.headline-title {
-		font-family: var(--sc-font-display);
-		font-size: 30px;
+		font-family: var(--sc-display);
+		font-size: 26px;
 		font-weight: 600;
 		color: var(--sc-text);
-		margin: 0 0 3px;
+		margin: 0 0 2px;
 		line-height: 1.1;
-		letter-spacing: -0.3px;
+		letter-spacing: -0.2px;
 	}
 
-	.headline-meta {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 12px;
-		font-family: var(--sc-font-body);
-	}
+	.headline-meta { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+	.meta-open   { color: var(--sc-open); font-weight: 600; }
+	.meta-sep    { color: var(--sc-dim); }
+	.meta-total  { color: var(--sc-dim); }
 
-	.meta-open { color: var(--sc-open); font-weight: 600; }
-	.meta-sep  { color: var(--sc-text-dim); }
-	.meta-total { color: var(--sc-text-dim); }
-
-	/* ── Rooms grid ── */
+	/* ── Grid ── */
 	.sc-grid {
 		flex: 1;
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		grid-template-rows: repeat(2, 1fr);
-		gap: 14px;
-		max-width: 960px;
+		gap: 12px;
+		max-width: 980px;
 		width: 100%;
 		margin: 0 auto;
 		min-height: 0;
 	}
 
-	/* Single room: full width */
-	.sc-grid-1 {
-		grid-template-columns: 1fr;
-		grid-template-rows: 1fr;
-		max-width: 500px;
-	}
+	.sc-grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; max-width: 480px; }
+	.sc-grid-2 { grid-template-rows: 1fr; }
 
-	/* 3+ rooms: keep 2-col but allow wrap */
-	.sc-grid-3plus {
-		grid-template-rows: auto;
-		align-content: start;
+	.sc-empty {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 13px;
+		color: var(--sc-dim);
+		letter-spacing: 0.5px;
 	}
 
 	/* ── Room tile ── */
@@ -558,111 +747,119 @@
 		border-radius: 16px;
 		overflow: hidden;
 		cursor: pointer;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		background: rgba(20, 30, 50, 0.7);
+		border: 1px solid rgba(255,255,255,0.08);
+		background: rgba(15, 23, 42, 0.8);
 		display: flex;
 		flex-direction: column;
 		text-align: left;
-		transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
 		min-height: 0;
+		transition: border-color 0.2s, transform 0.15s;
 		-webkit-tap-highlight-color: transparent;
 	}
 
-	.sc-tile:active {
-		transform: scale(0.97);
-	}
+	.sc-tile:active { transform: scale(0.975); }
+	.sc-tile.tile-open { border-color: rgba(74, 222, 128, 0.22); }
+	.sc-tile.tile-soon { border-color: rgba(251, 191, 36, 0.3); }
+	.sc-tile.tile-closing { border-color: rgba(251, 146, 60, 0.3); }
+	.sc-tile.tile-simulated { border-color: rgba(251, 191, 36, 0.4); }
 
-	.sc-tile.tile-open {
-		border-color: rgba(74, 222, 128, 0.25);
-	}
-
-	.sc-tile.tile-open:active {
-		box-shadow: 0 0 24px rgba(74, 222, 128, 0.2);
-	}
-
-	/* Background image */
 	.tile-bg {
 		position: absolute;
 		inset: 0;
-		width: 100%;
-		height: 100%;
+		width: 100%; height: 100%;
 		object-fit: cover;
-		opacity: 0.18;
+		opacity: 0.15;
 		z-index: 0;
 	}
 
-	/* Color overlay */
-	.tile-overlay {
+	.tile-wash {
 		position: absolute;
 		inset: 0;
-		opacity: 0.35;
+		opacity: 0.28;
 		z-index: 1;
-		transition: opacity 0.3s;
+		transition: background 0.4s;
 	}
 
-	/* Content layer */
-	.tile-content {
+	.tile-inner {
 		position: relative;
 		z-index: 2;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 14px 16px 14px;
+		justify-content: space-between;
+		padding: 12px 14px 13px;
+		gap: 6px;
+		min-height: 0;
 	}
 
-	/* Status badge top-right */
-	.tile-status-badge {
-		align-self: flex-end;
+	/* Top: status pill + sim icon */
+	.tile-top {
 		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.tile-status-pill {
+		display: inline-flex;
 		align-items: center;
 		gap: 5px;
 		padding: 3px 9px 3px 7px;
 		border-radius: 20px;
-		background: rgba(0, 0, 0, 0.5);
-		border: 1px solid rgba(100, 116, 139, 0.4);
 		font-size: 10px;
 		font-weight: 600;
-		color: rgba(148, 163, 184, 0.9);
-		letter-spacing: 0.3px;
-		margin-bottom: 10px;
+		letter-spacing: 0.2px;
+		border: 1px solid rgba(100,116,139,0.35);
+		background: rgba(15,23,42,0.6);
+		color: rgba(148,163,184,0.9);
 	}
 
-	.tile-status-badge.open {
-		background: rgba(74, 222, 128, 0.12);
-		border-color: rgba(74, 222, 128, 0.35);
+	.tile-status-pill.open {
+		border-color: rgba(74,222,128,0.35);
+		background: rgba(74,222,128,0.08);
 		color: #86efac;
 	}
 
-	.status-pip {
+	.tile-status-pill.soon, .tile-status-pill.closing {
+		border-color: rgba(251,191,36,0.35);
+		background: rgba(251,191,36,0.08);
+		color: #fde68a;
+	}
+
+	.pill-dot {
 		display: block;
-		width: 5px;
-		height: 5px;
+		width: 5px; height: 5px;
 		border-radius: 50%;
 		background: currentColor;
 		box-shadow: 0 0 4px currentColor;
 	}
 
-	.tile-body {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
+	.tile-sim-badge {
+		font-size: 14px;
+		filter: drop-shadow(0 0 4px rgba(251,191,36,0.5));
 	}
 
+	/* Mid: name + activity */
+	.tile-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
 	.tile-name {
-		font-family: var(--sc-font-display);
-		font-size: 20px;
+		font-family: var(--sc-display);
+		font-size: 19px;
 		font-weight: 600;
 		color: var(--sc-text);
-		margin: 0 0 5px;
+		margin: 0 0 4px;
 		line-height: 1.2;
 		text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
 	}
 
 	.tile-activity {
-		font-size: 12px;
-		color: rgba(200, 220, 245, 0.75);
-		margin: 0 0 6px;
+		font-size: 11px;
+		color: rgba(190,215,245,0.65);
+		margin: 0;
 		line-height: 1.3;
 		overflow: hidden;
 		display: -webkit-box;
@@ -671,285 +868,414 @@
 		-webkit-box-orient: vertical;
 	}
 
-	.tile-person {
+	/* Bottom: badges */
+	.tile-bottom {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+		align-items: center;
+	}
+
+	.tile-person-badge {
 		display: flex;
 		align-items: center;
-		gap: 5px;
-		font-size: 11px;
-		color: rgba(180, 200, 230, 0.65);
-	}
-
-	.person-icon { font-size: 12px; }
-
-	/* Tap hint bottom-right */
-	.tile-tap-hint {
-		position: absolute;
-		bottom: 12px;
-		right: 14px;
+		gap: 4px;
+		padding: 2px 8px 2px 5px;
+		border-radius: 10px;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.1);
 		font-size: 10px;
-		color: rgba(180, 200, 230, 0.35);
-		font-family: var(--sc-font-body);
-		letter-spacing: 0.5px;
-		transition: color 0.2s;
+		color: rgba(200,220,245,0.8);
 	}
 
-	.sc-tile:hover .tile-tap-hint {
-		color: rgba(180, 200, 230, 0.65);
+	.person-avatar { font-size: 10px; }
+	.person-name   { font-weight: 500; white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+
+	.tile-time-badge {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px 2px 5px;
+		border-radius: 10px;
+		background: rgba(251,191,36,0.08);
+		border: 1px solid rgba(251,191,36,0.2);
+		font-size: 10px;
+		font-family: var(--sc-mono);
+		color: #fde68a;
 	}
 
-	/* Open glow ring */
+	.tile-time-badge.closing {
+		background: rgba(251,146,60,0.08);
+		border-color: rgba(251,146,60,0.2);
+		color: #fed7aa;
+	}
+
+	/* Open ring */
 	.tile-open-ring {
 		position: absolute;
 		inset: 0;
 		border-radius: 16px;
-		border: 2px solid rgba(74, 222, 128, 0.4);
+		border: 2px solid rgba(74,222,128,0.35);
 		pointer-events: none;
-		animation: tile-ring-pulse 3s ease-in-out infinite;
+		animation: ring-pulse 3s ease-in-out infinite;
 	}
 
-	@keyframes tile-ring-pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.4; }
-	}
+	@keyframes ring-pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
 	/* ── Nav arrows ── */
 	.sc-nav {
 		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 44px;
-		height: 72px;
+		top: 50%; transform: translateY(-50%);
+		width: 42px; height: 68px;
 		background: var(--sc-glass);
 		border: 1px solid var(--sc-border);
 		color: var(--sc-text);
-		font-size: 32px;
+		font-size: 30px;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 20;
-		transition: background 0.2s;
+		transition: background 0.15s;
 		-webkit-tap-highlight-color: transparent;
 	}
 
-	.sc-nav:active { background: rgba(255,255,255,0.12); }
-
+	.sc-nav:active { background: rgba(255,255,255,0.1); }
 	.sc-nav-prev { left: 0; border-radius: 0 10px 10px 0; }
 	.sc-nav-next { right: 0; border-radius: 10px 0 0 10px; }
 
-	/* ── Empty ── */
-	.sc-empty {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 14px;
-		color: var(--sc-text-dim);
-		letter-spacing: 0.5px;
-	}
-
-	/* ── Detail bottom sheet ── */
-	.detail-backdrop {
+	/* ── Panel backdrop ── */
+	.panel-backdrop {
 		position: absolute;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0,0,0,0.45);
 		z-index: 40;
 		backdrop-filter: blur(2px);
 		-webkit-backdrop-filter: blur(2px);
 	}
 
-	.detail-sheet {
+	/* ── Side panel ── */
+	.side-panel {
 		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
+		top: 0; right: 0; bottom: 0;
+		width: min(340px, 92vw);
 		z-index: 50;
-		background: rgba(8, 16, 30, 0.97);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border-top: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 20px 20px 0 0;
-		padding-bottom: env(safe-area-inset-bottom, 0px);
-		box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
-	}
-
-	.sheet-handle {
-		width: 40px;
-		height: 4px;
-		border-radius: 2px;
-		background: rgba(255, 255, 255, 0.2);
-		margin: 12px auto 0;
-	}
-
-	.sheet-body {
+		background: rgba(6, 12, 24, 0.97);
+		backdrop-filter: blur(24px);
+		-webkit-backdrop-filter: blur(24px);
+		border-left: 1px solid rgba(255,255,255,0.1);
 		display: flex;
-		gap: 0;
+		flex-direction: column;
 		overflow: hidden;
-		border-radius: 16px 16px 0 0;
-		margin-top: 12px;
 	}
 
-	.sheet-accent {
-		width: 5px;
+	.panel-stripe {
+		height: 4px;
+		width: 100%;
 		flex-shrink: 0;
-		opacity: 0.7;
+		transition: background 0.4s;
 	}
 
-	.sheet-info {
+	.panel-content {
 		flex: 1;
-		padding: 16px 20px 20px;
+		overflow-y: auto;
+		padding: 20px 20px 28px;
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255,255,255,0.1) transparent;
 	}
 
-	.sheet-header {
+	/* Panel header */
+	.panel-header {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
-		gap: 12px;
-		margin-bottom: 14px;
+		gap: 10px;
+		margin-bottom: 12px;
 	}
 
-	.sheet-floor {
-		font-size: 10px;
+	.panel-floor-label {
+		font-family: var(--sc-mono);
+		font-size: 9px;
 		letter-spacing: 2px;
 		text-transform: uppercase;
-		color: var(--sc-text-dim);
-		font-family: 'DM Mono', monospace;
-		margin-bottom: 3px;
+		color: var(--sc-dim);
+		margin-bottom: 4px;
 	}
 
-	.sheet-name {
-		font-family: var(--sc-font-display);
-		font-size: 26px;
+	.panel-room-name {
+		font-family: var(--sc-display);
+		font-size: 24px;
 		font-weight: 700;
 		color: var(--sc-text);
 		margin: 0;
-		line-height: 1.1;
+		line-height: 1.15;
+		word-break: break-word;
 	}
 
-	.sheet-status {
+	.panel-close {
+		width: 32px; height: 32px;
+		border-radius: 8px;
+		border: 1px solid var(--sc-border);
+		background: rgba(255,255,255,0.04);
+		color: var(--sc-dim);
+		font-size: 14px;
+		cursor: pointer;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 5px 12px;
-		border-radius: 20px;
-		background: rgba(71, 85, 105, 0.3);
-		border: 1px solid rgba(100, 116, 139, 0.3);
-		font-size: 11px;
-		font-weight: 600;
-		color: rgba(148, 163, 184, 0.9);
-		white-space: nowrap;
+		justify-content: center;
 		flex-shrink: 0;
-		margin-top: 4px;
+		transition: background 0.15s, color 0.15s;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.panel-close:active { background: rgba(255,255,255,0.1); color: var(--sc-text); }
+
+	/* Status row */
+	.panel-status-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 18px;
 	}
 
-	.sheet-status.open {
-		background: rgba(74, 222, 128, 0.1);
-		border-color: rgba(74, 222, 128, 0.3);
+	.panel-status-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 5px 13px 5px 10px;
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: 600;
+		background: rgba(71,85,105,0.3);
+		border: 1px solid rgba(100,116,139,0.3);
+		color: rgba(148,163,184,0.9);
+	}
+
+	.panel-status-badge.open {
+		background: rgba(74,222,128,0.1);
+		border-color: rgba(74,222,128,0.3);
 		color: #86efac;
 	}
 
-	.sheet-status-pip {
+	.panel-status-badge.soon, .panel-status-badge.closing {
+		background: rgba(251,191,36,0.1);
+		border-color: rgba(251,191,36,0.3);
+		color: #fde68a;
+	}
+
+	.status-pip {
 		display: block;
-		width: 6px;
-		height: 6px;
+		width: 6px; height: 6px;
 		border-radius: 50%;
 		background: currentColor;
 		box-shadow: 0 0 5px currentColor;
 	}
 
-	.sheet-details {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		margin-bottom: 16px;
-		padding: 12px 14px;
-		background: rgba(255, 255, 255, 0.04);
-		border-radius: 10px;
-		border: 1px solid rgba(255, 255, 255, 0.07);
+	.panel-sim-tag {
+		font-family: var(--sc-mono);
+		font-size: 10px;
+		color: var(--sc-sim);
+		letter-spacing: 0.5px;
 	}
 
-	.sheet-detail-row {
-		display: flex;
-		align-items: flex-start;
-		gap: 10px;
-		font-size: 13px;
-		color: rgba(200, 220, 245, 0.8);
+	/* Sections */
+	.panel-section {
+		margin-bottom: 14px;
+	}
+
+	.section-label {
+		font-family: var(--sc-mono);
+		font-size: 9px;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		color: var(--sc-dim);
+		margin-bottom: 9px;
+	}
+
+	.panel-divider {
+		height: 1px;
+		background: rgba(255,255,255,0.07);
+		margin: 14px 0;
+	}
+
+	/* ── Simulation section ── */
+	.sim-toggle-block {
+		background: rgba(251,191,36,0.06);
+		border: 1px solid rgba(251,191,36,0.18);
+		border-radius: 10px;
+		padding: 12px 14px;
+	}
+
+	.sim-desc {
+		font-size: 11px;
+		color: var(--sc-dim);
+		margin: 0 0 10px;
 		line-height: 1.4;
 	}
 
-	.sheet-detail-icon {
-		font-size: 14px;
-		flex-shrink: 0;
-		margin-top: 1px;
+	.sim-toggle-btn {
+		width: 100%;
+		padding: 10px 14px;
+		border-radius: 8px;
+		border: 1px solid rgba(251,191,36,0.3);
+		background: rgba(251,191,36,0.1);
+		color: var(--sc-sim);
+		font-family: var(--sc-body);
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+		text-align: center;
+		-webkit-tap-highlight-color: transparent;
 	}
 
-	.sheet-detail-text {
-		flex: 1;
-	}
+	.sim-toggle-btn:active { background: rgba(251,191,36,0.2); }
 
-	.sheet-actions {
+	.sim-toggle-btn.sim-open {
+		border-color: rgba(74,222,128,0.3);
+		background: rgba(74,222,128,0.08);
+		color: #86efac;
+	}
+	.sim-toggle-btn.sim-open:active { background: rgba(74,222,128,0.18); }
+
+	.sim-toggle-btn.sim-close {
+		border-color: rgba(239,68,68,0.3);
+		background: rgba(239,68,68,0.08);
+		color: #fca5a5;
+	}
+	.sim-toggle-btn.sim-close:active { background: rgba(239,68,68,0.18); }
+
+	/* ── Time row ── */
+	.time-row {
 		display: flex;
-		gap: 10px;
 		align-items: center;
+		gap: 8px;
+		margin-bottom: 10px;
 	}
 
-	.sheet-edit-btn {
-		flex: 1;
-		padding: 12px 20px;
+	.time-chip {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 5px 12px;
+		border-radius: 8px;
+		font-family: var(--sc-mono);
+		font-size: 13px;
+		font-weight: 500;
+		border: 1px solid;
+	}
+
+	.open-chip  { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.25); color: #86efac; }
+	.close-chip { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.25);  color: #fca5a5; }
+	.time-arrow { color: var(--sc-dim); font-size: 16px; }
+	.time-chip-icon { font-size: 12px; }
+
+	/* Timeline */
+	.timeline-wrap { display: flex; flex-direction: column; gap: 4px; }
+
+	.timeline-track {
+		position: relative;
+		height: 6px;
+		background: rgba(255,255,255,0.08);
+		border-radius: 3px;
+		overflow: visible;
+	}
+
+	.timeline-fill {
+		position: absolute;
+		top: 0; bottom: 0;
+		background: rgba(100,116,139,0.5);
+		border-radius: 3px;
+		transition: background 0.4s;
+	}
+
+	.timeline-fill.fill-open { background: rgba(74,222,128,0.6); }
+
+	.timeline-now {
+		position: absolute;
+		top: -3px; bottom: -3px;
+		width: 2px;
+		background: #f87171;
+		border-radius: 1px;
+		transform: translateX(-50%);
+		box-shadow: 0 0 4px #f87171;
+	}
+
+	.timeline-labels {
+		display: flex;
+		justify-content: space-between;
+		font-family: var(--sc-mono);
+		font-size: 9px;
+		color: var(--sc-dim);
+	}
+
+	/* ── Person ── */
+	.person-list { display: flex; flex-direction: column; gap: 6px; }
+
+	.person-chip {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 12px;
+		border-radius: 10px;
+		background: rgba(255,255,255,0.04);
+		border: 1px solid rgba(255,255,255,0.08);
+	}
+
+	.person-avatar-lg  { font-size: 18px; }
+	.person-chip-name  { font-size: 13px; font-weight: 600; color: var(--sc-text); }
+
+	/* ── Activity ── */
+	.panel-activity {
+		font-size: 13px;
+		color: rgba(200,220,245,0.8);
+		line-height: 1.5;
+		margin: 0;
+		padding: 10px 12px;
+		background: rgba(255,255,255,0.04);
+		border-radius: 8px;
+		border: 1px solid rgba(255,255,255,0.07);
+	}
+
+	/* ── Actions ── */
+	.panel-actions { margin-top: 6px; }
+
+	.panel-edit-btn {
+		width: 100%;
+		padding: 13px 20px;
 		border-radius: 12px;
-		border: 1px solid rgba(147, 197, 253, 0.3);
-		background: rgba(147, 197, 253, 0.1);
+		border: 1px solid rgba(147,197,253,0.28);
+		background: rgba(147,197,253,0.08);
 		color: var(--sc-accent);
-		font-family: var(--sc-font-body);
+		font-family: var(--sc-body);
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background 0.15s;
 		-webkit-tap-highlight-color: transparent;
 	}
-
-	.sheet-edit-btn:active {
-		background: rgba(147, 197, 253, 0.2);
-	}
-
-	.sheet-close-btn {
-		width: 44px;
-		height: 44px;
-		border-radius: 12px;
-		border: 1px solid var(--sc-border);
-		background: rgba(255, 255, 255, 0.05);
-		color: var(--sc-text-dim);
-		font-size: 16px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		-webkit-tap-highlight-color: transparent;
-	}
-
-	.sheet-close-btn:active {
-		background: rgba(255, 255, 255, 0.1);
-	}
+	.panel-edit-btn:active { background: rgba(147,197,253,0.18); }
 
 	/* ── Responsive ── */
 	@media (max-width: 768px) {
-		.sc-topbar { padding: 8px 10px 0; }
-		.sc-tab { padding: 6px 10px 8px; font-size: 11px; }
+		.sc-topbar { padding: 7px 10px 0; }
+		.sc-tab { padding: 6px 9px 8px; font-size: 11px; }
 		.tab-emoji { font-size: 12px; }
 		.sc-page { padding: 0 10px 60px; }
-		.sc-headline { padding: 12px 2px 12px; margin-bottom: 12px; }
-		.headline-emoji { font-size: 28px; }
-		.headline-title { font-size: 24px; }
-		.sc-grid { gap: 10px; }
+		.sc-headline { padding: 10px 2px 10px; margin-bottom: 10px; }
+		.headline-emoji { font-size: 26px; }
+		.headline-title { font-size: 22px; }
+		.sc-grid { gap: 9px; }
 		.tile-name { font-size: 16px; }
-		.sheet-name { font-size: 22px; }
+		.side-panel { width: min(300px, 95vw); }
 	}
 
 	@media (max-width: 480px) {
-		.sc-tabs { gap: 2px; }
-		.sc-tab { padding: 5px 8px 7px; }
 		.tab-label { display: none; }
-		.sc-grid { gap: 8px; }
-		.tile-content { padding: 10px 12px; }
+		.sc-grid { gap: 7px; }
+		.tile-inner { padding: 9px 11px 10px; }
+		.side-panel { width: 100%; border-left: none; border-top: 1px solid var(--sc-border); top: auto; height: 85vh; border-radius: 16px 16px 0 0; }
 	}
 </style>
