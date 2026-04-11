@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { rooms, roomStatuses } from '$lib/stores/appState';
 	import type { RoomWithConfig } from '$lib/types';
+	import { onMount, onDestroy } from 'svelte';
 
 	let { handleEditRoom } = $props<{ handleEditRoom: (room: RoomWithConfig) => void }>();
 
-	const FLOOR_ORDER = ['eg', 'og1', 'og2', 'dach', 'ug', 'essen', 'extern'];
+	const FLOOR_ORDER = ['dach', 'og2', 'og1', 'eg', 'essen', 'ug', 'extern'];
 	const FLOOR_LABELS: Record<string, string> = {
-		eg: 'EG', og1: 'OG1', og2: 'OG2', dach: 'DACH', ug: 'UG', essen: 'ESSEN', extern: 'EXT'
+		dach: 'Dach', og2: 'OG 2', og1: 'OG 1', eg: 'EG', essen: 'Essen', ug: 'UG', extern: 'Extern'
 	};
-
-	// Orbital radii for each floor tier (px, relative to center)
-	const ORBIT_RADII = [90, 155, 215, 270, 320, 365, 405];
+	const FLOOR_COLORS: Record<string, string> = {
+		dach: '#a78bfa', og2: '#60a5fa', og1: '#34d399',
+		eg: '#fbbf24', essen: '#f87171', ug: '#94a3b8', extern: '#fb923c'
+	};
 
 	let allRooms = $derived(
 		$rooms.map((r) => ({
@@ -21,7 +23,6 @@
 		})) as RoomWithConfig[]
 	);
 
-	// Group by floor in order
 	let floorGroups = $derived(() => {
 		const map = new Map<string, RoomWithConfig[]>();
 		for (const r of allRooms) {
@@ -32,190 +33,197 @@
 			.filter(f => map.has(f))
 			.map((f, i) => ({
 				floor: f,
-				label: FLOOR_LABELS[f] ?? f.toUpperCase(),
+				label: FLOOR_LABELS[f] ?? f,
+				color: FLOOR_COLORS[f] ?? '#94a3b8',
 				rooms: map.get(f)!,
-				radius: ORBIT_RADII[i] ?? ORBIT_RADII[ORBIT_RADII.length - 1]
+				orbitIndex: i
 			}));
 	});
 
-	// Place rooms evenly around their orbit
-	function nodePosition(index: number, total: number, radius: number): { x: number; y: number } {
-		const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
-		return {
-			x: Math.cos(angle) * radius,
-			y: Math.sin(angle) * radius
-		};
+	// Continuous rotation — never pauses (iPad/TV passive display)
+	let rotationY = $state(0);
+	let animFrame: number;
+	let lastTime = 0;
+
+	function animate(ts: number) {
+		const dt = lastTime ? ts - lastTime : 0;
+		rotationY = (rotationY + dt * 0.010) % 360;
+		lastTime = ts;
+		animFrame = requestAnimationFrame(animate);
 	}
 
-	let hoveredRoom = $state<string | null>(null);
-	let selectedRoom = $state<RoomWithConfig | null>(null);
+	onMount(() => { animFrame = requestAnimationFrame(animate); });
+	onDestroy(() => { cancelAnimationFrame(animFrame); });
 
-	function selectRoom(room: RoomWithConfig) {
-		selectedRoom = selectedRoom?.id === room.id ? null : room;
+	// Compute chip position on its orbit ring
+	// Returns inline style string with transform + depth effects
+	function chipStyle(orbitIndex: number, cardIndex: number, total: number): string {
+		const baseRadius = 110 + orbitIndex * 100;
+		// Stagger orbit speed slightly per ring for organic feel
+		const speedOffset = orbitIndex * 15;
+		const angle = ((cardIndex / total) * 360 + rotationY + speedOffset) * (Math.PI / 180);
+		const x = Math.cos(angle) * baseRadius;
+		const z = Math.sin(angle) * baseRadius;
+		// Depth: items "behind" (z < 0) appear smaller and dimmer
+		const depthFactor = (z + baseRadius) / (2 * baseRadius); // 0 = far, 1 = near
+		const scale = 0.68 + depthFactor * 0.32;
+		const yShift = (1 - depthFactor) * 28; // slight vertical parallax
+		const brightness = 0.45 + depthFactor * 0.55;
+		const zIndex = Math.round(depthFactor * 100 + orbitIndex);
+		return `transform: translateX(${x}px) translateY(${yShift}px) scale(${scale}); filter: brightness(${brightness}); z-index: ${zIndex};`;
 	}
 </script>
 
-<div class="orbital-canvas">
-	<!-- Starfield background -->
+<div class="solar-canvas" role="presentation">
+
+	<!-- Starfield -->
 	<div class="starfield" aria-hidden="true">
-		{#each { length: 80 } as _, i}
-			<div
-				class="star"
-				style="
-					left: {(i * 137.508) % 100}%;
-					top: {(i * 97.3) % 100}%;
-					width: {(i % 3) + 1}px;
-					height: {(i % 3) + 1}px;
-					animation-delay: {(i * 0.23) % 4}s;
-					opacity: {0.2 + (i % 5) * 0.12};
-				"
-			></div>
+		{#each { length: 110 } as _, i}
+			<div class="star" style="
+				left: {(i * 131.17) % 100}%;
+				top: {(i * 79.43) % 100}%;
+				width: {1 + (i % 3)}px;
+				height: {1 + (i % 3)}px;
+				opacity: {0.12 + (i % 6) * 0.09};
+				animation-delay: {(i * 0.37) % 5}s;
+				animation-duration: {3 + (i % 4)}s;
+			"></div>
 		{/each}
 	</div>
 
-	<div class="orbital-system">
-		<!-- SVG for orbits and connection lines -->
-		<svg class="orbital-svg" viewBox="-450 -450 900 900" xmlns="http://www.w3.org/2000/svg">
-			<!-- Orbit rings -->
-			{#each floorGroups() as group}
-				<circle
-					class="orbit-ring"
-					cx="0"
-					cy="0"
-					r={group.radius}
-				/>
-				<!-- Floor label on ring -->
-				<text
-					class="orbit-label"
-					x={group.radius + 6}
-					y="4"
-				>{group.label}</text>
-			{/each}
+	<!-- Depth vignette -->
+	<div class="depth-vignette" aria-hidden="true"></div>
 
-			<!-- Connection lines from center to open rooms -->
-			{#each floorGroups() as group}
-				{#each group.rooms as room, i}
-					{@const pos = nodePosition(i, group.rooms.length, group.radius)}
-					{#if room.isOpen}
-						<line
-							class="spoke open"
-							x1="0" y1="0"
-							x2={pos.x} y2={pos.y}
-						/>
-					{/if}
-				{/each}
-			{/each}
-		</svg>
+	<div class="solar-system">
 
-		<!-- Central nucleus -->
-		<div class="nucleus" aria-hidden="true">
-			<div class="nucleus-core"></div>
-			<div class="nucleus-ring"></div>
-			<div class="nucleus-ring nucleus-ring-2"></div>
+		<!-- Decorative orbit rings -->
+		<div class="orbit-rings-wrap" aria-hidden="true">
+			{#each floorGroups() as group, i}
+				{@const r = 110 + i * 100}
+				<div class="orbit-ring" style="
+					width: {r * 2}px;
+					height: {r * 0.52}px;
+					border-color: {group.color}22;
+				"></div>
+			{/each}
 		</div>
 
-		<!-- Room nodes -->
+		<!-- Central sun -->
+		<div class="sun-wrap" aria-hidden="true">
+			<div class="sun-core"></div>
+			<div class="sun-ray sun-ray-1"></div>
+			<div class="sun-ray sun-ray-2"></div>
+			<div class="sun-ray sun-ray-3"></div>
+		</div>
+
+		<!-- Room chips — always visible, all info shown, no interaction needed -->
 		{#each floorGroups() as group}
-			{#each group.rooms as room, i}
-				{@const pos = nodePosition(i, group.rooms.length, group.radius)}
-				<button
-					class="room-node"
-					class:open={room.isOpen}
-					class:hovered={hoveredRoom === room.id}
-					class:selected={selectedRoom?.id === room.id}
-					style="transform: translate(calc(-50% + {pos.x}px), calc(-50% + {pos.y}px));"
-					onmouseenter={() => (hoveredRoom = room.id)}
-					onmouseleave={() => (hoveredRoom = null)}
-					onclick={() => selectRoom(room)}
-					aria-label="{room.name} — {room.isOpen ? 'geöffnet' : 'geschlossen'}"
+			{#each group.rooms as room, ci}
+				<div
+					class="room-chip"
+					class:chip-open={room.isOpen}
+					style={chipStyle(group.orbitIndex, ci, group.rooms.length)}
+					aria-label="{room.name}: {room.isOpen ? 'geöffnet' : 'geschlossen'}"
+					role="img"
 				>
-					<span class="node-pip"></span>
+					<!-- Top color bar = floor color -->
+					<div class="chip-bar" style="background: {group.color};"></div>
+
+					<div class="chip-body">
+						<!-- Floor label -->
+						<div class="chip-floor" style="color: {group.color};">{group.label}</div>
+						<!-- Room name -->
+						<div class="chip-name">{room.name}</div>
+						<!-- Activity if set -->
+						{#if room.config?.activity}
+							<div class="chip-activity">{room.config.activity}</div>
+						{/if}
+						<!-- Person if set -->
+						{#if room.person}
+							<div class="chip-person">👤 {room.person.split(',')[0].trim()}</div>
+						{/if}
+						<!-- Status pill -->
+						<div class="chip-status-pill" class:pill-open={room.isOpen}>
+							<span class="pill-dot" style="background: {room.isOpen ? '#4ade80' : '#64748b'};"></span>
+							{room.isOpen ? 'Geöffnet' : 'Geschlossen'}
+						</div>
+					</div>
+
+					<!-- Pulse glow for open rooms -->
 					{#if room.isOpen}
-						<span class="node-pulse" aria-hidden="true"></span>
+						<div class="open-glow" aria-hidden="true"></div>
 					{/if}
-				</button>
+				</div>
 			{/each}
 		{/each}
 	</div>
 
-	<!-- Tooltip / Detail panel -->
-	{#if selectedRoom}
-		<div class="detail-panel" role="dialog" aria-label="Raumdetails">
-			<div class="detail-header">
-				<span class="detail-status-dot" class:open={selectedRoom.isOpen}></span>
-				<span class="detail-floor">{FLOOR_LABELS[selectedRoom.floor] ?? selectedRoom.floor}</span>
+	<!-- Floor legend — always visible -->
+	<div class="floor-legend">
+		{#each floorGroups() as group}
+			<div class="legend-row">
+				<span class="legend-dot" style="background: {group.color}; box-shadow: 0 0 5px {group.color};"></span>
+				<span class="legend-name">{group.label}</span>
+				<span class="legend-ratio">
+					<span class="ratio-open">{group.rooms.filter(r => r.isOpen).length}</span>
+					<span class="ratio-sep">/</span>
+					<span class="ratio-total">{group.rooms.length}</span>
+				</span>
 			</div>
-			<h2 class="detail-name">{selectedRoom.name}</h2>
-			<div class="detail-badge" class:open={selectedRoom.isOpen}>
-				{selectedRoom.isOpen ? 'GEÖFFNET' : 'GESCHLOSSEN'}
-			</div>
-			<div class="detail-actions">
-				<button class="detail-edit-btn" onclick={() => { handleEditRoom(selectedRoom!); selectedRoom = null; }}>
-					Bearbeiten
-				</button>
-				<button class="detail-close-btn" onclick={() => (selectedRoom = null)}>✕</button>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Legend -->
-	<div class="legend">
-		<span class="legend-item open"><span class="legend-pip"></span>Geöffnet</span>
-		<span class="legend-item closed"><span class="legend-pip"></span>Geschlossen</span>
+		{/each}
 	</div>
 
-	<!-- Stats bar -->
+	<!-- Stats bar — always visible -->
 	<div class="stats-bar">
-		<span class="stat">
-			<span class="stat-val">{allRooms.filter(r => r.isOpen).length}</span>
-			<span class="stat-label">OFFEN</span>
-		</span>
-		<span class="stat-sep">/</span>
-		<span class="stat">
-			<span class="stat-val">{allRooms.length}</span>
-			<span class="stat-label">GESAMT</span>
-		</span>
-		<span class="stat">
-			<span class="stat-val">{floorGroups().length}</span>
-			<span class="stat-label">ETAGEN</span>
-		</span>
+		<div class="stat">
+			<span class="stat-num open-col">{allRooms.filter(r => r.isOpen).length}</span>
+			<span class="stat-lbl">Offen</span>
+		</div>
+		<div class="stat-sep"></div>
+		<div class="stat">
+			<span class="stat-num closed-col">{allRooms.length - allRooms.filter(r => r.isOpen).length}</span>
+			<span class="stat-lbl">Geschlossen</span>
+		</div>
+		<div class="stat-sep"></div>
+		<div class="stat">
+			<span class="stat-num accent-col">{allRooms.length}</span>
+			<span class="stat-lbl">Räume</span>
+		</div>
+		<div class="stat-sep"></div>
+		<div class="stat">
+			<span class="stat-num floor-col">{floorGroups().length}</span>
+			<span class="stat-lbl">Etagen</span>
+		</div>
 	</div>
 
 	{#if allRooms.length === 0}
-		<div class="empty">Keine Räume vorhanden.</div>
+		<div class="empty-msg">Keine Räume vorhanden.</div>
 	{/if}
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Orbitron:wght@400;700;900&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap');
 
-	/* ── Tokens ── */
 	:root {
-		--orb-open: #00ffc8;
-		--orb-open-glow: rgba(0, 255, 200, 0.35);
-		--orb-closed: #3a4a5c;
-		--orb-closed-dim: rgba(58, 74, 92, 0.6);
-		--orb-ring: rgba(100, 160, 220, 0.12);
-		--orb-ring-hover: rgba(100, 160, 220, 0.28);
-		--orb-bg: #020c18;
-		--orb-text: rgba(160, 200, 230, 0.85);
-		--orb-text-dim: rgba(100, 140, 170, 0.5);
-		--orb-accent: #4fc3f7;
-		--font-display: 'Orbitron', sans-serif;
+		--sol-bg: #03080f;
+		--sol-text: rgba(210, 228, 245, 0.92);
+		--sol-dim: rgba(120, 160, 190, 0.5);
+		--sol-accent: #7dd3fc;
+		--font-ui: 'Syne', sans-serif;
 		--font-mono: 'DM Mono', monospace;
 	}
 
 	/* ── Canvas ── */
-	.orbital-canvas {
+	.solar-canvas {
 		width: 100%;
 		height: 100%;
-		background: var(--orb-bg);
+		background: var(--sol-bg);
 		position: relative;
 		overflow: hidden;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: var(--font-mono);
+		font-family: var(--font-ui);
 	}
 
 	/* ── Starfield ── */
@@ -223,416 +231,339 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
+		z-index: 0;
 	}
 
 	.star {
 		position: absolute;
 		border-radius: 50%;
-		background: white;
-		animation: star-twinkle 4s ease-in-out infinite;
+		background: #fff;
+		animation: twinkle linear infinite;
 	}
 
-	@keyframes star-twinkle {
-		0%, 100% { opacity: inherit; transform: scale(1); }
-		50% { opacity: 0.05; transform: scale(0.5); }
+	@keyframes twinkle {
+		0%, 100% { opacity: inherit; }
+		50% { opacity: 0.03; }
 	}
 
-	/* ── Orbital System ── */
-	.orbital-system {
-		position: relative;
-		width: min(90vmin, 860px);
-		height: min(90vmin, 860px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	/* ── SVG Rings ── */
-	.orbital-svg {
+	/* ── Depth vignette ── */
+	.depth-vignette {
 		position: absolute;
 		inset: 0;
+		pointer-events: none;
+		z-index: 1;
+		background: radial-gradient(ellipse 65% 65% at 50% 50%, transparent 25%, rgba(3, 8, 15, 0.55) 100%);
+	}
+
+	/* ── Solar system ── */
+	.solar-system {
+		position: relative;
 		width: 100%;
 		height: 100%;
-		overflow: visible;
-	}
-
-	.orbit-ring {
-		fill: none;
-		stroke: var(--orb-ring);
-		stroke-width: 1;
-		stroke-dasharray: 4 6;
-		animation: ring-rotate 60s linear infinite;
-		transform-origin: 0 0;
-	}
-
-	@keyframes ring-rotate {
-		from { stroke-dashoffset: 0; }
-		to { stroke-dashoffset: -100; }
-	}
-
-	.orbit-label {
-		fill: var(--orb-text-dim);
-		font-family: var(--font-mono);
-		font-size: 8px;
-		letter-spacing: 1.5px;
-		dominant-baseline: middle;
-	}
-
-	.spoke {
-		stroke: none;
-	}
-
-	.spoke.open {
-		stroke: var(--orb-open);
-		stroke-width: 0.5;
-		opacity: 0.25;
-		stroke-dasharray: 3 5;
-	}
-
-	/* ── Nucleus ── */
-	.nucleus {
-		position: absolute;
-		width: 28px;
-		height: 28px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		pointer-events: none;
-	}
-
-	.nucleus-core {
-		position: absolute;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: var(--orb-accent);
-		box-shadow:
-			0 0 8px var(--orb-accent),
-			0 0 24px rgba(79, 195, 247, 0.4),
-			0 0 60px rgba(79, 195, 247, 0.15);
-		animation: nucleus-pulse 3s ease-in-out infinite;
-	}
-
-	.nucleus-ring {
-		position: absolute;
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		border: 1px solid rgba(79, 195, 247, 0.25);
-		animation: nucleus-expand 3s ease-out infinite;
-	}
-
-	.nucleus-ring-2 {
-		animation-delay: 1.5s;
-	}
-
-	@keyframes nucleus-pulse {
-		0%, 100% { transform: scale(1); }
-		50% { transform: scale(1.3); }
-	}
-
-	@keyframes nucleus-expand {
-		0% { transform: scale(1); opacity: 0.5; }
-		100% { transform: scale(3.5); opacity: 0; }
-	}
-
-	/* ── Room Nodes ── */
-	.room-node {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		border: none;
-		background: transparent;
-		cursor: pointer;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: transform 0.2s;
-	}
-
-	.room-node:hover,
-	.room-node.hovered {
-		transform: translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(1.8) !important;
-	}
-
-	.node-pip {
-		display: block;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: var(--orb-closed);
-		border: 1px solid rgba(100, 140, 170, 0.3);
-		transition: background 0.3s, box-shadow 0.3s;
-		position: relative;
 		z-index: 2;
 	}
 
-	.room-node.open .node-pip {
-		background: var(--orb-open);
-		border-color: var(--orb-open);
-		box-shadow:
-			0 0 6px var(--orb-open),
-			0 0 18px var(--orb-open-glow);
-	}
-
-	.room-node.selected .node-pip {
-		border: 2px solid white;
-		box-shadow:
-			0 0 0 3px rgba(255,255,255,0.15),
-			0 0 12px var(--orb-open);
-	}
-
-	/* Pulse ring for open rooms */
-	.node-pulse {
+	/* ── Orbit rings ── */
+	.orbit-rings-wrap {
 		position: absolute;
-		inset: -4px;
-		border-radius: 50%;
-		border: 1px solid var(--orb-open);
-		opacity: 0;
-		animation: node-pulse-anim 2.5s ease-out infinite;
-		pointer-events: none;
-	}
-
-	@keyframes node-pulse-anim {
-		0% { opacity: 0.6; transform: scale(0.8); }
-		100% { opacity: 0; transform: scale(2.5); }
-	}
-
-	/* ── Detail Panel ── */
-	.detail-panel {
-		position: absolute;
-		bottom: 60px;
-		right: 24px;
-		background: rgba(2, 12, 24, 0.92);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border: 1px solid rgba(79, 195, 247, 0.2);
-		border-radius: 4px;
-		padding: 16px 20px;
-		min-width: 200px;
-		max-width: 260px;
-		box-shadow:
-			0 0 40px rgba(79, 195, 247, 0.06),
-			0 16px 40px rgba(0, 0, 0, 0.7);
-		animation: panel-in 0.18s ease-out;
-	}
-
-	@keyframes panel-in {
-		from { opacity: 0; transform: translateY(8px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
-
-	.detail-header {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin-bottom: 6px;
-	}
-
-	.detail-status-dot {
-		display: block;
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--orb-closed);
-		flex-shrink: 0;
-	}
-
-	.detail-status-dot.open {
-		background: var(--orb-open);
-		box-shadow: 0 0 6px var(--orb-open);
-	}
-
-	.detail-floor {
-		font-size: 9px;
-		letter-spacing: 2px;
-		color: var(--orb-text-dim);
-		text-transform: uppercase;
-	}
-
-	.detail-name {
-		font-family: var(--font-display);
-		font-size: 15px;
-		font-weight: 700;
-		color: white;
-		margin: 0 0 10px;
-		line-height: 1.3;
-		word-break: break-word;
-	}
-
-	.detail-badge {
-		display: inline-block;
-		font-size: 9px;
-		letter-spacing: 2px;
-		padding: 3px 8px;
-		border-radius: 2px;
-		background: rgba(58, 74, 92, 0.4);
-		color: var(--orb-text-dim);
-		margin-bottom: 14px;
-		border: 1px solid rgba(58, 74, 92, 0.5);
-	}
-
-	.detail-badge.open {
-		background: rgba(0, 255, 200, 0.1);
-		color: var(--orb-open);
-		border-color: rgba(0, 255, 200, 0.3);
-		text-shadow: 0 0 8px rgba(0, 255, 200, 0.4);
-	}
-
-	.detail-actions {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-	}
-
-	.detail-edit-btn {
-		flex: 1;
-		padding: 7px 12px;
-		border-radius: 3px;
-		border: 1px solid rgba(79, 195, 247, 0.3);
-		background: rgba(79, 195, 247, 0.08);
-		color: var(--orb-accent);
-		font-family: var(--font-mono);
-		font-size: 10px;
-		letter-spacing: 1px;
-		text-transform: uppercase;
-		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
-	}
-
-	.detail-edit-btn:hover {
-		background: rgba(79, 195, 247, 0.16);
-		border-color: rgba(79, 195, 247, 0.5);
-	}
-
-	.detail-close-btn {
-		width: 30px;
-		height: 30px;
-		border-radius: 3px;
-		border: 1px solid rgba(255,255,255,0.1);
-		background: rgba(255,255,255,0.04);
-		color: var(--orb-text-dim);
-		font-size: 12px;
-		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background 0.15s, color 0.15s;
+		pointer-events: none;
 	}
 
-	.detail-close-btn:hover {
-		background: rgba(255,255,255,0.1);
-		color: white;
-	}
-
-	/* ── Legend ── */
-	.legend {
+	.orbit-ring {
 		position: absolute;
-		top: 20px;
-		right: 20px;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
+		border-radius: 50%;
+		border: 1px dashed;
+		pointer-events: none;
 	}
 
-	.legend-item {
+	/* ── Sun ── */
+	.sun-wrap {
+		position: absolute;
+		width: 60px;
+		height: 60px;
 		display: flex;
 		align-items: center;
-		gap: 7px;
-		font-size: 10px;
-		letter-spacing: 1.5px;
-		text-transform: uppercase;
-		color: var(--orb-text-dim);
+		justify-content: center;
+		pointer-events: none;
+		z-index: 50;
 	}
 
-	.legend-pip {
-		display: block;
-		width: 8px;
-		height: 8px;
+	.sun-core {
+		position: absolute;
+		width: 26px;
+		height: 26px;
 		border-radius: 50%;
-		background: var(--orb-closed);
+		background: radial-gradient(circle, #fff8c0 0%, #fcd34d 45%, #f97316 100%);
+		box-shadow:
+			0 0 10px #fcd34d,
+			0 0 28px rgba(252, 211, 77, 0.45),
+			0 0 70px rgba(249, 115, 22, 0.2);
+		animation: sun-breathe 5s ease-in-out infinite;
+	}
+
+	.sun-ray {
+		position: absolute;
+		border-radius: 50%;
+		border: 1px solid rgba(252, 211, 77, 0.22);
+		animation: sun-ray-expand 5s ease-out infinite;
+	}
+
+	.sun-ray-1 { width: 44px; height: 44px; }
+	.sun-ray-2 { width: 60px; height: 60px; animation-delay: 1.6s; }
+	.sun-ray-3 { width: 80px; height: 80px; animation-delay: 3.2s; }
+
+	@keyframes sun-breathe {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.15); }
+	}
+
+	@keyframes sun-ray-expand {
+		0% { opacity: 0.5; transform: scale(0.85); }
+		100% { opacity: 0; transform: scale(1.6); }
+	}
+
+	/* ── Room chips ── */
+	.room-chip {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 138px;
+		/* Offset so transform origin is chip center */
+		margin-top: -44px;
+		margin-left: -69px;
+		background: rgba(6, 16, 32, 0.88);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid rgba(100, 160, 220, 0.15);
+		border-radius: 10px;
+		overflow: hidden;
+		will-change: transform, filter;
+		transition: border-color 0.4s;
+	}
+
+	.room-chip.chip-open {
+		border-color: rgba(74, 222, 128, 0.25);
+	}
+
+	/* Top colored bar */
+	.chip-bar {
+		height: 3px;
+		width: 100%;
+	}
+
+	.chip-body {
+		padding: 8px 10px 10px;
+	}
+
+	.chip-floor {
+		font-size: 8px;
+		font-weight: 700;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		font-family: var(--font-mono);
+		margin-bottom: 2px;
+		line-height: 1;
+	}
+
+	.chip-name {
+		font-size: 12px;
+		font-weight: 700;
+		color: rgba(220, 235, 252, 0.97);
+		line-height: 1.25;
+		margin-bottom: 4px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.chip-activity {
+		font-size: 9px;
+		color: rgba(160, 200, 230, 0.7);
+		line-height: 1.3;
+		margin-bottom: 3px;
+		font-family: var(--font-mono);
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
+		-webkit-box-orient: vertical;
+	}
+
+	.chip-person {
+		font-size: 9px;
+		color: rgba(148, 163, 184, 0.7);
+		font-family: var(--font-mono);
+		margin-bottom: 5px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* Status pill */
+	.chip-status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 9px;
+		font-family: var(--font-mono);
+		letter-spacing: 0.3px;
+		color: rgba(100, 130, 160, 0.8);
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		border-radius: 20px;
+		padding: 2px 7px 2px 5px;
+	}
+
+	.chip-status-pill.pill-open {
+		color: rgba(134, 239, 172, 0.9);
+		background: rgba(74, 222, 128, 0.07);
+		border-color: rgba(74, 222, 128, 0.2);
+	}
+
+	.pill-dot {
+		display: block;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
 		flex-shrink: 0;
 	}
 
-	.legend-item.open .legend-pip {
-		background: var(--orb-open);
-		box-shadow: 0 0 5px var(--orb-open);
+	/* Open rooms get a subtle green glow */
+	.open-glow {
+		position: absolute;
+		inset: 0;
+		border-radius: 10px;
+		border: 1px solid rgba(74, 222, 128, 0.35);
+		pointer-events: none;
+		animation: open-pulse 3s ease-out infinite;
 	}
 
-	/* ── Stats Bar ── */
+	@keyframes open-pulse {
+		0% { opacity: 0.6; }
+		60% { opacity: 0.2; }
+		100% { opacity: 0.6; }
+	}
+
+	/* ── Floor legend ── */
+	.floor-legend {
+		position: absolute;
+		top: 18px;
+		right: 18px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		z-index: 30;
+		background: rgba(3, 8, 15, 0.78);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border: 1px solid rgba(100, 160, 220, 0.1);
+		border-radius: 10px;
+		padding: 12px 16px;
+		min-width: 120px;
+	}
+
+	.legend-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.legend-dot {
+		display: block;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.legend-name {
+		font-size: 10px;
+		font-family: var(--font-mono);
+		color: var(--sol-text);
+		flex: 1;
+		letter-spacing: 0.3px;
+	}
+
+	.legend-ratio {
+		font-size: 9px;
+		font-family: var(--font-mono);
+		display: flex;
+		align-items: center;
+		gap: 1px;
+	}
+
+	.ratio-open { color: #4ade80; }
+	.ratio-sep { color: rgba(100, 160, 220, 0.3); margin: 0 1px; }
+	.ratio-total { color: var(--sol-dim); }
+
+	/* ── Stats bar ── */
 	.stats-bar {
 		position: absolute;
-		bottom: 20px;
+		bottom: 18px;
 		left: 50%;
 		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
-		gap: 20px;
-		background: rgba(2, 12, 24, 0.7);
-		backdrop-filter: blur(8px);
-		border: 1px solid rgba(79, 195, 247, 0.12);
-		border-radius: 4px;
-		padding: 8px 20px;
+		background: rgba(3, 8, 15, 0.82);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border: 1px solid rgba(100, 160, 220, 0.1);
+		border-radius: 10px;
+		padding: 10px 0;
+		z-index: 30;
+		white-space: nowrap;
 	}
 
 	.stat {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 2px;
+		gap: 3px;
+		padding: 0 22px;
 	}
 
-	.stat-val {
-		font-family: var(--font-display);
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--orb-accent);
+	.stat-num {
+		font-family: var(--font-ui);
+		font-size: 24px;
+		font-weight: 800;
 		line-height: 1;
+		color: var(--sol-text);
 	}
 
-	.stat-label {
-		font-size: 7px;
-		letter-spacing: 2px;
-		color: var(--orb-text-dim);
+	.open-col   { color: #4ade80; }
+	.closed-col { color: #94a3b8; }
+	.accent-col { color: var(--sol-accent); }
+	.floor-col  { color: #fbbf24; }
+
+	.stat-lbl {
+		font-size: 8px;
+		font-family: var(--font-mono);
+		color: var(--sol-dim);
+		letter-spacing: 1.5px;
 		text-transform: uppercase;
 	}
 
 	.stat-sep {
-		color: rgba(79, 195, 247, 0.2);
-		font-size: 18px;
+		width: 1px;
+		height: 36px;
+		background: rgba(100, 160, 220, 0.1);
+		flex-shrink: 0;
 	}
 
 	/* ── Empty ── */
-	.empty {
+	.empty-msg {
 		position: absolute;
-		color: var(--orb-text-dim);
+		font-family: var(--font-mono);
 		font-size: 13px;
 		letter-spacing: 2px;
+		color: var(--sol-dim);
 		text-transform: uppercase;
-	}
-
-	/* ── Responsive ── */
-	@media (max-width: 600px) {
-		.orbital-system {
-			width: 95vmin;
-			height: 95vmin;
-		}
-
-		.detail-panel {
-			bottom: 70px;
-			right: 8px;
-			left: 8px;
-			max-width: none;
-		}
-
-		.stats-bar {
-			gap: 14px;
-			padding: 6px 14px;
-		}
+		z-index: 30;
 	}
 </style>
