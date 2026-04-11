@@ -29,12 +29,29 @@
 	import SandboxLayoutGrid from '$lib/sandbox/layouts/SandboxLayoutGrid.svelte';
 	import SandboxLayoutCompact from '$lib/sandbox/layouts/SandboxLayoutCompact.svelte';
 	import SandboxLayoutSplit from '$lib/sandbox/layouts/SandboxLayoutSplit.svelte';
+	import SandboxLayoutTimeline from '$lib/sandbox/layouts/SandboxLayoutTimeline.svelte';
+	import SandboxLayoutHeatmap from '$lib/sandbox/layouts/SandboxLayoutHeatmap.svelte';
+	import SandboxLayoutMasonry from '$lib/sandbox/layouts/SandboxLayoutMasonry.svelte';
+	import SandboxLayoutFloorplan from '$lib/sandbox/layouts/SandboxLayoutFloorplan.svelte';
+	import SandboxLayoutDeck from '$lib/sandbox/layouts/SandboxLayoutDeck.svelte';
+	import SandboxLayoutSplitscreen from '$lib/sandbox/layouts/SandboxLayoutSplitscreen.svelte';
+	import SandboxLayoutNeon from '$lib/sandbox/layouts/SandboxLayoutNeon.svelte';
 
 	let isLoading = $state(true);
 	let showMenu = $state(false);
 	let editingRoom = $state<RoomWithConfig | null>(null);
 	let showScheduler = $state(false);
 	let canvasRef: any = $state(null);
+	let showPanel = $state(false);
+	let badgeEl: HTMLElement | null = $state(null);
+	let panelEl: HTMLElement | null = $state(null);
+
+	function handleWindowClick(e: MouseEvent) {
+		if (!showPanel) return;
+		const target = e.target as Node;
+		if (badgeEl?.contains(target) || panelEl?.contains(target)) return;
+		showPanel = false;
+	}
 
 	onMount(async () => {
 		try {
@@ -120,32 +137,48 @@
 	}
 </script>
 
+<svelte:window onmousedown={handleWindowClick} />
+
 {#if isLoading}
 	<div class="sandbox-loading" transition:fade>
 		<div class="loading-spinner"></div>
 		<p>Lade Sandbox...</p>
 	</div>
 {:else}
-	<div class="sandbox-banner" transition:fade>
-		<span class="sandbox-label">🧪 SANDBOX MODUS</span>
-		<span class="sandbox-hint">Kein DB-Schreibzugriff — nur lokale Änderungen</span>
 
-		<div class="layout-switcher">
-			{#each LAYOUT_OPTIONS as opt}
-				<button
-					class="layout-btn"
-					class:active={$sandboxLayout === opt.id}
-					onclick={() => sandboxLayout.setLayout(opt.id)}
-					title={opt.description}
-				>
-					<span class="layout-icon">{opt.icon}</span>
-					<span class="layout-label">{opt.label}</span>
-				</button>
-			{/each}
+	<button
+		class="sandbox-badge"
+		bind:this={badgeEl}
+		onclick={() => (showPanel = !showPanel)}
+		title="Sandbox-Menü"
+	>
+		🧪
+	</button>
+
+	{#if showPanel}
+		<div class="sandbox-panel" bind:this={panelEl} transition:fade={{ duration: 150 }}>
+			<div class="panel-header">
+				<span class="panel-title">SANDBOX MODUS</span>
+				<span class="panel-hint">Kein DB-Schreibzugriff</span>
+			</div>
+
+			<div class="panel-layouts">
+				{#each LAYOUT_OPTIONS as opt}
+					<button
+						class="panel-layout-btn"
+						class:active={$sandboxLayout === opt.id}
+						onclick={() => { sandboxLayout.setLayout(opt.id); showPanel = false; }}
+					>
+						<span class="panel-layout-icon">{opt.icon}</span>
+						<span class="panel-layout-name">{opt.label}</span>
+						<span class="panel-layout-desc">{opt.description}</span>
+					</button>
+				{/each}
+			</div>
+
+			<button class="panel-exit-btn" onclick={exitSandbox}>← Live-Dashboard</button>
 		</div>
-
-		<button class="sandbox-exit-btn" onclick={exitSandbox}>← Live-Dashboard</button>
-	</div>
+	{/if}
 
 	<div class="dashboard">
 		<Header onOpenMenu={() => (showMenu = true)} {canvasRef} />
@@ -159,6 +192,20 @@
 			<SandboxLayoutCompact {handleEditRoom} />
 		{:else if $sandboxLayout === 'split'}
 			<SandboxLayoutSplit {handleEditRoom} />
+		{:else if $sandboxLayout === 'timeline'}
+			<SandboxLayoutTimeline {handleEditRoom} />
+		{:else if $sandboxLayout === 'heatmap'}
+			<SandboxLayoutHeatmap {handleEditRoom} />
+		{:else if $sandboxLayout === 'masonry'}
+			<SandboxLayoutMasonry {handleEditRoom} />
+		{:else if $sandboxLayout === 'floorplan'}
+			<SandboxLayoutFloorplan {handleEditRoom} />
+		{:else if $sandboxLayout === 'deck'}
+			<SandboxLayoutDeck {handleEditRoom} />
+		{:else if $sandboxLayout === 'splitscreen'}
+			<SandboxLayoutSplitscreen {handleEditRoom} />
+		{:else if $sandboxLayout === 'neon'}
+			<SandboxLayoutNeon {handleEditRoom} />
 		{/if}
 	</div>
 
@@ -207,116 +254,143 @@
 		to { transform: rotate(360deg); }
 	}
 
-	.sandbox-banner {
+	/* ── Mini Badge ── */
+	.sandbox-badge {
 		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 36px;
-		background: linear-gradient(90deg, #d97706, #f59e0b);
-		color: #1a1a1a;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 16px;
-		z-index: 200;
-		font-size: 13px;
-		font-weight: 700;
-	}
-
-	.sandbox-label {
-		font-size: 11px;
-		letter-spacing: 1.5px;
-		text-transform: uppercase;
-		background: rgba(0, 0, 0, 0.15);
-		padding: 2px 8px;
-		border-radius: 4px;
-	}
-
-	.sandbox-hint {
-		font-size: 12px;
-		opacity: 0.8;
-	}
-
-	@media (max-width: 600px) {
-		.sandbox-hint {
-			display: none;
-		}
-	}
-
-	.sandbox-exit-btn {
-		padding: 3px 12px;
-		background: rgba(0, 0, 0, 0.2);
-		border: 1px solid rgba(0, 0, 0, 0.3);
-		border-radius: 4px;
-		color: #1a1a1a;
-		font-size: 12px;
-		font-weight: 700;
+		top: 12px;
+		left: 12px;
+		z-index: 300;
+		background: rgba(217, 119, 6, 0.88);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 20px;
+		padding: 5px 11px;
+		font-size: 16px;
+		line-height: 1;
 		cursor: pointer;
-		transition: background 0.2s;
+		transition: background 0.15s, transform 0.15s;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 	}
 
-	.sandbox-exit-btn:hover {
-		background: rgba(0, 0, 0, 0.35);
+	.sandbox-badge:hover {
+		background: rgba(217, 119, 6, 1);
+		transform: scale(1.08);
 	}
 
-	.layout-switcher {
+	/* ── Dropdown Panel ── */
+	.sandbox-panel {
+		position: fixed;
+		top: 50px;
+		left: 12px;
+		z-index: 300;
+		background: rgba(20, 12, 3, 0.94);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border: 1px solid rgba(217, 119, 6, 0.35);
+		border-radius: 14px;
+		padding: 14px;
+		min-width: 230px;
+		max-width: 280px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+	}
+
+	.panel-header {
+		margin-bottom: 10px;
+		padding-bottom: 10px;
+		border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+	}
+
+	.panel-title {
+		display: block;
+		font-size: 10px;
+		font-weight: 800;
+		letter-spacing: 1.8px;
+		text-transform: uppercase;
+		color: #f59e0b;
+	}
+
+	.panel-hint {
+		display: block;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.4);
+		margin-top: 2px;
+	}
+
+	.panel-layouts {
 		display: flex;
-		gap: 3px;
-		background: rgba(0, 0, 0, 0.15);
-		border-radius: 6px;
-		padding: 2px;
+		flex-direction: column;
+		gap: 2px;
+		margin-bottom: 10px;
 	}
 
-	.layout-btn {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		padding: 2px 8px;
-		border-radius: 4px;
+	.panel-layout-btn {
+		display: grid;
+		grid-template-columns: 22px 1fr;
+		grid-template-rows: auto auto;
+		column-gap: 8px;
+		padding: 7px 8px;
+		border-radius: 8px;
 		border: 1px solid transparent;
 		background: transparent;
-		color: #1a1a1a;
+		color: rgba(255, 255, 255, 0.8);
+		cursor: pointer;
+		text-align: left;
+		transition: background 0.12s, border-color 0.12s;
+	}
+
+	.panel-layout-btn:hover {
+		background: rgba(255, 255, 255, 0.07);
+	}
+
+	.panel-layout-btn.active {
+		background: rgba(217, 119, 6, 0.2);
+		border-color: rgba(217, 119, 6, 0.45);
+	}
+
+	.panel-layout-icon {
+		grid-row: 1 / 3;
+		align-self: center;
+		font-size: 15px;
+		text-align: center;
+	}
+
+	.panel-layout-name {
+		font-size: 12px;
+		font-weight: 700;
+		color: #fff;
+		line-height: 1.3;
+	}
+
+	.panel-layout-desc {
+		font-size: 10px;
+		color: rgba(255, 255, 255, 0.38);
+		line-height: 1.2;
+	}
+
+	.panel-exit-btn {
+		width: 100%;
+		padding: 7px;
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.05);
+		color: rgba(255, 255, 255, 0.6);
 		font-size: 12px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
-		white-space: nowrap;
+		transition: background 0.15s, color 0.15s;
 	}
 
-	.layout-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
+	.panel-exit-btn:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: #fff;
 	}
 
-	.layout-btn.active {
-		background: rgba(255, 255, 255, 0.5);
-		border-color: rgba(0, 0, 0, 0.2);
-	}
-
-	.layout-icon {
-		font-size: 13px;
-	}
-
-	@media (max-width: 900px) {
-		.layout-label {
-			display: none;
-		}
-		.layout-btn {
-			padding: 2px 6px;
-		}
-	}
-
-	@media (max-width: 600px) {
-		.layout-switcher {
-			gap: 1px;
-		}
-	}
-
+	/* ── Dashboard ── */
 	.dashboard {
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
-		padding-top: 36px;
 		transform: translateZ(0);
 		contain: layout style paint;
 		box-sizing: border-box;
