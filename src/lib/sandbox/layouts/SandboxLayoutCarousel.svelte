@@ -465,12 +465,12 @@
 
 				<!-- ── Öffnungszeiten-Timeline ── -->
 				{#if panelLive.config?.open_time || editOpenTime}
+					{@const op       = parseMinutes(panelLive.config?.open_time)}
+					{@const cl       = parseMinutes(panelLive.config?.close_time)}
+					{@const nowPct   = nowTimelinePos()}
+					{@const openPct  = timelinePos(op ?? DAY_START)}
+					{@const closePct = timelinePos(cl ?? DAY_END)}
 					<div class="panel-section">
-						{@const op = parseMinutes(panelLive.config?.open_time)}
-						{@const cl = parseMinutes(panelLive.config?.close_time)}
-						{@const nowPct = nowTimelinePos()}
-						{@const openPct  = timelinePos(op  ?? DAY_START)}
-						{@const closePct = timelinePos(cl  ?? DAY_END)}
 						<div class="timeline-wrap">
 							<div class="timeline-track">
 								<div
