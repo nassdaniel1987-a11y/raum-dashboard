@@ -13,7 +13,8 @@ export type SandboxLayoutId =
 	| 'deck'
 	| 'splitscreen'
 	| 'neon'
-	| 'orbital';
+	| 'orbital'
+	| 'archipelago';
 
 export interface LayoutOption {
 	id: SandboxLayoutId;
@@ -35,7 +36,8 @@ export const LAYOUT_OPTIONS: LayoutOption[] = [
 	{ id: 'deck',        label: 'Karten-Deck',  icon: '🃏',  description: 'Stapel — eine Karte nach der anderen' },
 	{ id: 'splitscreen', label: 'Splitscreen',  icon: '▐▌',  description: 'Liste + Detailansicht' },
 	{ id: 'neon',        label: 'Neon-Board',   icon: '⚡',  description: 'Retro Neon-Optik' },
-	{ id: 'orbital',     label: 'Orbital',      icon: '🪐',  description: 'Räume als Planetensystem' }
+	{ id: 'orbital',      label: 'Orbital',       icon: '🪐',  description: 'Räume als Planetensystem' },
+	{ id: 'archipelago',  label: 'Archipelago',   icon: '⬡',   description: 'Räume als topografische Inselkarte' }
 ];
 
 const SESSION_KEY = 'sandbox_layout';
