@@ -21,7 +21,7 @@
 	let animationDirection = $state<'next' | 'prev'>('next');
 	let autoPageEnabled = $state(true);
 	let pageDuration = $state(8); // Sekunden pro Seite
-	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
+	let animationType = $state<'book' | 'slide' | 'fade' | 'cube' | 'morph' | 'ripple' | 'zoom'>('book');
 	let pageTimerId: ReturnType<typeof setTimeout> | undefined;
 
 	// Seiten-Definition (5 Seiten)
@@ -213,7 +213,7 @@
 		return autoPageEnabled;
 	}
 
-	export function setAnimationType(type: 'book' | 'slide' | 'fade' | 'cube') {
+	export function setAnimationType(type: 'book' | 'slide' | 'fade' | 'cube' | 'morph' | 'ripple' | 'zoom') {
 		animationType = type;
 		localStorage.setItem('animationType', type);
 	}
@@ -324,7 +324,7 @@
 		</div>
 	{:else}
 		<!-- ===== DESKTOP/TABLET: Seiten-Ansicht ===== -->
-		<div class="page-container" class:anim-book={animationType === 'book'} class:anim-slide={animationType === 'slide'} class:anim-fade={animationType === 'fade'} class:anim-cube={animationType === 'cube'}>
+		<div class="page-container" class:anim-book={animationType === 'book'} class:anim-slide={animationType === 'slide'} class:anim-fade={animationType === 'fade'} class:anim-cube={animationType === 'cube'} class:anim-morph={animationType === 'morph'} class:anim-ripple={animationType === 'ripple'} class:anim-zoom={animationType === 'zoom'}>
 			<!-- Seiteninhalt -->
 			{#key currentPage}
 				<div
@@ -503,6 +503,54 @@
 	@keyframes cubePrev {
 		0% { transform: rotateY(90deg) translateZ(200px); opacity: 0; }
 		100% { transform: rotateY(0deg) translateZ(0); opacity: 1; }
+	}
+
+	/* MORPH Animation — cards scale + blur in from center */
+	.anim-morph .page-content.animate-next {
+		animation: morphIn 0.55s cubic-bezier(.22,.68,0,1.1);
+	}
+	.anim-morph .page-content.animate-prev {
+		animation: morphIn 0.55s cubic-bezier(.22,.68,0,1.1);
+	}
+
+	@keyframes morphIn {
+		0%   { opacity: 0; transform: scale(0.82); filter: blur(12px); }
+		60%  { filter: blur(0px); }
+		100% { opacity: 1; transform: scale(1); filter: blur(0px); }
+	}
+
+	/* RIPPLE Animation — expands from left edge like ink spreading */
+	.anim-ripple .page-content.animate-next {
+		animation: rippleNext 0.6s cubic-bezier(.4,0,.2,1);
+	}
+	.anim-ripple .page-content.animate-prev {
+		animation: ripplePrev 0.6s cubic-bezier(.4,0,.2,1);
+	}
+
+	@keyframes rippleNext {
+		0%   { opacity: 0; clip-path: inset(0 100% 0 0); }
+		100% { opacity: 1; clip-path: inset(0 0% 0 0); }
+	}
+	@keyframes ripplePrev {
+		0%   { opacity: 0; clip-path: inset(0 0 0 100%); }
+		100% { opacity: 1; clip-path: inset(0 0 0 0%); }
+	}
+
+	/* ZOOM Animation — soft punch zoom from behind */
+	.anim-zoom .page-content.animate-next {
+		animation: zoomNext 0.48s cubic-bezier(.34,1.56,.64,1);
+	}
+	.anim-zoom .page-content.animate-prev {
+		animation: zoomPrev 0.48s cubic-bezier(.34,1.56,.64,1);
+	}
+
+	@keyframes zoomNext {
+		0%   { opacity: 0; transform: scale(1.14) translateX(40px); }
+		100% { opacity: 1; transform: scale(1)    translateX(0); }
+	}
+	@keyframes zoomPrev {
+		0%   { opacity: 0; transform: scale(1.14) translateX(-40px); }
+		100% { opacity: 1; transform: scale(1)    translateX(0); }
 	}
 
 	/* Seiten-Header */

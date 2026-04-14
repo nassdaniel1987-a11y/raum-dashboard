@@ -14,7 +14,8 @@ export type SandboxLayoutId =
 	| 'splitscreen'
 	| 'neon'
 	| 'orbital'
-	| 'archipelago';
+	| 'archipelago'
+	| 'polished';
 
 export interface LayoutOption {
 	id: SandboxLayoutId;
@@ -37,7 +38,8 @@ export const LAYOUT_OPTIONS: LayoutOption[] = [
 	{ id: 'splitscreen', label: 'Splitscreen',  icon: '▐▌',  description: 'Liste + Detailansicht' },
 	{ id: 'neon',        label: 'Neon-Board',   icon: '⚡',  description: 'Retro Neon-Optik' },
 	{ id: 'orbital',      label: 'Orbital',       icon: '🪐',  description: 'Räume als Planetensystem' },
-	{ id: 'archipelago',  label: 'Archipelago',   icon: '⬡',   description: 'Räume als topografische Inselkarte' }
+	{ id: 'archipelago',  label: 'Archipelago',   icon: '⬡',   description: 'Räume als topografische Inselkarte' },
+	{ id: 'polished',    label: 'Verfeinert',    icon: '✦',   description: 'Live-Design verfeinert — gleiche Kacheln, schärfere Details' }
 ];
 
 const SESSION_KEY = 'sandbox_layout';
