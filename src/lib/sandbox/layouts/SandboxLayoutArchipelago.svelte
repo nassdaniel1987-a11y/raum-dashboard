@@ -7,13 +7,13 @@
 	const FLOOR_ORDER = ['dach', 'og2', 'og1', 'eg', 'essen', 'ug', 'extern'];
 
 	const FLOOR_META: Record<string, { label: string; short: string; accent: string }> = {
-		dach:   { label: 'Dachgeschoss',   short: 'DACH', accent: '#f0c060' },
-		og2:    { label: 'OG 2',           short: 'OG 2', accent: '#7eb8f7' },
-		og1:    { label: 'OG 1',           short: 'OG 1', accent: '#6ed4a0' },
-		eg:     { label: 'Erdgeschoss',    short: 'EG',   accent: '#a78bfa' },
-		essen:  { label: 'Essbereich',     short: 'ESS',  accent: '#fb923c' },
-		ug:     { label: 'Untergeschoss',  short: 'UG',   accent: '#94a3b8' },
-		extern: { label: 'Außenbereich',   short: 'EXT',  accent: '#34d399' },
+		dach:   { label: 'Dachgeschoss',  short: 'DACH', accent: '#f0c060' },
+		og2:    { label: 'OG 2',          short: 'OG 2', accent: '#60a5fa' },
+		og1:    { label: 'OG 1',          short: 'OG 1', accent: '#4ade80' },
+		eg:     { label: 'Erdgeschoss',   short: 'EG',   accent: '#c084fc' },
+		essen:  { label: 'Essbereich',    short: 'ESS',  accent: '#fb923c' },
+		ug:     { label: 'Untergeschoss', short: 'UG',   accent: '#94a3b8' },
+		extern: { label: 'Außen',         short: 'EXT',  accent: '#2dd4bf' },
 	};
 
 	let allRooms = $derived(
@@ -47,105 +47,117 @@
 			}));
 	});
 
-	let openCount = $derived(allRooms.filter(r => r.isOpen).length);
+	let openCount  = $derived(allRooms.filter(r => r.isOpen).length);
 	let totalCount = $derived(allRooms.length);
 
 	function getImageUrl(room: RoomWithConfig): string {
 		return room.config?.activity_image_url ?? room.image_url ?? '';
 	}
+
+	// Flex weight per floor: more rooms → more vertical space
+	// Minimum 1, scales with room count so single-room floors don't collapse
+	function floorWeight(roomCount: number): number {
+		return Math.max(1, roomCount);
+	}
 </script>
 
-<div class="sb" role="presentation">
+<div class="board" role="presentation">
 
-	<!-- Subtle grid texture -->
-	<div class="bg-grid" aria-hidden="true"></div>
-
-	<!-- ── Top bar ── -->
-	<header class="topbar">
-		<div class="topbar-left">
-			<span class="topbar-logo" aria-hidden="true">▣</span>
-			<span class="topbar-title">Raumstatus</span>
+	<!-- ── Header bar ── -->
+	<header class="hbar">
+		<div class="hbar-brand">
+			<svg class="hbar-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+				<rect x="1" y="1" width="8" height="8" rx="1.5" fill="currentColor" opacity=".9"/>
+				<rect x="11" y="1" width="8" height="8" rx="1.5" fill="currentColor" opacity=".5"/>
+				<rect x="1" y="11" width="8" height="8" rx="1.5" fill="currentColor" opacity=".5"/>
+				<rect x="11" y="11" width="8" height="8" rx="1.5" fill="currentColor" opacity=".3"/>
+			</svg>
+			<span class="hbar-title">Raumstatus</span>
 		</div>
-		<div class="topbar-counters">
-			<div class="counter counter--open">
-				<span class="counter-dot" aria-hidden="true"></span>
-				<span class="counter-num">{openCount}</span>
-				<span class="counter-lbl">OFFEN</span>
+
+		<div class="hbar-stats">
+			<div class="hstat hstat--open">
+				<span class="hstat-dot" aria-hidden="true"></span>
+				<span class="hstat-n">{openCount}</span>
+				<span class="hstat-lbl">offen</span>
 			</div>
-			<div class="counter-sep" aria-hidden="true"></div>
-			<div class="counter counter--closed">
-				<span class="counter-num">{totalCount - openCount}</span>
-				<span class="counter-lbl">ZU</span>
+			<div class="hstat-sep" aria-hidden="true"></div>
+			<div class="hstat hstat--closed">
+				<span class="hstat-n">{totalCount - openCount}</span>
+				<span class="hstat-lbl">geschlossen</span>
 			</div>
 		</div>
 	</header>
 
-	<!-- ── Floor rows — each gets equal vertical space, no scroll ── -->
-	<div class="floors-wrap">
-		{#each floorGroups() as group, gi}
-			<section
-				class="floor-row"
-				style="--accent: {group.meta.accent}; animation-delay: {gi * 0.05}s;"
-				aria-label={group.meta.label}
+	<!-- ── Floor bands ── -->
+	<div class="bands">
+		{#each floorGroups() as grp, gi}
+			<!-- Each band's flex-grow = room count, so more rooms = more height -->
+			<div
+				class="band"
+				style="flex: {floorWeight(grp.rooms.length)}; --accent: {grp.meta.accent}; animation-delay: {gi * 0.07}s;"
+				aria-label={grp.meta.label}
 			>
-				<!-- Sidebar label -->
-				<div class="floor-label" style="border-left-color: {group.meta.accent};">
-					<span class="floor-short" style="color: {group.meta.accent};">{group.meta.short}</span>
-					<span class="floor-ratio">
-						<span style="color: {group.meta.accent}; font-weight: 700;">
-							{group.rooms.filter(r => r.isOpen).length}
-						</span>/{group.rooms.length}
+				<!-- Floor label column -->
+				<div class="band-label">
+					<span class="band-short" style="color: {grp.meta.accent};">{grp.meta.short}</span>
+					<span class="band-count">
+						<span style="color: {grp.meta.accent}; font-weight:700;">{grp.rooms.filter(r => r.isOpen).length}</span>/{grp.rooms.length}
 					</span>
 				</div>
 
-				<!-- Cards — fill all available width equally -->
-				<div class="card-strip">
-					{#each group.rooms as room, ri}
+				<!-- Accent rule -->
+				<div class="band-rule" style="background: {grp.meta.accent};" aria-hidden="true"></div>
+
+				<!-- Cards -->
+				<div class="band-cards">
+					{#each grp.rooms as room, ri}
 						{@const imgUrl = getImageUrl(room)}
+						{@const hasImg = !!imgUrl}
 						<button
 							class="card"
 							class:card--open={room.isOpen}
 							class:card--closed={!room.isOpen}
-							style="animation-delay: {gi * 0.05 + ri * 0.035}s;"
+							style="animation-delay: {gi * 0.07 + ri * 0.04}s;"
 							onclick={() => handleEditRoom(room)}
 							aria-label="{room.name}: {room.isOpen ? 'geöffnet' : 'geschlossen'}"
 						>
-							<!-- Image background (wenn vorhanden) -->
-							{#if imgUrl}
-								<div
-									class="card-img"
-									style="background-image: url('{imgUrl}');"
-									aria-hidden="true"
-								></div>
-								<div class="card-img-overlay" aria-hidden="true"></div>
+							<!-- Full-bleed image -->
+							{#if hasImg}
+								<div class="card-img" style="background-image:url('{imgUrl}');" aria-hidden="true"></div>
+								<div class="card-img-scrim" aria-hidden="true"></div>
 							{/if}
 
-							<!-- Left status stripe -->
-							<div class="card-stripe" aria-hidden="true"></div>
+							<!-- Colored top band = instant status signal -->
+							<div class="card-topband" aria-hidden="true"></div>
 
-							<!-- Content -->
-							<div class="card-body">
-								<!-- Status pill — always first, always visible -->
-								<div class="status-pill" class:pill--open={room.isOpen} class:pill--closed={!room.isOpen}>
+							<!-- All text content -->
+							<div class="card-inner">
+								<!-- Status label — dominates visually -->
+								<div class="card-status">
 									{#if room.isOpen}
-										<span class="pill-dot" aria-hidden="true"></span>
+										<span class="status-open">
+											<span class="status-dot" aria-hidden="true"></span>
+											OFFEN
+										</span>
+									{:else}
+										<span class="status-closed">GESCHLOSSEN</span>
 									{/if}
-									{room.isOpen ? 'OFFEN' : 'ZU'}
 								</div>
 
 								<!-- Room name -->
 								<div class="card-name">{room.name}</div>
 
-								<!-- Activity when set -->
+								<!-- Activity — prominent when present -->
 								{#if room.config?.activity}
 									<div class="card-activity">{room.config.activity}</div>
 								{/if}
 
-								<!-- Person avatar + name -->
+								<!-- Person -->
 								{#if room.person}
 									<div class="card-person">
-										<span class="person-initial">{room.person.trim()[0]?.toUpperCase() ?? '?'}</span>
-										<span class="person-name">{room.person.split(',')[0].trim()}</span>
+										<span class="card-person-dot" aria-hidden="true">●</span>
+										{room.person.split(',')[0].trim()}
 									</div>
 								{/if}
 
@@ -156,301 +168,285 @@
 									</div>
 								{/if}
 							</div>
-
-							<!-- Green halo for open rooms -->
-							{#if room.isOpen}
-								<div class="open-halo" aria-hidden="true"></div>
-							{/if}
 						</button>
 					{/each}
 				</div>
-			</section>
+			</div>
 
 			{#if gi < floorGroups().length - 1}
-				<div class="floor-divider" aria-hidden="true"></div>
+				<div class="band-sep" aria-hidden="true"></div>
 			{/if}
 		{/each}
 
 		{#if floorGroups().length === 0}
-			<div class="empty">
-				<span>▣</span>
-				<span>Keine Räume vorhanden</span>
-			</div>
+			<div class="empty">Keine Räume vorhanden</div>
 		{/if}
 	</div>
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Bebas+Neue&display=swap');
 
 	/* ─── tokens ─── */
 	:root {
-		--sb-bg:         #0b0e13;
-		--sb-surface:    #12181f;
-		--sb-surface-hi: #18222e;
-		--sb-border:     rgba(255,255,255,0.06);
-		--sb-text:       #e8edf3;
-		--sb-text-dim:   rgba(180,200,220,0.45);
-		--sb-open:       #22c55e;
-		--sb-open-dim:   rgba(34,197,94,0.14);
-		--sb-open-glow:  rgba(34,197,94,0.3);
-		--font-cond:     'Barlow Condensed', sans-serif;
-		--font-body:     'Barlow', sans-serif;
+		--bg:          #0d1117;
+		--surface:     #161b22;
+		--surface2:    #1f2937;
+		--border:      rgba(255,255,255,0.07);
+		--text:        #e6edf3;
+		--text-mid:    rgba(200,215,230,0.6);
+		--text-dim:    rgba(160,180,200,0.35);
+		--green:       #3fb950;
+		--green-dim:   rgba(63,185,80,0.15);
+		--green-glow:  rgba(63,185,80,0.4);
+		--closed-col:  rgba(130,145,160,0.45);
+		--font-disp:   'Bebas Neue', sans-serif;
+		--font-ui:     'DM Sans', sans-serif;
 	}
 
 	/* ─── shell ─── */
-	.sb {
+	.board {
 		width: 100%;
 		height: 100%;
-		background: var(--sb-bg);
+		background: var(--bg);
 		display: flex;
 		flex-direction: column;
-		font-family: var(--font-body);
+		font-family: var(--font-ui);
+		overflow: hidden;
 		position: relative;
-		overflow: hidden; /* NO scroll on outer */
 	}
 
-	.bg-grid {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		z-index: 0;
-		background-image:
-			linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-		background-size: 36px 36px;
-	}
-
-	/* ─── topbar ─── */
-	.topbar {
-		position: relative;
-		z-index: 10;
+	/* ─── header bar ─── */
+	.hbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10px 18px;
-		background: rgba(11,14,19,0.92);
-		border-bottom: 1px solid var(--sb-border);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
+		padding: 0 16px;
+		height: 44px;
+		background: var(--surface);
+		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
+		z-index: 10;
 	}
 
-	.topbar-left {
+	.hbar-brand {
 		display: flex;
 		align-items: center;
 		gap: 9px;
+		color: var(--green);
 	}
 
-	.topbar-logo {
-		font-size: 16px;
-		color: var(--sb-open);
-		filter: drop-shadow(0 0 5px var(--sb-open-glow));
+	.hbar-icon {
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+	}
+
+	.hbar-title {
+		font-family: var(--font-disp);
+		font-size: 22px;
+		letter-spacing: 1.5px;
+		color: var(--text);
 		line-height: 1;
 	}
 
-	.topbar-title {
-		font-family: var(--font-cond);
-		font-size: 18px;
-		font-weight: 700;
-		letter-spacing: 1px;
-		color: var(--sb-text);
-		text-transform: uppercase;
-	}
-
-	.topbar-counters {
+	.hbar-stats {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 6px;
 	}
 
-	.counter {
+	.hstat {
 		display: flex;
 		align-items: center;
 		gap: 5px;
-		padding: 4px 12px;
+		padding: 4px 10px;
 		border-radius: 5px;
 	}
 
-	.counter--open {
-		background: var(--sb-open-dim);
-		border: 1px solid rgba(34,197,94,0.18);
+	.hstat--open {
+		background: var(--green-dim);
+		border: 1px solid rgba(63,185,80,0.2);
 	}
 
-	.counter--closed {
-		background: rgba(255,255,255,0.025);
-		border: 1px solid rgba(255,255,255,0.05);
+	.hstat--closed {
+		background: rgba(255,255,255,0.03);
+		border: 1px solid var(--border);
 	}
 
-	.counter-num {
-		font-family: var(--font-cond);
-		font-size: 24px;
-		font-weight: 800;
-		line-height: 1;
-		color: var(--sb-text);
-	}
-
-	.counter--open .counter-num { color: var(--sb-open); }
-
-	.counter-lbl {
-		font-family: var(--font-cond);
-		font-size: 10px;
-		font-weight: 600;
-		letter-spacing: 1.5px;
-		color: var(--sb-text-dim);
-		align-self: flex-end;
-		padding-bottom: 1px;
-	}
-
-	.counter-dot {
-		width: 6px;
-		height: 6px;
+	.hstat-dot {
+		width: 7px;
+		height: 7px;
 		border-radius: 50%;
-		background: var(--sb-open);
-		box-shadow: 0 0 6px var(--sb-open);
+		background: var(--green);
+		box-shadow: 0 0 7px var(--green-glow);
+		animation: dot-pulse 2.2s ease-in-out infinite;
 		flex-shrink: 0;
-		animation: dot-blink 2s ease-in-out infinite;
 	}
 
-	@keyframes dot-blink {
+	@keyframes dot-pulse {
 		0%, 100% { opacity: 1; }
 		50%       { opacity: 0.25; }
 	}
 
-	.counter-sep {
+	.hstat-n {
+		font-family: var(--font-disp);
+		font-size: 22px;
+		line-height: 1;
+		color: var(--text);
+	}
+
+	.hstat--open .hstat-n { color: var(--green); }
+
+	.hstat-lbl {
+		font-size: 10px;
+		font-weight: 500;
+		letter-spacing: 0.8px;
+		color: var(--text-dim);
+		text-transform: uppercase;
+		align-self: flex-end;
+		padding-bottom: 2px;
+	}
+
+	.hstat-sep {
 		width: 1px;
-		height: 26px;
-		background: var(--sb-border);
+		height: 22px;
+		background: var(--border);
 		margin: 0 2px;
 	}
 
-	/* ─── floors wrap — takes all remaining height, NO overflow ─── */
-	.floors-wrap {
+	/* ─── bands container ─── */
+	.bands {
 		flex: 1;
-		overflow: hidden; /* hard clip — no scroll */
 		display: flex;
 		flex-direction: column;
-		position: relative;
-		z-index: 5;
-		padding: 8px 14px 10px;
+		overflow: hidden;
+		padding: 6px 12px 8px;
 		gap: 0;
 	}
 
-	/* ─── floor row — each takes equal share of vertical space ─── */
-	.floor-row {
-		flex: 1;
+	/* ─── single floor band ─── */
+	.band {
+		/* flex set inline per band (= room count) */
 		display: flex;
 		align-items: stretch;
-		gap: 10px;
-		min-height: 0; /* allow flex children to shrink */
-		animation: row-in 0.35s ease-out both;
+		gap: 0;
+		min-height: 0;
+		animation: band-in 0.4s ease-out both;
 	}
 
-	@keyframes row-in {
-		from { opacity: 0; transform: translateX(-6px); }
+	@keyframes band-in {
+		from { opacity: 0; transform: translateX(-8px); }
 		to   { opacity: 1; transform: translateX(0); }
 	}
 
-	.floor-divider {
-		height: 1px;
-		background: linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0.07) 40%, rgba(255,255,255,0.04));
-		flex-shrink: 0;
-		margin: 2px 0;
-	}
-
-	/* ─── floor label sidebar ─── */
-	.floor-label {
+	/* ─── floor label column ─── */
+	.band-label {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		align-items: flex-start;
-		gap: 3px;
-		padding: 4px 10px 4px 10px;
-		border-left: 2px solid;
-		min-width: 44px;
-		max-width: 50px;
+		align-items: center;
+		width: 40px;
 		flex-shrink: 0;
+		padding: 4px 0;
+		gap: 2px;
 	}
 
-	.floor-short {
-		font-family: var(--font-cond);
-		font-size: 13px;
-		font-weight: 800;
+	.band-short {
+		font-family: var(--font-disp);
+		font-size: 14px;
 		letter-spacing: 1px;
 		line-height: 1;
 	}
 
-	.floor-ratio {
-		font-family: var(--font-cond);
-		font-size: 11px;
-		color: var(--sb-text-dim);
+	.band-count {
+		font-size: 10px;
+		color: var(--text-dim);
+		font-weight: 500;
 		white-space: nowrap;
 	}
 
-	/* ─── card strip — cards fill all available width ─── */
-	.card-strip {
-		flex: 1;
-		display: flex;
-		gap: 8px;
-		align-items: stretch;
-		min-width: 0;
-		overflow: hidden; /* clip if somehow too many */
+	/* ─── thin vertical accent rule ─── */
+	.band-rule {
+		width: 2px;
+		border-radius: 2px;
+		flex-shrink: 0;
+		margin: 6px 8px 6px 4px;
+		opacity: 0.7;
 	}
 
-	/* ─── card — fills available width, no fixed size ─── */
-	.card {
+	/* ─── card strip ─── */
+	.band-cards {
 		flex: 1;
+		display: flex;
+		gap: 6px;
+		align-items: stretch;
 		min-width: 0;
-		position: relative;
-		border-radius: 7px;
 		overflow: hidden;
+		padding: 4px 0;
+	}
+
+	/* ─── band separator ─── */
+	.band-sep {
+		height: 1px;
+		background: var(--border);
+		margin: 0 0 0 52px;
+		flex-shrink: 0;
+	}
+
+	/* ═══════════════════════════════
+	   CARD
+	═══════════════════════════════ */
+	.card {
+		position: relative;
+		overflow: hidden;
+		border-radius: 6px;
 		cursor: pointer;
 		text-align: left;
 		padding: 0;
-		border: 1px solid var(--sb-border);
-		transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+		border: 1px solid var(--border);
 		animation: card-in 0.3s ease-out both;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+		/* flex split: open cards get MORE space than closed */
+		flex: 1;
+		min-width: 0;
 	}
 
 	@keyframes card-in {
-		from { opacity: 0; transform: scale(0.96); }
+		from { opacity: 0; transform: scale(0.94); }
 		to   { opacity: 1; transform: scale(1); }
 	}
 
-	/* OPEN — bright, full height, green accent */
+	/* ── OPEN card ── */
 	.card--open {
-		background: var(--sb-surface-hi);
-		border-color: rgba(34,197,94,0.22);
-		box-shadow:
-			0 0 0 1px rgba(34,197,94,0.08),
-			0 2px 14px rgba(0,0,0,0.35),
-			inset 0 0 24px rgba(34,197,94,0.03);
+		background: var(--surface2);
+		border-color: rgba(63,185,80,0.25);
+		flex: 1.6; /* open gets 60% more space than closed */
+		box-shadow: inset 0 0 0 1px rgba(63,185,80,0.08),
+		            0 2px 12px rgba(0,0,0,0.3);
 	}
 
 	.card--open:hover {
-		transform: translateY(-2px) scale(1.01);
-		border-color: rgba(34,197,94,0.38);
-		box-shadow:
-			0 0 0 1px rgba(34,197,94,0.22),
-			0 6px 22px rgba(0,0,0,0.45),
-			0 0 16px rgba(34,197,94,0.1);
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(0,0,0,0.4),
+		            0 0 14px rgba(63,185,80,0.12),
+		            inset 0 0 0 1px rgba(63,185,80,0.2);
 	}
 
-	/* CLOSED — dim, gray, visually smaller feel */
+	/* ── CLOSED card ── */
 	.card--closed {
 		background: rgba(255,255,255,0.025);
 		border-color: rgba(255,255,255,0.04);
-		opacity: 0.6;
-		/* shrink flex basis so closed cards take less space */
-		flex: 0.6;
+		flex: 1; /* baseline */
+		opacity: 0.55;
 	}
 
 	.card--closed:hover {
-		opacity: 0.82;
+		opacity: 0.78;
 		transform: translateY(-1px);
 	}
 
-	/* ── image bg ── */
+	/* ── image behind card ── */
 	.card-img {
 		position: absolute;
 		inset: 0;
@@ -459,111 +455,102 @@
 		z-index: 0;
 	}
 
-	.card-img-overlay {
+	/* Scrim: strong at bottom, lighter at top so image shows through top half */
+	.card-img-scrim {
 		position: absolute;
 		inset: 0;
 		background: linear-gradient(
-			150deg,
-			rgba(11,14,19,0.25) 0%,
-			rgba(11,14,19,0.7)  55%,
-			rgba(11,14,19,0.9)  100%
+			175deg,
+			rgba(13,17,23,0.18) 0%,
+			rgba(13,17,23,0.55) 45%,
+			rgba(13,17,23,0.88) 100%
 		);
 		z-index: 1;
 	}
 
-	/* ── left stripe ── */
-	.card-stripe {
+	/* ── colored top band — instant status signal ── */
+	.card-topband {
 		position: absolute;
-		left: 0;
-		top: 0;
-		width: 3px;
-		height: 100%;
+		top: 0; left: 0; right: 0;
+		height: 4px;
 		z-index: 5;
 	}
 
-	.card--open .card-stripe {
-		background: var(--sb-open);
-		box-shadow: 2px 0 10px rgba(34,197,94,0.45);
+	.card--open  .card-topband {
+		background: var(--green);
+		box-shadow: 0 0 10px var(--green-glow);
 	}
 
-	.card--closed .card-stripe {
-		background: rgba(100,120,140,0.25);
+	.card--closed .card-topband {
+		background: rgba(130,145,160,0.3);
 	}
 
-	/* ── body ── */
-	.card-body {
+	/* ── inner layout ── */
+	.card-inner {
 		position: relative;
 		z-index: 6;
-		padding: 7px 9px 8px 11px;
+		padding: 10px 10px 9px 10px;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 3px;
-		height: 100%;
 		justify-content: center;
 	}
 
-	/* ── status pill ── */
-	.status-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		border-radius: 3px;
-		padding: 1px 7px;
-		font-family: var(--font-cond);
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 1.5px;
-		align-self: flex-start;
+	/* ── status label ── */
+	.card-status {
 		margin-bottom: 1px;
 	}
 
-	.pill--open {
-		background: rgba(34,197,94,0.18);
-		color: var(--sb-open);
-		border: 1px solid rgba(34,197,94,0.28);
+	.status-open {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-family: var(--font-disp);
+		font-size: clamp(12px, 1.6vh, 18px);
+		letter-spacing: 1.5px;
+		color: var(--green);
+		text-shadow: 0 0 10px var(--green-glow);
 	}
 
-	.pill--closed {
-		background: rgba(255,255,255,0.04);
-		color: rgba(130,150,165,0.65);
-		border: 1px solid rgba(255,255,255,0.06);
-	}
-
-	.pill-dot {
+	.status-dot {
 		display: block;
-		width: 5px;
-		height: 5px;
+		width: 7px;
+		height: 7px;
 		border-radius: 50%;
-		background: var(--sb-open);
-		box-shadow: 0 0 5px var(--sb-open);
+		background: var(--green);
+		box-shadow: 0 0 7px var(--green-glow);
 		flex-shrink: 0;
-		animation: pill-beat 1.8s ease-in-out infinite;
+		animation: sdot 1.8s ease-in-out infinite;
 	}
 
-	@keyframes pill-beat {
-		0%, 100% { transform: scale(1); opacity: 1; }
-		50%       { transform: scale(1.4); opacity: 0.5; }
+	@keyframes sdot {
+		0%,100% { transform: scale(1);    opacity: 1; }
+		50%      { transform: scale(1.45); opacity: 0.5; }
 	}
 
-	/* ── name ── */
+	.status-closed {
+		font-family: var(--font-disp);
+		font-size: clamp(10px, 1.3vh, 14px);
+		letter-spacing: 1.2px;
+		color: var(--closed-col);
+	}
+
+	/* ── room name ── */
 	.card-name {
-		font-family: var(--font-cond);
-		color: var(--sb-text);
-		line-height: 1.1;
+		font-family: var(--font-disp);
+		letter-spacing: 0.5px;
+		color: var(--text);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		line-height: 1.1;
 	}
 
-	.card--open .card-name {
-		font-size: clamp(14px, 1.8vh, 22px);
-		font-weight: 800;
-	}
-
+	.card--open  .card-name { font-size: clamp(14px, 2.2vh, 26px); }
 	.card--closed .card-name {
-		font-size: clamp(11px, 1.4vh, 15px);
-		font-weight: 600;
-		color: rgba(170,190,210,0.55);
+		font-size: clamp(12px, 1.7vh, 18px);
+		color: rgba(180,195,215,0.5);
 	}
 
 	/* ── activity ── */
@@ -578,80 +565,55 @@
 		-webkit-box-orient: vertical;
 	}
 
-	.card--open  .card-activity { color: rgba(200,230,210,0.85); }
-	.card--closed .card-activity { color: rgba(140,160,175,0.4); -webkit-line-clamp: 1; line-clamp: 1; }
+	.card--open  .card-activity { color: rgba(210,230,215,0.8); }
+	.card--closed .card-activity {
+		color: rgba(140,160,175,0.4);
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
+	}
 
 	/* ── person ── */
 	.card-person {
+		font-size: clamp(9px, 1.1vh, 12px);
+		color: var(--text-mid);
 		display: flex;
 		align-items: center;
-		gap: 5px;
-		margin-top: 1px;
-	}
-
-	.person-initial {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		font-family: var(--font-cond);
-		font-size: 9px;
-		font-weight: 700;
-		flex-shrink: 0;
-	}
-
-	.card--open  .person-initial { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: var(--sb-open); }
-	.card--closed .person-initial { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--sb-text-dim); }
-
-	.person-name {
-		font-size: 10px;
-		color: var(--sb-text-dim);
+		gap: 4px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	/* ── time ── */
-	.card-time {
-		font-family: var(--font-cond);
-		font-size: 10px;
-		color: rgba(140,165,185,0.4);
-		letter-spacing: 0.2px;
 		margin-top: 1px;
 	}
 
-	/* ── open halo ── */
-	.open-halo {
-		position: absolute;
-		inset: 0;
-		border-radius: 7px;
-		pointer-events: none;
-		z-index: 3;
-		border: 1px solid rgba(34,197,94,0.12);
-		animation: halo-breathe 3.5s ease-in-out infinite;
+	.card--closed .card-person { color: var(--text-dim); }
+
+	.card-person-dot {
+		color: var(--green);
+		font-size: 6px;
+		flex-shrink: 0;
+		opacity: 0.7;
 	}
 
-	@keyframes halo-breathe {
-		0%, 100% { opacity: 0.4; }
-		50%       { opacity: 1; }
+	.card--closed .card-person-dot { color: var(--text-dim); }
+
+	/* ── time ── */
+	.card-time {
+		font-size: clamp(8px, 1vh, 11px);
+		color: var(--text-dim);
+		margin-top: auto;
+		font-weight: 500;
+		letter-spacing: 0.3px;
 	}
 
 	/* ─── empty ─── */
 	.empty {
 		flex: 1;
 		display: flex;
-		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 12px;
-		color: var(--sb-text-dim);
-		font-family: var(--font-cond);
+		color: var(--text-dim);
 		font-size: 14px;
 		letter-spacing: 2px;
 		text-transform: uppercase;
 	}
-
-	.empty span:first-child { font-size: 28px; opacity: 0.25; }
 </style>
