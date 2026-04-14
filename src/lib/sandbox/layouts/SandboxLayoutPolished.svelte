@@ -163,9 +163,8 @@
 					{/if}
 
 					<!-- Open count badge -->
-					{@const pageOpen = page.rooms.filter(r => r.isOpen).length}
-					{#if pageOpen > 0}
-						<span class="tab-badge">{pageOpen}</span>
+					{#if page.rooms.filter(r => r.isOpen).length > 0}
+						<span class="tab-badge">{page.rooms.filter(r => r.isOpen).length}</span>
 					{/if}
 				</button>
 			{/each}
