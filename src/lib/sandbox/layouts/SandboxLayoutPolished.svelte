@@ -178,14 +178,7 @@
 				<span class="gc-lbl">offen</span>
 			</div>
 
-			<!-- Runner -->
-			{#if $runnerNameStore}
-				<div class="runner-chip">
-					<span class="runner-ic" aria-hidden="true">🏃</span>
-					<span class="runner-nm">{$runnerNameStore}</span>
-				</div>
-			{/if}
-		</div>
+	</div>
 	</nav>
 
 	<!-- ══ Page ══ -->
@@ -197,14 +190,21 @@
 		>
 			<!-- Page header -->
 			<div class="page-hdr">
-				<h2 class="page-title">{currentPage()?.label}</h2>
-				<div class="page-meta">
-					<span class="meta-open" class:meta-open-none={openCount() === 0}>
-						{openCount()} geöffnet
+				<h2 class="page-title">
+					{currentPage()?.label}
+					<span class="page-meta-inline">
+						<span class="meta-open" class:meta-open-none={openCount() === 0}>{openCount()} geöffnet</span>
+						<span class="meta-sep">·</span>
+						<span class="meta-total">{currentRooms().length} Räume</span>
 					</span>
-					<span class="meta-sep">·</span>
-					<span class="meta-total">{currentRooms().length} Räume</span>
-				</div>
+				</h2>
+				{#if $runnerNameStore}
+					<div class="runner-row">
+						<span class="runner-row-ic" aria-hidden="true">🏃</span>
+						<span class="runner-row-lbl">Ansprechpartner:</span>
+						<span class="runner-row-nm">{$runnerNameStore}</span>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Room grid -->
@@ -497,28 +497,6 @@
 		letter-spacing: 0.3px;
 	}
 
-	/* Runner */
-	.runner-chip {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 4px 12px;
-		border-radius: 20px;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.12);
-	}
-
-	.runner-ic { font-size: 14px; line-height: 1; }
-
-	.runner-nm {
-		font-size: 13px;
-		font-weight: 700;
-		color: #fff;
-		max-width: 120px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
 
 	/* ════════════════════════
 	   PAGE
@@ -553,29 +531,38 @@
 
 	/* Page header */
 	.page-hdr {
-		display: flex;
-		align-items: baseline;
-		gap: 14px;
-		margin-bottom: 16px;
+		text-align: center;
+		margin-bottom: 14px;
 		flex-shrink: 0;
 	}
 
 	.page-title {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
 		margin: 0;
-		font-size: clamp(22px, 3.5vh, 34px);
+		font-size: clamp(20px, 3.2vh, 30px);
 		font-weight: 800;
 		color: #fff;
 		text-shadow: 0 2px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5);
 		letter-spacing: -0.3px;
-		line-height: 1;
+		line-height: 1.1;
+		background: rgba(0,0,0,0.45);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		padding: 10px 28px 10px;
+		border-radius: 16px;
+		border: 1px solid rgba(255,255,255,0.15);
 	}
 
-	.page-meta {
+	.page-meta-inline {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 500;
+		line-height: 1;
 	}
 
 	.meta-open {
@@ -586,6 +573,35 @@
 	.meta-open-none { color: rgba(255,255,255,0.35); }
 	.meta-sep       { color: rgba(255,255,255,0.2); }
 	.meta-total     { color: rgba(255,255,255,0.45); }
+
+	/* Ansprechpartner row */
+	.runner-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		margin-top: 7px;
+		padding: 5px 16px;
+		background: rgba(0,0,0,0.38);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border-radius: 20px;
+		border: 1px solid rgba(255,255,255,0.13);
+	}
+
+	.runner-row-ic  { font-size: 15px; line-height: 1; }
+
+	.runner-row-lbl {
+		font-size: 12px;
+		font-weight: 500;
+		color: rgba(255,255,255,0.65);
+	}
+
+	.runner-row-nm {
+		font-size: 13px;
+		font-weight: 700;
+		color: #fff;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+	}
 
 	/* ════════════════════════
 	   GRID
