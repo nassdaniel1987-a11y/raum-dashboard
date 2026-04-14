@@ -53,401 +53,359 @@
 	function getImageUrl(room: RoomWithConfig): string {
 		return room.config?.activity_image_url ?? room.image_url ?? '';
 	}
-
-	// Flex weight per floor: more rooms → more vertical space
-	// Minimum 1, scales with room count so single-room floors don't collapse
-	function floorWeight(roomCount: number): number {
-		return Math.max(1, roomCount);
-	}
 </script>
 
 <div class="board" role="presentation">
 
-	<!-- ── Header bar ── -->
+	<!-- ══ HEADER ══ -->
 	<header class="hbar">
-		<div class="hbar-brand">
-			<svg class="hbar-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-				<rect x="1" y="1" width="8" height="8" rx="1.5" fill="currentColor" opacity=".9"/>
-				<rect x="11" y="1" width="8" height="8" rx="1.5" fill="currentColor" opacity=".5"/>
-				<rect x="1" y="11" width="8" height="8" rx="1.5" fill="currentColor" opacity=".5"/>
-				<rect x="11" y="11" width="8" height="8" rx="1.5" fill="currentColor" opacity=".3"/>
-			</svg>
-			<span class="hbar-title">Raumstatus</span>
-		</div>
-
-		<div class="hbar-stats">
-			<div class="hstat hstat--open">
-				<span class="hstat-dot" aria-hidden="true"></span>
-				<span class="hstat-n">{openCount}</span>
-				<span class="hstat-lbl">offen</span>
+		<span class="hbar-title">Raumstatus</span>
+		<div class="hbar-pills">
+			<div class="hpill hpill--open">
+				<span class="hpill-led" aria-hidden="true"></span>
+				<span class="hpill-n">{openCount}</span>
+				<span class="hpill-lbl">OFFEN</span>
 			</div>
-			<div class="hstat-sep" aria-hidden="true"></div>
-			<div class="hstat hstat--closed">
-				<span class="hstat-n">{totalCount - openCount}</span>
-				<span class="hstat-lbl">geschlossen</span>
+			<div class="hpill hpill--closed">
+				<span class="hpill-n">{totalCount - openCount}</span>
+				<span class="hpill-lbl">ZU</span>
 			</div>
 		</div>
 	</header>
 
-	<!-- ── Floor bands ── -->
-	<div class="bands">
-		{#each floorGroups() as grp, gi}
-			<!-- Each band's flex-grow = room count, so more rooms = more height -->
-			<div
-				class="band"
-				style="flex: {floorWeight(grp.rooms.length)}; --accent: {grp.meta.accent}; animation-delay: {gi * 0.07}s;"
-				aria-label={grp.meta.label}
-			>
-				<!-- Floor label column -->
-				<div class="band-label">
-					<span class="band-short" style="color: {grp.meta.accent};">{grp.meta.short}</span>
-					<span class="band-count">
-						<span style="color: {grp.meta.accent}; font-weight:700;">{grp.rooms.filter(r => r.isOpen).length}</span>/{grp.rooms.length}
+	<!-- ══ MAIN: sidebar + grid ══ -->
+	<div class="main">
+
+		<!-- Left sidebar: floor labels stacked proportionally -->
+		<aside class="sidebar" aria-hidden="true">
+			{#each floorGroups() as grp}
+				<div
+					class="sb-floor"
+					style="flex: {grp.rooms.length}; --acc: {grp.meta.accent};"
+				>
+					<div class="sb-bar" style="background: {grp.meta.accent};"></div>
+					<span class="sb-label" style="color: {grp.meta.accent};">{grp.meta.short}</span>
+					<span class="sb-ratio">
+						{grp.rooms.filter(r => r.isOpen).length}/{grp.rooms.length}
 					</span>
 				</div>
+			{/each}
+		</aside>
 
-				<!-- Accent rule -->
-				<div class="band-rule" style="background: {grp.meta.accent};" aria-hidden="true"></div>
+		<!-- Right: all rooms in a single responsive grid -->
+		<div class="grid-wrap">
+			{#each floorGroups() as grp, gi}
+				{#each grp.rooms as room, ri}
+					{@const imgUrl = getImageUrl(room)}
+					{@const hasImg = !!imgUrl}
 
-				<!-- Cards -->
-				<div class="band-cards">
-					{#each grp.rooms as room, ri}
-						{@const imgUrl = getImageUrl(room)}
-						{@const hasImg = !!imgUrl}
-						<button
-							class="card"
-							class:card--open={room.isOpen}
-							class:card--closed={!room.isOpen}
-							style="animation-delay: {gi * 0.07 + ri * 0.04}s;"
-							onclick={() => handleEditRoom(room)}
-							aria-label="{room.name}: {room.isOpen ? 'geöffnet' : 'geschlossen'}"
-						>
-							<!-- Full-bleed image -->
-							{#if hasImg}
-								<div class="card-img" style="background-image:url('{imgUrl}');" aria-hidden="true"></div>
-								<div class="card-img-scrim" aria-hidden="true"></div>
+					<button
+						class="card"
+						class:is-open={room.isOpen}
+						class:is-closed={!room.isOpen}
+						class:has-img={hasImg}
+						style="
+							--acc: {grp.meta.accent};
+							animation-delay: {(gi * 4 + ri) * 0.035}s;
+						"
+						onclick={() => handleEditRoom(room)}
+						aria-label="{room.name}: {room.isOpen ? 'geöffnet' : 'geschlossen'}"
+					>
+						<!-- Image bg -->
+						{#if hasImg}
+							<div class="c-img" style="background-image:url('{imgUrl}');" aria-hidden="true"></div>
+							<div class="c-scrim" aria-hidden="true"></div>
+						{/if}
+
+						<!-- Big colored background wash for open rooms -->
+						{#if room.isOpen}
+							<div class="c-wash" aria-hidden="true"></div>
+						{/if}
+
+						<!-- Content -->
+						<div class="c-body">
+
+							<!-- Status — THE first thing you read -->
+							<div class="c-status" aria-hidden="true">
+								{#if room.isOpen}
+									<span class="c-led" aria-hidden="true"></span>
+								{/if}
+								<span class="c-status-text">
+									{room.isOpen ? 'OFFEN' : 'ZU'}
+								</span>
+							</div>
+
+							<!-- Floor tag -->
+							<div class="c-floor-tag" style="color: {grp.meta.accent};">
+								{grp.meta.short}
+							</div>
+
+							<!-- Name -->
+							<div class="c-name">{room.name}</div>
+
+							<!-- Activity -->
+							{#if room.config?.activity}
+								<div class="c-activity">{room.config.activity}</div>
 							{/if}
 
-							<!-- Colored top band = instant status signal -->
-							<div class="card-topband" aria-hidden="true"></div>
-
-							<!-- All text content -->
-							<div class="card-inner">
-								<!-- Status label — dominates visually -->
-								<div class="card-status">
-									{#if room.isOpen}
-										<span class="status-open">
-											<span class="status-dot" aria-hidden="true"></span>
-											OFFEN
-										</span>
-									{:else}
-										<span class="status-closed">GESCHLOSSEN</span>
-									{/if}
+							<!-- Person -->
+							{#if room.person}
+								<div class="c-person">
+									<span class="c-person-ic" aria-hidden="true">◉</span>
+									{room.person.split(',')[0].trim()}
 								</div>
+							{/if}
 
-								<!-- Room name -->
-								<div class="card-name">{room.name}</div>
+							<!-- Time -->
+							{#if room.config?.open_time}
+								<div class="c-time">
+									{room.config.open_time}{room.config.close_time ? '–' + room.config.close_time : ''}
+								</div>
+							{/if}
+						</div>
+					</button>
+				{/each}
+			{/each}
 
-								<!-- Activity — prominent when present -->
-								{#if room.config?.activity}
-									<div class="card-activity">{room.config.activity}</div>
-								{/if}
-
-								<!-- Person -->
-								{#if room.person}
-									<div class="card-person">
-										<span class="card-person-dot" aria-hidden="true">●</span>
-										{room.person.split(',')[0].trim()}
-									</div>
-								{/if}
-
-								<!-- Time -->
-								{#if room.config?.open_time}
-									<div class="card-time">
-										{room.config.open_time}{room.config.close_time ? '–' + room.config.close_time : ''}
-									</div>
-								{/if}
-							</div>
-						</button>
-					{/each}
-				</div>
-			</div>
-
-			{#if gi < floorGroups().length - 1}
-				<div class="band-sep" aria-hidden="true"></div>
+			{#if totalCount === 0}
+				<div class="empty">Keine Räume</div>
 			{/if}
-		{/each}
+		</div>
 
-		{#if floorGroups().length === 0}
-			<div class="empty">Keine Räume vorhanden</div>
-		{/if}
 	</div>
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Bebas+Neue&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap');
 
-	/* ─── tokens ─── */
+	/* ── design tokens ── */
 	:root {
-		--bg:          #0d1117;
-		--surface:     #161b22;
-		--surface2:    #1f2937;
-		--border:      rgba(255,255,255,0.07);
-		--text:        #e6edf3;
-		--text-mid:    rgba(200,215,230,0.6);
-		--text-dim:    rgba(160,180,200,0.35);
-		--green:       #3fb950;
-		--green-dim:   rgba(63,185,80,0.15);
-		--green-glow:  rgba(63,185,80,0.4);
-		--closed-col:  rgba(130,145,160,0.45);
-		--font-disp:   'Bebas Neue', sans-serif;
-		--font-ui:     'DM Sans', sans-serif;
+		--bg:       #0c0f14;
+		--surf:     #141920;
+		--surf2:    #1c2430;
+		--border:   rgba(255,255,255,0.07);
+		--text:     #dde6f0;
+		--mid:      rgba(200,215,230,0.55);
+		--dim:      rgba(150,170,190,0.3);
+		--green:    #22c55e;
+		--g-dim:    rgba(34,197,94,0.12);
+		--g-glow:   rgba(34,197,94,0.5);
+		--f-head:   'Syne', sans-serif;
+		--f-mono:   'Geist Mono', 'Courier New', monospace;
 	}
 
-	/* ─── shell ─── */
+	/* ── shell ── */
 	.board {
 		width: 100%;
 		height: 100%;
 		background: var(--bg);
 		display: flex;
 		flex-direction: column;
-		font-family: var(--font-ui);
+		font-family: var(--f-mono);
 		overflow: hidden;
-		position: relative;
 	}
 
-	/* ─── header bar ─── */
+	/* ── header ── */
 	.hbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 0 16px;
-		height: 44px;
-		background: var(--surface);
+		height: 42px;
+		background: var(--surf);
 		border-bottom: 1px solid var(--border);
-		flex-shrink: 0;
-		z-index: 10;
-	}
-
-	.hbar-brand {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-		color: var(--green);
-	}
-
-	.hbar-icon {
-		width: 18px;
-		height: 18px;
 		flex-shrink: 0;
 	}
 
 	.hbar-title {
-		font-family: var(--font-disp);
-		font-size: 22px;
-		letter-spacing: 1.5px;
+		font-family: var(--f-head);
+		font-size: 17px;
+		font-weight: 800;
+		letter-spacing: 1px;
 		color: var(--text);
-		line-height: 1;
+		text-transform: uppercase;
 	}
 
-	.hbar-stats {
+	.hbar-pills {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 	}
 
-	.hstat {
+	.hpill {
 		display: flex;
 		align-items: center;
-		gap: 5px;
-		padding: 4px 10px;
-		border-radius: 5px;
+		gap: 6px;
+		padding: 4px 12px;
+		border-radius: 20px;
+		font-family: var(--f-mono);
 	}
 
-	.hstat--open {
-		background: var(--green-dim);
-		border: 1px solid rgba(63,185,80,0.2);
+	.hpill--open {
+		background: var(--g-dim);
+		border: 1px solid rgba(34,197,94,0.25);
 	}
 
-	.hstat--closed {
+	.hpill--closed {
 		background: rgba(255,255,255,0.03);
 		border: 1px solid var(--border);
 	}
 
-	.hstat-dot {
+	.hpill-led {
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
 		background: var(--green);
-		box-shadow: 0 0 7px var(--green-glow);
-		animation: dot-pulse 2.2s ease-in-out infinite;
+		box-shadow: 0 0 8px var(--g-glow);
 		flex-shrink: 0;
+		animation: led 2s ease-in-out infinite;
 	}
 
-	@keyframes dot-pulse {
-		0%, 100% { opacity: 1; }
-		50%       { opacity: 0.25; }
+	@keyframes led {
+		0%,100% { opacity: 1; }
+		50%      { opacity: 0.2; }
 	}
 
-	.hstat-n {
-		font-family: var(--font-disp);
-		font-size: 22px;
-		line-height: 1;
+	.hpill-n {
+		font-size: 18px;
+		font-weight: 700;
 		color: var(--text);
+		line-height: 1;
 	}
 
-	.hstat--open .hstat-n { color: var(--green); }
+	.hpill--open .hpill-n { color: var(--green); }
 
-	.hstat-lbl {
+	.hpill-lbl {
 		font-size: 10px;
 		font-weight: 500;
-		letter-spacing: 0.8px;
-		color: var(--text-dim);
-		text-transform: uppercase;
-		align-self: flex-end;
-		padding-bottom: 2px;
+		letter-spacing: 1px;
+		color: var(--dim);
 	}
 
-	.hstat-sep {
-		width: 1px;
-		height: 22px;
-		background: var(--border);
-		margin: 0 2px;
-	}
-
-	/* ─── bands container ─── */
-	.bands {
+	/* ── main layout ── */
+	.main {
 		flex: 1;
 		display: flex;
-		flex-direction: column;
 		overflow: hidden;
-		padding: 6px 12px 8px;
 		gap: 0;
 	}
 
-	/* ─── single floor band ─── */
-	.band {
-		/* flex set inline per band (= room count) */
-		display: flex;
-		align-items: stretch;
-		gap: 0;
-		min-height: 0;
-		animation: band-in 0.4s ease-out both;
-	}
-
-	@keyframes band-in {
-		from { opacity: 0; transform: translateX(-8px); }
-		to   { opacity: 1; transform: translateX(0); }
-	}
-
-	/* ─── floor label column ─── */
-	.band-label {
+	/* ── sidebar ── */
+	.sidebar {
+		width: 48px;
+		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		width: 40px;
-		flex-shrink: 0;
-		padding: 4px 0;
-		gap: 2px;
+		background: rgba(255,255,255,0.018);
+		border-right: 1px solid var(--border);
+		overflow: hidden;
 	}
 
-	.band-short {
-		font-family: var(--font-disp);
-		font-size: 14px;
-		letter-spacing: 1px;
+	.sb-floor {
+		/* flex set inline */
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		border-bottom: 1px solid var(--border);
+		position: relative;
+		padding: 4px 0;
+	}
+
+	.sb-floor:last-child { border-bottom: none; }
+
+	.sb-bar {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 3px;
+		border-radius: 0 2px 2px 0;
+		opacity: 0.8;
+	}
+
+	.sb-label {
+		font-family: var(--f-head);
+		font-size: 11px;
+		font-weight: 800;
+		letter-spacing: 0.5px;
+		text-align: center;
 		line-height: 1;
 	}
 
-	.band-count {
-		font-size: 10px;
-		color: var(--text-dim);
-		font-weight: 500;
+	.sb-ratio {
+		font-size: 9px;
+		color: var(--dim);
+		text-align: center;
 		white-space: nowrap;
 	}
 
-	/* ─── thin vertical accent rule ─── */
-	.band-rule {
-		width: 2px;
-		border-radius: 2px;
-		flex-shrink: 0;
-		margin: 6px 8px 6px 4px;
-		opacity: 0.7;
-	}
-
-	/* ─── card strip ─── */
-	.band-cards {
+	/* ── grid ── */
+	.grid-wrap {
 		flex: 1;
-		display: flex;
-		gap: 6px;
-		align-items: stretch;
-		min-width: 0;
 		overflow: hidden;
-		padding: 4px 0;
+		padding: 8px;
+		/* Auto-fit: as many columns as fit at minimum 140px */
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		grid-auto-rows: 1fr;
+		gap: 6px;
+		align-content: start;
 	}
 
-	/* ─── band separator ─── */
-	.band-sep {
-		height: 1px;
-		background: var(--border);
-		margin: 0 0 0 52px;
-		flex-shrink: 0;
-	}
-
-	/* ═══════════════════════════════
+	/* ══════════════════════════════
 	   CARD
-	═══════════════════════════════ */
+	══════════════════════════════ */
 	.card {
 		position: relative;
 		overflow: hidden;
-		border-radius: 6px;
+		border-radius: 8px;
 		cursor: pointer;
 		text-align: left;
 		padding: 0;
-		border: 1px solid var(--border);
-		animation: card-in 0.3s ease-out both;
-		transition: transform 0.15s ease, box-shadow 0.15s ease;
-		/* flex split: open cards get MORE space than closed */
-		flex: 1;
-		min-width: 0;
+		animation: pop-in 0.3s ease-out both;
+		transition: transform 0.14s ease, box-shadow 0.14s ease;
+		border: 1px solid transparent;
 	}
 
-	@keyframes card-in {
-		from { opacity: 0; transform: scale(0.94); }
-		to   { opacity: 1; transform: scale(1); }
+	@keyframes pop-in {
+		from { opacity: 0; transform: scale(0.92) translateY(6px); }
+		to   { opacity: 1; transform: scale(1)    translateY(0); }
 	}
 
-	/* ── OPEN card ── */
-	.card--open {
-		background: var(--surface2);
-		border-color: rgba(63,185,80,0.25);
-		flex: 1.6; /* open gets 60% more space than closed */
-		box-shadow: inset 0 0 0 1px rgba(63,185,80,0.08),
-		            0 2px 12px rgba(0,0,0,0.3);
+	/* OPEN */
+	.card.is-open {
+		background: var(--surf2);
+		border-color: rgba(34,197,94,0.3);
+		box-shadow: 0 2px 16px rgba(0,0,0,0.35),
+		            0 0 0 1px rgba(34,197,94,0.08);
 	}
 
-	.card--open:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(0,0,0,0.4),
-		            0 0 14px rgba(63,185,80,0.12),
-		            inset 0 0 0 1px rgba(63,185,80,0.2);
+	.card.is-open:hover {
+		transform: translateY(-3px) scale(1.015);
+		box-shadow: 0 8px 24px rgba(0,0,0,0.45),
+		            0 0 20px rgba(34,197,94,0.15),
+		            0 0 0 1px rgba(34,197,94,0.25);
 	}
 
-	/* ── CLOSED card ── */
-	.card--closed {
+	/* CLOSED */
+	.card.is-closed {
 		background: rgba(255,255,255,0.025);
-		border-color: rgba(255,255,255,0.04);
-		flex: 1; /* baseline */
+		border-color: rgba(255,255,255,0.05);
+		/* Closed cards desaturate and dim */
+		filter: saturate(0.4);
 		opacity: 0.55;
 	}
 
-	.card--closed:hover {
+	.card.is-closed:hover {
 		opacity: 0.78;
+		filter: saturate(0.7);
 		transform: translateY(-1px);
 	}
 
-	/* ── image behind card ── */
-	.card-img {
+	/* Image bg */
+	.c-img {
 		position: absolute;
 		inset: 0;
 		background-size: cover;
@@ -455,165 +413,179 @@
 		z-index: 0;
 	}
 
-	/* Scrim: strong at bottom, lighter at top so image shows through top half */
-	.card-img-scrim {
+	/* Scrim over image — stronger gradient so text is always clear */
+	.c-scrim {
 		position: absolute;
 		inset: 0;
 		background: linear-gradient(
-			175deg,
-			rgba(13,17,23,0.18) 0%,
-			rgba(13,17,23,0.55) 45%,
-			rgba(13,17,23,0.88) 100%
+			160deg,
+			rgba(12,15,20,0.1)  0%,
+			rgba(12,15,20,0.6)  50%,
+			rgba(12,15,20,0.92) 100%
 		);
 		z-index: 1;
 	}
 
-	/* ── colored top band — instant status signal ── */
-	.card-topband {
+	/* Green wash for open rooms — subtle background tint */
+	.c-wash {
 		position: absolute;
-		top: 0; left: 0; right: 0;
-		height: 4px;
-		z-index: 5;
+		inset: 0;
+		background: radial-gradient(ellipse at top left,
+			rgba(34,197,94,0.07) 0%,
+			transparent 70%
+		);
+		z-index: 1;
+		pointer-events: none;
 	}
 
-	.card--open  .card-topband {
-		background: var(--green);
-		box-shadow: 0 0 10px var(--green-glow);
-	}
-
-	.card--closed .card-topband {
-		background: rgba(130,145,160,0.3);
-	}
-
-	/* ── inner layout ── */
-	.card-inner {
+	/* Body */
+	.c-body {
 		position: relative;
-		z-index: 6;
-		padding: 10px 10px 9px 10px;
+		z-index: 5;
+		padding: 9px 10px 10px;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 3px;
-		justify-content: center;
 	}
 
-	/* ── status label ── */
-	.card-status {
-		margin-bottom: 1px;
-	}
-
-	.status-open {
-		display: inline-flex;
+	/* ── STATUS LINE — first and biggest ── */
+	.c-status {
+		display: flex;
 		align-items: center;
 		gap: 5px;
-		font-family: var(--font-disp);
-		font-size: clamp(12px, 1.6vh, 18px);
-		letter-spacing: 1.5px;
-		color: var(--green);
-		text-shadow: 0 0 10px var(--green-glow);
+		margin-bottom: 2px;
 	}
 
-	.status-dot {
+	.c-led {
 		display: block;
-		width: 7px;
-		height: 7px;
+		width: 8px;
+		height: 8px;
 		border-radius: 50%;
 		background: var(--green);
-		box-shadow: 0 0 7px var(--green-glow);
+		box-shadow: 0 0 8px var(--g-glow), 0 0 16px var(--g-glow);
 		flex-shrink: 0;
-		animation: sdot 1.8s ease-in-out infinite;
+		animation: pulse 1.8s ease-in-out infinite;
 	}
 
-	@keyframes sdot {
-		0%,100% { transform: scale(1);    opacity: 1; }
-		50%      { transform: scale(1.45); opacity: 0.5; }
+	@keyframes pulse {
+		0%,100% { transform: scale(1);    box-shadow: 0 0 8px var(--g-glow); }
+		50%      { transform: scale(1.35); box-shadow: 0 0 16px var(--g-glow); }
 	}
 
-	.status-closed {
-		font-family: var(--font-disp);
-		font-size: clamp(10px, 1.3vh, 14px);
-		letter-spacing: 1.2px;
-		color: var(--closed-col);
+	.c-status-text {
+		font-family: var(--f-head);
+		font-weight: 800;
+		letter-spacing: 1px;
+		line-height: 1;
 	}
 
-	/* ── room name ── */
-	.card-name {
-		font-family: var(--font-disp);
-		letter-spacing: 0.5px;
-		color: var(--text);
+	/* Open: big bright green */
+	.is-open .c-status-text {
+		font-size: clamp(13px, 1.8vh, 20px);
+		color: var(--green);
+		text-shadow: 0 0 12px rgba(34,197,94,0.6);
+	}
+
+	/* Closed: smaller, muted */
+	.is-closed .c-status-text {
+		font-size: clamp(11px, 1.4vh, 15px);
+		color: rgba(140,155,170,0.7);
+	}
+
+	/* ── Floor tag ── */
+	.c-floor-tag {
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 1.5px;
+		text-transform: uppercase;
+		opacity: 0.8;
+		line-height: 1;
+	}
+
+	/* ── Room name ── */
+	.c-name {
+		font-family: var(--f-head);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		line-height: 1.1;
 	}
 
-	.card--open  .card-name { font-size: clamp(14px, 2.2vh, 26px); }
-	.card--closed .card-name {
-		font-size: clamp(12px, 1.7vh, 18px);
-		color: rgba(180,195,215,0.5);
+	.is-open  .c-name {
+		font-size: clamp(13px, 1.9vh, 22px);
+		font-weight: 800;
+		color: var(--text);
 	}
 
-	/* ── activity ── */
-	.card-activity {
-		font-size: clamp(10px, 1.2vh, 13px);
+	.is-closed .c-name {
+		font-size: clamp(11px, 1.5vh, 17px);
+		font-weight: 700;
+		color: rgba(170,185,205,0.5);
+	}
+
+	/* ── Activity ── */
+	.c-activity {
+		font-size: clamp(9px, 1.15vh, 13px);
 		font-weight: 500;
+		color: rgba(195,220,205,0.82);
 		line-height: 1.3;
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
+		margin-top: 1px;
 	}
 
-	.card--open  .card-activity { color: rgba(210,230,215,0.8); }
-	.card--closed .card-activity {
-		color: rgba(140,160,175,0.4);
+	.is-closed .c-activity {
+		color: rgba(130,150,165,0.38);
 		-webkit-line-clamp: 1;
 		line-clamp: 1;
 	}
 
-	/* ── person ── */
-	.card-person {
-		font-size: clamp(9px, 1.1vh, 12px);
-		color: var(--text-mid);
+	/* ── Person ── */
+	.c-person {
 		display: flex;
 		align-items: center;
 		gap: 4px;
+		font-size: clamp(9px, 1.05vh, 12px);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		margin-top: 1px;
+		margin-top: 2px;
 	}
 
-	.card--closed .card-person { color: var(--text-dim); }
+	.is-open  .c-person { color: rgba(200,225,210,0.7); }
+	.is-closed .c-person { color: var(--dim); }
 
-	.card-person-dot {
-		color: var(--green);
-		font-size: 6px;
+	.c-person-ic {
+		font-size: 7px;
 		flex-shrink: 0;
-		opacity: 0.7;
+		opacity: 0.6;
 	}
 
-	.card--closed .card-person-dot { color: var(--text-dim); }
+	.is-open  .c-person-ic { color: var(--green); }
+	.is-closed .c-person-ic { color: var(--dim); }
 
-	/* ── time ── */
-	.card-time {
-		font-size: clamp(8px, 1vh, 11px);
-		color: var(--text-dim);
+	/* ── Time ── */
+	.c-time {
+		font-size: clamp(8px, 0.95vh, 11px);
+		color: var(--dim);
 		margin-top: auto;
-		font-weight: 500;
-		letter-spacing: 0.3px;
+		letter-spacing: 0.2px;
 	}
 
-	/* ─── empty ─── */
+	/* ── empty ── */
 	.empty {
-		flex: 1;
+		grid-column: 1 / -1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--text-dim);
-		font-size: 14px;
+		color: var(--dim);
+		font-size: 13px;
 		letter-spacing: 2px;
 		text-transform: uppercase;
+		padding: 40px;
 	}
 </style>
