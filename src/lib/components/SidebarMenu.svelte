@@ -72,7 +72,7 @@
 	}
 	let autoPageActive = $state(true);
 	let pageDuration = $state(8);
-	let animationType = $state<'book' | 'slide' | 'fade' | 'cube'>('book');
+	let animationType = $state<'book' | 'slide' | 'fade' | 'cube' | 'morph' | 'ripple' | 'zoom'>('book');
 	let displayScaleX = $state(1.0);
 	let cardWidth = $state(1.0);
 	let cardHeight = $state(1.0);
@@ -514,6 +514,24 @@
 									onclick={() => selectAnimationType('cube')}
 									title="Würfel"
 								>🎲</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'morph'}
+									onclick={() => selectAnimationType('morph')}
+									title="Morphen"
+								>🫧</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'ripple'}
+									onclick={() => selectAnimationType('ripple')}
+									title="Welle"
+								>🌊</button>
+								<button
+									class="anim-btn"
+									class:active={animationType === 'zoom'}
+									onclick={() => selectAnimationType('zoom')}
+									title="Zoom"
+								>🔍</button>
 							</div>
 						</div>
 					</section>

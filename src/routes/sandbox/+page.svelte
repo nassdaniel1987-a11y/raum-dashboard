@@ -38,6 +38,7 @@
 	import SandboxLayoutNeon from '$lib/sandbox/layouts/SandboxLayoutNeon.svelte';
 	import SandboxLayoutOrbital from '$lib/sandbox/layouts/SandboxLayoutOrbital.svelte';
 	import SandboxLayoutArchipelago from '$lib/sandbox/layouts/SandboxLayoutArchipelago.svelte';
+	import SandboxLayoutPolished from '$lib/sandbox/layouts/SandboxLayoutPolished.svelte';
 
 	let isLoading = $state(true);
 	let showMenu = $state(false);
@@ -232,6 +233,8 @@
 			<SandboxLayoutOrbital {handleEditRoom} />
 		{:else if $sandboxLayout === 'archipelago'}
 			<SandboxLayoutArchipelago {handleEditRoom} />
+		{:else if $sandboxLayout === 'polished'}
+			<SandboxLayoutPolished {handleEditRoom} />
 		{/if}
 	</div>
 
