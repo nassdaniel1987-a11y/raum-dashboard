@@ -321,21 +321,6 @@
 		opacity: 0.8;
 	}
 
-	/* ✅ Status-Indikator: Pulsierender Ring */
-	.room-card::after {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		border-radius: 20px;
-		pointer-events: none;
-		z-index: 10;
-		opacity: 0;
-		transition: opacity 0.3s;
-	}
-
 	.room-card.selected {
 		border-color: #f59e0b;
 		box-shadow:
@@ -358,75 +343,83 @@
 		transition: all 0.1s;
 	}
 
-	/* ✅ Dauerhafter grüner Rahmen für alle geöffneten Räume */
-	.room-card.open::after {
-		opacity: 1;
-		border: 3px solid rgba(34, 197, 94, 0.9);
+	/* Status-Indikatoren werden direkt auf .room-card als outline+box-shadow gerendert,
+	   damit sie nicht mit Theme-::after-Dekorationen kollidieren. */
+
+	/* Dauerhafter grüner Rahmen für alle geöffneten Räume */
+	.room-card.open {
+		outline: 3px solid rgba(34, 197, 94, 0.9);
+		outline-offset: 0px;
 		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.3),
+			0 2px 8px rgba(0, 0, 0, 0.15),
 			0 0 20px rgba(34, 197, 94, 0.5),
 			inset 0 0 12px rgba(34, 197, 94, 0.2);
 	}
 
-	/* ✅ STATUS-INDIKATOREN: Bald offen (Gelb pulsierend) */
-	.room-card.status-opening-soon::after {
-		opacity: 1;
-		border: 4px solid #ffd700; /* ✅ Helleres, leuchtenderes Goldgelb */
+	/* Bald offen (Gelb pulsierend) */
+	.room-card.status-opening-soon {
+		outline: 4px solid #ffd700;
+		outline-offset: 0px;
 		box-shadow:
-			0 0 30px rgba(255, 215, 0, 0.9), /* ✅ Stärkerer Außen-Glow */
+			0 4px 16px rgba(0, 0, 0, 0.3),
+			0 0 30px rgba(255, 215, 0, 0.9),
 			0 0 15px rgba(255, 215, 0, 0.7),
-			inset 0 0 25px rgba(255, 215, 0, 0.4); /* ✅ Stärkerer Innen-Glow */
-		animation: pulse-yellow 1.5s ease-in-out infinite; /* ✅ Etwas schneller */
+			inset 0 0 25px rgba(255, 215, 0, 0.4);
+		animation: pulse-yellow 1.5s ease-in-out infinite;
 	}
 
 	@keyframes pulse-yellow {
 		0%, 100% {
-			opacity: 1;
-			border-width: 4px;
+			outline-width: 4px;
 			box-shadow:
+				0 4px 16px rgba(0, 0, 0, 0.3),
 				0 0 30px rgba(255, 215, 0, 0.9),
 				0 0 15px rgba(255, 215, 0, 0.7),
 				inset 0 0 25px rgba(255, 215, 0, 0.4);
 		}
 		50% {
-			opacity: 1;
-			border-width: 5px; /* ✅ Dickerer Border beim Puls */
+			outline-width: 5px;
 			box-shadow:
-				0 0 50px rgba(255, 215, 0, 1), /* ✅ Maximaler Glow */
+				0 4px 16px rgba(0, 0, 0, 0.3),
+				0 0 50px rgba(255, 215, 0, 1),
 				0 0 25px rgba(255, 215, 0, 0.9),
 				inset 0 0 35px rgba(255, 215, 0, 0.6);
 		}
 	}
 
-	/* ✅ STATUS-INDIKATOREN: Gerade geöffnet (Grün mit Glow) */
-	.room-card.status-just-opened::after {
-		opacity: 1;
-		border: 3px solid #22c55e;
+	/* Gerade geöffnet (Grün mit Glow) */
+	.room-card.status-just-opened {
+		outline: 3px solid #22c55e;
+		outline-offset: 0px;
 		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.3),
 			0 0 30px rgba(34, 197, 94, 0.8),
 			inset 0 0 20px rgba(34, 197, 94, 0.3);
-		animation: glow-green 1.5s ease-in-out 3; /* ✅ 3x dann stop */
+		animation: glow-green 1.5s ease-in-out 3;
 	}
 
 	@keyframes glow-green {
 		0%, 100% {
-			opacity: 1;
 			box-shadow:
+				0 4px 16px rgba(0, 0, 0, 0.3),
 				0 0 30px rgba(34, 197, 94, 0.8),
 				inset 0 0 20px rgba(34, 197, 94, 0.3);
 		}
 		50% {
-			opacity: 1;
 			box-shadow:
+				0 4px 16px rgba(0, 0, 0, 0.3),
 				0 0 50px rgba(34, 197, 94, 1),
 				inset 0 0 30px rgba(34, 197, 94, 0.5);
 		}
 	}
 
-	/* ✅ STATUS-INDIKATOREN: Schließt bald (Orange blinkend) */
-	.room-card.status-closing-soon::after {
-		opacity: 1;
-		border: 3px solid #f97316;
+	/* Schließt bald (Orange blinkend) */
+	.room-card.status-closing-soon {
+		outline: 3px solid #f97316;
+		outline-offset: 0px;
 		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.3),
 			0 0 25px rgba(249, 115, 22, 0.7),
 			inset 0 0 20px rgba(249, 115, 22, 0.3);
 		animation: pulse-orange 1.5s ease-in-out infinite;
@@ -434,14 +427,14 @@
 
 	@keyframes pulse-orange {
 		0%, 100% {
-			opacity: 1;
 			box-shadow:
+				0 4px 16px rgba(0, 0, 0, 0.3),
 				0 0 25px rgba(249, 115, 22, 0.7),
 				inset 0 0 20px rgba(249, 115, 22, 0.3);
 		}
 		50% {
-			opacity: 0.6;
 			box-shadow:
+				0 4px 16px rgba(0, 0, 0, 0.3),
 				0 0 40px rgba(249, 115, 22, 0.9),
 				inset 0 0 30px rgba(249, 115, 22, 0.4);
 		}
@@ -691,21 +684,15 @@
 	}
 
 	.room-activity {
-		margin: auto 0;
+		margin: 4px 0;
 		font-weight: 600;
 		opacity: 1;
 		width: 100%;
-		padding: 4px 3px; /* ✅ Reduziert von 6px 4px */
+		padding: 4px 3px;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		overflow-wrap: break-word;
-		line-height: 1.2; /* ✅ Reduziert von 1.3 */
-		/* Verhindert Overflow */
-		overflow: hidden;
-		display: -webkit-box;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
-		-webkit-box-orient: vertical;
+		line-height: 1.2;
 	}
 
 	/* ✅ Große Displays: Noch kleinere Kacheln */

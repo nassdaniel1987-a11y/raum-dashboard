@@ -56,42 +56,26 @@ export const cardThemes: Record<string, CardTheme> = {
 					rgba(251, 207, 232, 0.15) 100%
 				);
 			}
-			/* Wehende Blütenblätter */
 			.room-card::after {
 				content: '🌸';
 				position: absolute;
-				top: 10px;
-				right: 20%;
-				font-size: 14px;
-				opacity: 0;
+				top: 8px;
+				right: 12px;
+				font-size: 16px;
+				opacity: 0.55;
 				pointer-events: none;
 				z-index: 1;
-				animation: spring-petal-drift 10s ease-in-out infinite;
 			}
-
-			/* Krabbelnder Marienkäfer */
 			.room-header::before {
 				content: '🐞';
 				position: absolute;
 				top: 50%;
-				left: -10px;
+				left: 8px;
+				transform: translateY(-50%);
 				font-size: 16px;
-				z-index: 10;
+				opacity: 0.9;
 				pointer-events: none;
-				animation: spring-ladybug-crawl 15s linear infinite;
-			}
-
-			@keyframes spring-petal-drift {
-				0% { top: 10px; right: 20%; opacity: 0; transform: rotate(0deg); }
-				15% { opacity: 0.6; }
-				85% { opacity: 0.3; }
-				100% { top: 90%; right: 30%; opacity: 0; transform: rotate(180deg) translateX(20px); }
-			}
-			@keyframes spring-ladybug-crawl {
-				0% { left: -10px; transform: translateY(-50%); opacity: 0; }
-				5% { opacity: 1; }
-				95% { opacity: 1; }
-				100% { left: calc(100% + 10px); transform: translateY(-50%); opacity: 0; }
+				z-index: 10;
 			}
 		`
 	},
@@ -125,15 +109,9 @@ export const cardThemes: Record<string, CardTheme> = {
 				top: -8px;
 				right: -8px;
 				font-size: 32px;
-				opacity: 0.4;
+				opacity: 0.5;
 				pointer-events: none;
 				z-index: 1;
-				animation: summer-shine 4s ease-in-out infinite;
-			}
-
-			@keyframes summer-shine {
-				0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.4; }
-				50% { transform: rotate(15deg) scale(1.15); opacity: 0.6; }
 			}
 		`
 	},
@@ -165,20 +143,11 @@ export const cardThemes: Record<string, CardTheme> = {
 				content: '🍂 🍁';
 				position: absolute;
 				top: 5px;
-				left: 5px;
-				right: 5px;
+				left: 8px;
 				font-size: 18px;
-				opacity: 0.4;
+				opacity: 0.5;
 				pointer-events: none;
 				z-index: 1;
-				animation: autumn-fall 8s ease-in-out infinite;
-			}
-
-			@keyframes autumn-fall {
-				0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
-				25% { transform: translateY(3px) rotate(-5deg); opacity: 0.5; }
-				50% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
-				75% { transform: translateY(3px) rotate(5deg); opacity: 0.5; }
 			}
 		`
 	},
@@ -206,65 +175,29 @@ export const cardThemes: Record<string, CardTheme> = {
 					rgba(59, 130, 246, 0.2) 100%
 				);
 			}
-
-			/* Viele fallende Schneeflocken */
 			.room-card::after {
 				content: '❄️ ❄️ ❄️';
 				position: absolute;
-				top: -15px;
-				left: 0;
-				right: 0;
+				top: 6px;
+				left: 8px;
+				right: 8px;
 				text-align: center;
-				font-size: 18px;
-				letter-spacing: 30px;
-				opacity: 0;
+				font-size: 14px;
+				letter-spacing: 12px;
+				opacity: 0.75;
 				pointer-events: none;
 				z-index: 1;
-				animation: winter-snowfall-1 5s ease-in-out infinite;
 			}
-
 			.room-header::before {
-				content: '❄️ ❄️';
-				position: absolute;
-				top: -10px;
-				left: 10%;
-				font-size: 16px;
-				letter-spacing: 20px;
-				opacity: 0;
-				pointer-events: none;
-				z-index: 1;
-				animation: winter-snowfall-2 6s ease-in-out infinite 1s;
-			}
-
-			.room-header::after {
 				content: '❄️';
 				position: absolute;
-				top: 20%;
-				right: 10%;
-				font-size: 20px;
-				opacity: 0;
+				top: 50%;
+				right: 10px;
+				transform: translateY(-50%);
+				font-size: 18px;
+				opacity: 0.7;
 				pointer-events: none;
-				z-index: 1;
-				animation: winter-snowfall-3 4s ease-in-out infinite 2s;
-			}
-
-			@keyframes winter-snowfall-1 {
-				0% { top: -15px; opacity: 0; transform: translateY(0) rotate(0deg); }
-				15% { opacity: 0.8; }
-				85% { opacity: 0.6; }
-				100% { top: 110%; opacity: 0; transform: translateY(0) rotate(360deg); }
-			}
-			@keyframes winter-snowfall-2 {
-				0% { top: -10px; opacity: 0; transform: translateX(0) rotate(0deg); }
-				20% { opacity: 0.7; }
-				80% { opacity: 0.5; }
-				100% { top: 110%; opacity: 0; transform: translateX(20px) rotate(-360deg); }
-			}
-			@keyframes winter-snowfall-3 {
-				0% { top: 20%; right: 10%; opacity: 0; transform: scale(0.5) rotate(0deg); }
-				15% { opacity: 0.9; }
-				85% { opacity: 0.6; }
-				100% { top: 110%; right: 15%; opacity: 0; transform: scale(1.2) rotate(540deg); }
+				z-index: 10;
 			}
 		`
 	},
@@ -284,7 +217,6 @@ export const cardThemes: Record<string, CardTheme> = {
 			.room-card {
 				background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(34, 197, 94, 0.08) 100%) !important;
 				border-image: linear-gradient(90deg, #dc2626 0%, #22c55e 33%, #fbbf24 66%, #dc2626 100%) 1 !important;
-				animation: christmas-glow 3s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: repeating-linear-gradient(
@@ -298,75 +230,27 @@ export const cardThemes: Record<string, CardTheme> = {
 			.room-card::after {
 				content: '🎄 ⭐ 🎁';
 				position: absolute;
-				top: -5px;
+				top: 4px;
 				left: 50%;
 				transform: translateX(-50%);
-				font-size: 18px;
-				opacity: 0.5;
+				font-size: 16px;
+				opacity: 0.6;
 				pointer-events: none;
 				z-index: 1;
-				animation: christmas-sparkle 2s ease-in-out infinite;
+				white-space: nowrap;
 			}
-
-			/* Weihnachts-Lichterkette - obere Reihe */
 			.room-header::before {
 				content: '💡💡💡💡💡';
 				position: absolute;
-				top: 0px;
+				top: 4px;
 				left: 50%;
 				transform: translateX(-50%);
-				font-size: 14px;
+				font-size: 12px;
 				letter-spacing: 8px;
-				opacity: 0.9;
+				opacity: 0.85;
 				pointer-events: none;
 				z-index: 2;
-				animation: christmas-lights-blink 2s ease-in-out infinite;
-			}
-
-			.room-header::after {
-				content: '🔴🟢🟡🔴🟢';
-				position: absolute;
-				top: -5px;
-				left: 0;
-				right: 0;
-				text-align: center;
-				font-size: 8px;
-				letter-spacing: 4px;
-				opacity: 0.8;
-				pointer-events: none;
-				z-index: 2;
-				animation: christmas-lights-twinkle 1.5s ease-in-out infinite;
-			}
-
-			@keyframes christmas-glow {
-				0%, 100% { box-shadow: 0 8px 32px rgba(220, 38, 38, 0.5), 0 0 60px rgba(34, 197, 94, 0.3); }
-				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.5), 0 0 60px rgba(251, 191, 36, 0.4); }
-			}
-			@keyframes christmas-sparkle {
-				0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
-				50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
-			}
-			@keyframes christmas-lights-blink {
-				0%, 100% {
-					opacity: 0.6;
-				}
-				50% {
-					opacity: 1;
-				}
-			}
-			@keyframes christmas-lights-twinkle {
-				0%, 100% {
-					opacity: 0.5;
-					transform: scaleY(1);
-				}
-				25% {
-					opacity: 0.9;
-					transform: scaleY(1.2);
-				}
-				75% {
-					opacity: 0.7;
-					transform: scaleY(0.9);
-				}
+				white-space: nowrap;
 			}
 		`
 	},
@@ -397,19 +281,14 @@ export const cardThemes: Record<string, CardTheme> = {
 			.room-card::after {
 				content: '🐰 🥚 🌷';
 				position: absolute;
-				bottom: -8px;
+				bottom: 4px;
 				left: 50%;
 				transform: translateX(-50%);
-				font-size: 18px;
-				opacity: 0.5;
+				font-size: 16px;
+				opacity: 0.6;
 				pointer-events: none;
 				z-index: 1;
-				animation: easter-hop 3s ease-in-out infinite;
-			}
-
-			@keyframes easter-hop {
-				0%, 100% { transform: translateX(-50%) translateY(0); }
-				50% { transform: translateX(-50%) translateY(-5px); }
+				white-space: nowrap;
 			}
 		`
 	},
@@ -444,16 +323,11 @@ export const cardThemes: Record<string, CardTheme> = {
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
-				font-size: 24px;
-				opacity: 0.2;
+				font-size: 22px;
+				opacity: 0.25;
 				pointer-events: none;
 				z-index: 1;
-				animation: halloween-spook 4s ease-in-out infinite;
-			}
-
-			@keyframes halloween-spook {
-				0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
-				50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.05); }
+				white-space: nowrap;
 			}
 		`
 	},
@@ -473,7 +347,6 @@ export const cardThemes: Record<string, CardTheme> = {
 			.room-card {
 				background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%) !important;
 				border-image: linear-gradient(90deg, #ef4444 0%, #f59e0b 14%, #fbbf24 28%, #84cc16 42%, #10b981 56%, #06b6d4 70%, #8b5cf6 84%, #ef4444 100%) 1 !important;
-				animation: rainbow-shift 6s linear infinite;
 			}
 			.room-card::before {
 				background: repeating-linear-gradient(
@@ -494,19 +367,9 @@ export const cardThemes: Record<string, CardTheme> = {
 				left: 50%;
 				transform: translate(-50%, -50%);
 				font-size: 50px;
-				opacity: 0.15;
+				opacity: 0.18;
 				pointer-events: none;
 				z-index: 1;
-				animation: rainbow-float 5s ease-in-out infinite;
-			}
-
-			@keyframes rainbow-shift {
-				0% { filter: hue-rotate(0deg); }
-				100% { filter: hue-rotate(360deg); }
-			}
-			@keyframes rainbow-float {
-				0%, 100% { transform: translate(-50%, -50%) scale(1); }
-				50% { transform: translate(-50%, -48%) scale(1.05); }
 			}
 		`
 	},
@@ -537,20 +400,14 @@ export const cardThemes: Record<string, CardTheme> = {
 			.room-card::after {
 				content: '🌿 🌱 🍃';
 				position: absolute;
-				bottom: -5px;
-				left: 0;
-				right: 0;
-				text-align: center;
-				font-size: 18px;
-				opacity: 0.4;
+				bottom: 4px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 16px;
+				opacity: 0.5;
 				pointer-events: none;
 				z-index: 1;
-				animation: nature-grow 4s ease-in-out infinite;
-			}
-
-			@keyframes nature-grow {
-				0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-				50% { transform: translateY(-3px) scale(1.05); opacity: 0.6; }
+				white-space: nowrap;
 			}
 		`
 	},
@@ -569,7 +426,6 @@ export const cardThemes: Record<string, CardTheme> = {
 		additionalStyles: `
 			.room-card {
 				background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(168, 85, 247, 0.08) 100%) !important;
-				animation: birthday-sparkle 3s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: radial-gradient(
@@ -580,21 +436,17 @@ export const cardThemes: Record<string, CardTheme> = {
 					transparent 100%
 				);
 			}
-
-			/* Konfetti-Effekt */
 			.room-card::after {
 				content: '🎊';
 				position: absolute;
-				top: -10px;
+				top: 4px;
 				left: 50%;
+				transform: translateX(-50%);
 				font-size: 16px;
-				opacity: 0;
+				opacity: 0.7;
 				pointer-events: none;
 				z-index: 1;
-				animation: birthday-confetti 8s ease-in-out infinite;
 			}
-
-			/* Brennende Kerze */
 			.room-header::before {
 				content: '🕯️';
 				position: absolute;
@@ -604,30 +456,7 @@ export const cardThemes: Record<string, CardTheme> = {
 				font-size: 18px;
 				z-index: 10;
 				pointer-events: none;
-				animation: birthday-candle-flicker 2s ease-in-out infinite;
-			}
-
-			@keyframes birthday-sparkle {
-				0%, 100% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.6), 0 0 60px rgba(168, 85, 247, 0.3); }
-				50% { box-shadow: 0 8px 32px rgba(251, 191, 36, 0.6), 0 0 80px rgba(236, 72, 153, 0.5); }
-			}
-			@keyframes birthday-confetti {
-				0% { top: -10px; left: 50%; opacity: 0; transform: rotate(0deg) scale(0.5); }
-				15% { opacity: 1; }
-				85% { opacity: 0.5; }
-				100% { top: 100%; left: 45%; opacity: 0; transform: rotate(720deg) scale(0.8); }
-			}
-			@keyframes birthday-candle-flicker {
-				0%, 100% {
-					opacity: 1;
-					transform: translateY(-50%) scale(1);
-					filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
-				}
-				50% {
-					opacity: 0.8;
-					transform: translateY(-50%) scale(1.05);
-					filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1));
-				}
+				filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
 			}
 		`
 	},
@@ -646,7 +475,6 @@ export const cardThemes: Record<string, CardTheme> = {
 		additionalStyles: `
 			.room-card {
 				background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(147, 51, 234, 0.1) 100%) !important;
-				animation: newyear-glow 2s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: radial-gradient(
@@ -657,29 +485,15 @@ export const cardThemes: Record<string, CardTheme> = {
 					transparent 100%
 				);
 			}
-
-			/* Feuerwerk-Funken Effekt */
 			.room-card::after {
 				content: '✨';
 				position: absolute;
-				top: 20%;
-				right: 20%;
+				top: 18%;
+				right: 18%;
 				font-size: 20px;
-				opacity: 0;
+				opacity: 0.8;
 				pointer-events: none;
 				z-index: 1;
-				animation: newyear-sparkle 4s ease-in-out infinite;
-			}
-
-			@keyframes newyear-glow {
-				0%, 100% { box-shadow: 0 8px 32px rgba(251, 191, 36, 0.7), 0 0 60px rgba(147, 51, 234, 0.4); }
-				50% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.7), 0 0 100px rgba(251, 191, 36, 0.6); }
-			}
-			@keyframes newyear-sparkle {
-				0% { top: 20%; right: 20%; opacity: 0; transform: scale(0.3); }
-				10% { opacity: 1; transform: scale(1.2); }
-				30% { opacity: 0.8; transform: scale(0.8) rotate(180deg); }
-				100% { top: 80%; right: 10%; opacity: 0; transform: scale(0.5) rotate(360deg); }
 			}
 		`
 	},
@@ -707,25 +521,16 @@ export const cardThemes: Record<string, CardTheme> = {
 					rgba(103, 232, 249, 0.12) 100%
 				);
 			}
-
-			/* Wellen-Effekt */
 			.room-card::after {
 				content: '🌊';
 				position: absolute;
 				bottom: 5px;
-				left: 0;
-				right: 0;
-				text-align: center;
+				left: 50%;
+				transform: translateX(-50%);
 				font-size: 18px;
-				opacity: 0.3;
+				opacity: 0.4;
 				pointer-events: none;
 				z-index: 1;
-				animation: meer-wave 6s ease-in-out infinite;
-			}
-
-			@keyframes meer-wave {
-				0%, 100% { transform: translateX(0) scaleX(1); opacity: 0.3; }
-				50% { transform: translateX(5px) scaleX(1.05); opacity: 0.5; }
 			}
 		`
 	},
@@ -744,7 +549,6 @@ export const cardThemes: Record<string, CardTheme> = {
 		additionalStyles: `
 			.room-card {
 				background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(251, 207, 232, 0.08) 100%) !important;
-				animation: valentine-heartbeat 2.5s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: radial-gradient(
@@ -755,42 +559,26 @@ export const cardThemes: Record<string, CardTheme> = {
 					transparent 100%
 				);
 			}
-
-			/* Fliegende Herzen */
 			.room-card::after {
 				content: '💕';
 				position: absolute;
 				bottom: 10px;
-				left: 20%;
-				font-size: 14px;
-				opacity: 0;
+				left: 18%;
+				font-size: 16px;
+				opacity: 0.85;
 				pointer-events: none;
 				z-index: 1;
-				animation: valentine-heart-float 6s ease-in-out infinite;
 			}
-
 			.room-header::before {
 				content: '💖';
 				position: absolute;
-				bottom: 15px;
-				right: 25%;
+				top: 10px;
+				right: 18%;
 				font-size: 16px;
-				opacity: 0;
+				opacity: 0.85;
 				pointer-events: none;
 				z-index: 1;
-				animation: valentine-heart-float 7s ease-in-out infinite 2s;
 				filter: drop-shadow(0 2px 4px rgba(244, 114, 182, 0.5));
-			}
-
-			@keyframes valentine-heartbeat {
-				0%, 100% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.6), 0 0 60px rgba(251, 207, 232, 0.3); }
-				50% { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.8), 0 0 80px rgba(244, 114, 182, 0.5); }
-			}
-			@keyframes valentine-heart-float {
-				0% { bottom: 10px; opacity: 0; transform: rotate(0deg) scale(0.8); }
-				15% { opacity: 1; }
-				85% { opacity: 0.7; }
-				100% { bottom: 100%; opacity: 0; transform: rotate(20deg) scale(1.2); }
 			}
 		`
 	},
@@ -809,7 +597,6 @@ export const cardThemes: Record<string, CardTheme> = {
 		additionalStyles: `
 			.room-card {
 				background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(196, 181, 253, 0.06) 100%) !important;
-				animation: musik-pulse 1.5s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: radial-gradient(
@@ -819,50 +606,26 @@ export const cardThemes: Record<string, CardTheme> = {
 					transparent 100%
 				);
 			}
-
-			/* Tanzende Noten */
 			.room-card::after {
 				content: '🎵';
 				position: absolute;
-				top: 20%;
+				top: 18%;
 				left: 10%;
 				font-size: 18px;
-				opacity: 0;
+				opacity: 0.85;
 				pointer-events: none;
 				z-index: 1;
-				animation: musik-note-dance-1 4s ease-in-out infinite;
 			}
-
 			.room-header::before {
 				content: '🎶';
 				position: absolute;
-				top: 30%;
-				right: 15%;
+				top: 28%;
+				right: 12%;
 				font-size: 16px;
-				opacity: 0;
+				opacity: 0.85;
 				pointer-events: none;
 				z-index: 1;
-				animation: musik-note-dance-2 3.5s ease-in-out infinite 1s;
 				filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4));
-			}
-
-			@keyframes musik-pulse {
-				0%, 100% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.6), 0 0 60px rgba(196, 181, 253, 0.3); }
-				50% { box-shadow: 0 8px 32px rgba(168, 85, 247, 0.9), 0 0 80px rgba(139, 92, 246, 0.6); }
-			}
-			@keyframes musik-note-dance-1 {
-				0% { top: 20%; left: 10%; opacity: 0; transform: rotate(0deg) scale(0.8); }
-				15% { opacity: 1; }
-				50% { top: 40%; left: 15%; transform: rotate(15deg) scale(1.1); }
-				85% { opacity: 0.8; }
-				100% { top: 70%; left: 20%; opacity: 0; transform: rotate(-15deg) scale(0.9); }
-			}
-			@keyframes musik-note-dance-2 {
-				0% { top: 30%; right: 15%; opacity: 0; transform: rotate(0deg) scale(0.7); }
-				15% { opacity: 1; }
-				50% { top: 50%; right: 20%; transform: rotate(-20deg) scale(1); }
-				85% { opacity: 0.7; }
-				100% { top: 80%; right: 25%; opacity: 0; transform: rotate(20deg) scale(0.8); }
 			}
 		`
 	},
@@ -881,7 +644,6 @@ export const cardThemes: Record<string, CardTheme> = {
 		additionalStyles: `
 			.room-card {
 				background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(74, 222, 128, 0.06) 100%) !important;
-				animation: sport-energy 2s ease-in-out infinite;
 			}
 			.room-card::before {
 				background: linear-gradient(
@@ -891,30 +653,15 @@ export const cardThemes: Record<string, CardTheme> = {
 					rgba(74, 222, 128, 0.12) 100%
 				);
 			}
-
-			/* Fliegender Ball */
 			.room-card::after {
 				content: '⚽';
 				position: absolute;
-				top: 20px;
-				left: -20px;
-				font-size: 20px;
-				opacity: 0;
+				top: 12px;
+				right: 12px;
+				font-size: 22px;
+				opacity: 0.75;
 				pointer-events: none;
 				z-index: 1;
-				animation: sport-ball-fly 5s ease-in-out infinite;
-			}
-
-			@keyframes sport-energy {
-				0%, 100% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6), 0 0 60px rgba(74, 222, 128, 0.3); }
-				50% { box-shadow: 0 8px 32px rgba(34, 197, 94, 0.9), 0 0 80px rgba(22, 163, 74, 0.6); }
-			}
-			@keyframes sport-ball-fly {
-				0% { top: 20px; left: -20px; opacity: 0; transform: rotate(0deg); }
-				10% { opacity: 1; }
-				50% { top: 50%; left: 50%; transform: rotate(360deg); }
-				90% { opacity: 0.8; }
-				100% { top: 80px; left: calc(100% + 20px); opacity: 0; transform: rotate(720deg); }
 			}
 		`
 	},
@@ -942,22 +689,17 @@ export const cardThemes: Record<string, CardTheme> = {
 					rgba(217, 119, 6, 0.1) 100%
 				);
 			}
-
-			/* Dampf vom Kaffee */
 			.room-card::after {
 				content: '☁️';
 				position: absolute;
-				top: 30%;
+				top: 14%;
 				left: 50%;
 				transform: translateX(-50%);
 				font-size: 14px;
-				opacity: 0;
+				opacity: 0.55;
 				pointer-events: none;
 				z-index: 1;
-				animation: cafe-steam 4s ease-in-out infinite;
 			}
-
-			/* Kaffeetasse im Header */
 			.room-header::before {
 				content: '☕';
 				position: absolute;
@@ -967,18 +709,6 @@ export const cardThemes: Record<string, CardTheme> = {
 				font-size: 18px;
 				z-index: 10;
 				pointer-events: none;
-				animation: cafe-cup-steam 3s ease-in-out infinite;
-			}
-
-			@keyframes cafe-steam {
-				0% { top: 30%; opacity: 0; transform: translateX(-50%) scale(0.5); }
-				20% { opacity: 0.6; }
-				80% { opacity: 0.3; }
-				100% { top: -10%; opacity: 0; transform: translateX(-50%) scale(1.5); }
-			}
-			@keyframes cafe-cup-steam {
-				0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
-				50% { transform: translateY(-50%) scale(1.05); opacity: 0.9; }
 			}
 		`
 	}
