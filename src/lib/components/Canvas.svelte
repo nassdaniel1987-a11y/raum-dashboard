@@ -603,7 +603,6 @@
 		width: 100%;
 		max-width: 380px;
 		height: auto;
-		max-height: 280px;
 	}
 
 	.room-wrapper-page.selected {
@@ -803,7 +802,6 @@
 
 		.room-wrapper-page :global(.room-card) {
 			max-width: 100%;
-			max-height: 250px;
 		}
 
 		.nav-arrow {
