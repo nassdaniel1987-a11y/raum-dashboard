@@ -294,7 +294,7 @@
 		overflow: visible;
 		/* Performance: backdrop-filter entfernt - zu teuer für iPad */
 		background: rgba(30, 30, 40, 0.85);
-		height: 100%;
+		height: auto;
 		min-height: 80px;
 		display: flex;
 		flex-direction: column;
