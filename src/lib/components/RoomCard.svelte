@@ -645,7 +645,7 @@
 		position: relative;
 		z-index: 2; /* ✅ Über dem Gradient-Overlay */
 		padding: 8px;
-		height: 100%;
+		height: auto;
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
