@@ -730,9 +730,6 @@
 		overflow: hidden;
 		background: rgba(0, 0, 0, 0.05);
 		border-radius: 2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.activity-image {
