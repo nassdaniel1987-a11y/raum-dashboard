@@ -226,7 +226,7 @@
 					<img
 						src={imageSrc}
 						alt="Aktivitätsbild"
-						class="preview-image"
+						class="preview-image calm-preview-image"
 						style="transform: translate({activePosition.x}%, {activePosition.y}%) scale({activePosition.zoom}) rotate({activePosition.rotation}deg); transform-origin: center;"
 						draggable="false"
 					/>
@@ -470,6 +470,10 @@
 		transform-origin: center center;
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.calm-preview-image {
+		object-fit: contain;
 	}
 
 	.drag-hint {
