@@ -24,7 +24,7 @@
 	}>();
 
 	// State
-	let activeTab = $state<'dashboard' | 'planning' | 'persons' | 'design' | 'blitz' | 'system'>('dashboard');
+	let activeTab = $state<'operation' | 'planning' | 'persons' | 'design' | 'blitz' | 'system'>('operation');
 
 	// Personen-Verwaltung State
 	let newPersonName = $state('');
@@ -444,8 +444,8 @@
 
 		<!-- Tabs -->
 		<div class="tabs">
-			<button class="tab" class:active={activeTab === 'dashboard'} onclick={() => activeTab = 'dashboard'}>
-				Dashboard
+			<button class="tab" class:active={activeTab === 'operation'} onclick={() => activeTab = 'operation'}>
+				Betrieb
 			</button>
 			<button class="tab" class:active={activeTab === 'planning'} onclick={() => activeTab = 'planning'}>
 				Planung
@@ -466,8 +466,19 @@
 
 		<!-- Content -->
 		<div class="content">
-			{#if activeTab === 'dashboard'}
+			{#if activeTab === 'operation'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
+					<section class="section section-lead">
+						<div class="lead-copy">
+							<span class="eyebrow">Live-Betrieb</span>
+							<h3>Aktuelle Anzeige steuern</h3>
+						</div>
+						<div class="quick-actions">
+							<button class="btn btn-success" onclick={bulkOpenAllRooms}>Alle öffnen</button>
+							<button class="btn btn-danger" onclick={bulkCloseAllRooms}>Alle schließen</button>
+						</div>
+					</section>
+
 					<!-- Seiten-Wechsel Einstellungen -->
 					<section class="section">
 						<h3>Seiten-Wechsel</h3>
@@ -569,22 +580,6 @@
 						{/if}
 					</section>
 
-					<!-- Raumsteuerung -->
-					<section class="section">
-						<h3>Raumsteuerung</h3>
-						<div class="button-row">
-							<button class="btn btn-success" onclick={bulkOpenAllRooms}>Alle öffnen</button>
-							<button class="btn btn-danger" onclick={bulkCloseAllRooms}>Alle schließen</button>
-						</div>
-					</section>
-
-					<!-- Tagesplaner -->
-					<section class="section">
-						<h3>Tagesplaner</h3>
-						<button class="btn btn-primary full-width" onclick={() => { onOpenScheduler(); onClose(); }}>
-							Tagesplaner öffnen
-						</button>
-					</section>
 				</div>
 
 			{:else if activeTab === 'planning'}
@@ -594,6 +589,13 @@
 							<span class="info-label">Aktueller Tag</span>
 							<span class="info-value">{weekdayNames[$viewWeekday]}</span>
 						</div>
+					</section>
+
+					<section class="section">
+						<h3>Tagesplaner</h3>
+						<button class="btn btn-primary full-width" onclick={() => { onOpenScheduler(); onClose(); }}>
+							Tagesplaner öffnen
+						</button>
 					</section>
 
 					<section class="section">
@@ -686,6 +688,39 @@
 							</button>
 						</div>
 					</section>
+
+					{#if $isEditMode}
+						<section class="section">
+							<h3>Raumverwaltung</h3>
+
+							{#if !showCreateForm}
+								<button class="btn full-width" onclick={() => showCreateForm = true}>
+									Neuen Raum erstellen
+								</button>
+							{:else}
+								<div class="create-form" transition:slide={{ duration: 200 }}>
+									<input type="text" bind:value={newRoomName} placeholder="Raum-Name" onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()} />
+									<select bind:value={newRoomFloor}>
+										<option value="extern">Außenbereich</option>
+										<option value="dach">Dachgeschoss</option>
+										<option value="og2">2. OG</option>
+										<option value="og1">1. OG</option>
+										<option value="eg">Erdgeschoss</option>
+										<option value="essen">Essen</option>
+										<option value="ug">Untergeschoss</option>
+									</select>
+									<div class="button-row">
+										<button class="btn btn-success" onclick={handleCreateRoom}>Erstellen</button>
+										<button class="btn" onclick={() => showCreateForm = false}>Abbrechen</button>
+									</div>
+								</div>
+							{/if}
+
+							<button class="btn full-width" onclick={handleSwap} disabled={$swapSelection.length !== 2}>
+								Räume tauschen ({$swapSelection.length}/2)
+							</button>
+						</section>
+					{/if}
 
 					<!-- Kachel-Theme -->
 					<section class="section">
@@ -819,39 +854,6 @@
 						</button>
 					</section>
 
-					<!-- Raumverwaltung -->
-					{#if $isEditMode}
-						<section class="section">
-							<h3>Raumverwaltung</h3>
-
-							{#if !showCreateForm}
-								<button class="btn full-width" onclick={() => showCreateForm = true}>
-									Neuen Raum erstellen
-								</button>
-							{:else}
-								<div class="create-form" transition:slide={{ duration: 200 }}>
-									<input type="text" bind:value={newRoomName} placeholder="Raum-Name" onkeydown={(e) => e.key === 'Enter' && handleCreateRoom()} />
-									<select bind:value={newRoomFloor}>
-										<option value="extern">Außenbereich</option>
-										<option value="dach">Dachgeschoss</option>
-										<option value="og2">2. OG</option>
-										<option value="og1">1. OG</option>
-										<option value="eg">Erdgeschoss</option>
-										<option value="essen">Essen</option>
-										<option value="ug">Untergeschoss</option>
-									</select>
-									<div class="button-row">
-										<button class="btn btn-success" onclick={handleCreateRoom}>Erstellen</button>
-										<button class="btn" onclick={() => showCreateForm = false}>Abbrechen</button>
-									</div>
-								</div>
-							{/if}
-
-							<button class="btn full-width" onclick={handleSwap} disabled={$swapSelection.length !== 2}>
-								Räume tauschen ({$swapSelection.length}/2)
-							</button>
-						</section>
-					{/if}
 				</div>
 			{/if}
 		</div>
@@ -1006,6 +1008,46 @@
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 8px;
 		padding: 16px;
+	}
+
+	.section-lead {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		background: rgba(59, 130, 246, 0.1);
+		border-color: rgba(59, 130, 246, 0.24);
+	}
+
+	.lead-copy {
+		min-width: 0;
+	}
+
+	.lead-copy h3 {
+		margin-bottom: 0;
+		font-size: 16px;
+		text-transform: none;
+		letter-spacing: 0;
+	}
+
+	.eyebrow {
+		display: block;
+		margin-bottom: 4px;
+		color: rgba(147, 197, 253, 0.78);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.quick-actions {
+		display: flex;
+		flex: 0 0 auto;
+		gap: 8px;
+	}
+
+	.quick-actions .btn {
+		min-width: 108px;
 	}
 
 	.section h3 {
@@ -1763,6 +1805,15 @@
 
 		.section {
 			padding: 12px;
+		}
+
+		.section-lead {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.quick-actions .btn {
+			min-width: 0;
 		}
 	}
 
