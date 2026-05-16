@@ -187,7 +187,7 @@
 	<div class="preview-label">
 		{activePreview === 'classic'
 			? `Klassische Kachel - ${actualFrameSize}px Bildmarke`
-			: 'Ruhige Kachel - rechter Bildbereich'}
+			: 'Ruhige Kachel - Live-Ausschnitt'}
 	</div>
 
 	<div class="frame-container">
@@ -344,7 +344,8 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(150px, 30%);
 		width: min(100%, 520px);
-		min-height: 180px;
+		aspect-ratio: 1.08 / 1;
+		min-height: 360px;
 		overflow: hidden;
 		border: 1px solid rgba(226, 232, 240, 0.16);
 		background: rgba(15, 23, 42, 0.82);
@@ -356,7 +357,7 @@
 		display: flex;
 		min-width: 0;
 		flex-direction: column;
-		padding: 16px 18px;
+		padding: 18px 20px;
 	}
 
 	.calm-state {
@@ -369,7 +370,7 @@
 
 	.calm-copy strong {
 		margin-top: 10px;
-		font-size: 24px;
+		font-size: 28px;
 		line-height: 1;
 		overflow-wrap: anywhere;
 	}
@@ -377,7 +378,7 @@
 	.calm-copy > span:not(.calm-state) {
 		margin-top: 10px;
 		color: rgba(241, 245, 249, 0.78);
-		font-size: 15px;
+		font-size: 17px;
 		font-weight: 700;
 		line-height: 1.15;
 	}
@@ -389,7 +390,7 @@
 		margin-top: auto;
 		padding-top: 14px;
 		color: rgba(226, 232, 240, 0.72);
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 800;
 	}
 
@@ -597,6 +598,10 @@
 
 	/* Mobile */
 	@media (max-width: 480px) {
+		.calm-preview-card {
+			min-height: 280px;
+		}
+
 		.image-viewport {
 			max-width: 100%;
 		}
