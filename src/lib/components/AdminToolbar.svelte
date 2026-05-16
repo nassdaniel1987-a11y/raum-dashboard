@@ -21,7 +21,6 @@
 	let closeTime = $state(room.config?.close_time || '');
 	let titleFontSize = $state(room.config?.title_font_size || 42);
 	let textFontSize = $state(room.config?.text_font_size || 28);
-	let imageFile = $state<File | null>(null);
 	let uploading = $state(false);
 
 	const parseTimeLocal = (timeString: string | null | undefined): number | null => {
@@ -69,25 +68,6 @@
 					);
 			}
 
-			if (imageFile) {
-				const fileExt = imageFile.name.split('.').pop();
-				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
-				const { error: uploadError } = await supabase.storage
-					.from('room-images')
-					.upload(fileName, imageFile);
-
-				if (!uploadError) {
-					const {
-						data: { publicUrl }
-					} = supabase.storage.from('room-images').getPublicUrl(fileName);
-
-					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
-				} else {
-					console.error('Error uploading image:', uploadError);
-					toasts.show('✕ Fehler beim Bild-Upload!', 'error');
-				}
-			}
-
 			toasts.show('✓ Raum erfolgreich aktualisiert!', 'success');
 			onClose();
 		} catch (error) {
@@ -95,13 +75,6 @@
 			toasts.show('✕ Fehler beim Speichern!', 'error');
 		} finally {
 			uploading = false;
-		}
-	}
-
-	function handleFileChange(e: Event) {
-		const target = e.target as HTMLInputElement;
-		if (target.files && target.files[0]) {
-			imageFile = target.files[0];
 		}
 	}
 
@@ -199,18 +172,6 @@
 				</div>
 			</div>
 
-			<div class="form-group">
-				<label for="room-image-{room.id}">Hintergrundbild</label>
-				<input
-					id="room-image-{room.id}"
-					type="file"
-					accept="image/*"
-					onchange={handleFileChange}
-				/>
-				{#if room.image_url}
-					<p class="hint">Aktuelles Bild: {room.image_url.split('/').pop()}</p>
-				{/if}
-			</div>
 		</div>
 
 		<div class="modal-footer">
@@ -305,7 +266,6 @@
 
 	input[type='text'],
 	input[type='time'],
-	input[type='file'],
 	select {
 		width: 100%;
 		padding: 12px;
@@ -348,12 +308,6 @@
 		height: 50px;
 		border-radius: 12px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
-	}
-
-	.hint {
-		font-size: 12px;
-		opacity: 0.7;
-		margin-top: 5px;
 	}
 
 	.modal-footer {

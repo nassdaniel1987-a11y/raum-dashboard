@@ -250,6 +250,7 @@
 			{#each currentRooms() as room (room.id)}
 				<button
 					class="calm-card"
+					class:has-image={!!room.config?.activity_image_url}
 					class:is-open={roomState(room) === 'open'}
 					class:is-closed={roomState(room) === 'closed'}
 					class:is-opening={roomState(room) === 'opening'}
@@ -258,35 +259,41 @@
 					onclick={() => handleEditRoom(room)}
 					title={`${room.name} bearbeiten`}
 				>
-					{#if room.config?.activity_image_url || room.image_url}
-						<img
-							class="card-image"
-							src={room.config?.activity_image_url || room.image_url || ''}
-							alt=""
-							loading="eager"
-						/>
-					{/if}
+					<div class="card-layout">
+						<div class="card-body">
+							<div class="card-head">
+								<span class="state-dot"></span>
+								<span class="state-label">{stateLabel(room)}</span>
+							</div>
 
-					<div class="card-body">
-						<div class="card-head">
-							<span class="state-dot"></span>
-							<span class="state-label">{stateLabel(room)}</span>
+							<h3>{room.name}</h3>
+
+							<p class="activity">
+								{room.config?.activity || 'Keine Aktivitaet eingetragen'}
+							</p>
+
+							<div class="card-meta">
+								<span>{timeLabel(room)}</span>
+								{#if personList(room).length > 0}
+									<span>{personList(room).join(' / ')}</span>
+								{:else}
+									<span>Keine Person</span>
+								{/if}
+							</div>
 						</div>
 
-						<h3>{room.name}</h3>
-
-						<p class="activity">
-							{room.config?.activity || 'Keine Aktivitaet eingetragen'}
-						</p>
-
-						<div class="card-meta">
-							<span>{timeLabel(room)}</span>
-							{#if personList(room).length > 0}
-								<span>{personList(room).join(' / ')}</span>
-							{:else}
-								<span>Keine Person</span>
-							{/if}
-						</div>
+						{#if room.config?.activity_image_url}
+							<div class="card-visual" aria-hidden="true">
+								<img
+									src={room.config.activity_image_url}
+									alt=""
+									loading="eager"
+									style={room.config.activity_image_position
+										? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}) rotate(${room.config.activity_image_position.rotation ?? 0}deg); transform-origin: center;`
+										: ''}
+								/>
+							</div>
+						{/if}
 					</div>
 				</button>
 			{/each}
@@ -517,16 +524,15 @@
 		border-color: rgba(251, 191, 36, 0.48);
 	}
 
-	.card-image {
-		position: absolute;
-		right: 0;
-		top: 0;
-		width: 42%;
+	.card-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		width: 100%;
 		height: 100%;
-		object-fit: cover;
-		opacity: 0.16;
-		filter: saturate(0.9) contrast(0.92);
-		pointer-events: none;
+	}
+
+	.calm-card.has-image .card-layout {
+		grid-template-columns: minmax(0, 1fr) minmax(170px, 30%);
 	}
 
 	.card-body {
@@ -537,6 +543,32 @@
 		width: 100%;
 		min-width: 0;
 		padding: 18px 20px 18px 28px;
+	}
+
+	.card-visual {
+		position: relative;
+		min-width: 0;
+		min-height: 0;
+		margin: 12px 12px 12px 0;
+		overflow: hidden;
+		border: 1px solid rgba(226, 232, 240, 0.16);
+		background: rgba(2, 6, 23, 0.42);
+	}
+
+	.card-visual::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background: linear-gradient(90deg, rgba(2, 6, 23, 0.18), transparent 24%);
+		pointer-events: none;
+	}
+
+	.card-visual img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
 	}
 
 	.card-head {
@@ -585,6 +617,10 @@
 		font-weight: 900;
 		letter-spacing: 0;
 		overflow-wrap: anywhere;
+	}
+
+	.calm-card.has-image h3 {
+		font-size: clamp(28px, 2.7vw, 46px);
 	}
 
 	.activity {
@@ -688,6 +724,10 @@
 
 		.card-meta {
 			grid-template-columns: 1fr;
+		}
+
+		.calm-card.has-image .card-layout {
+			grid-template-columns: minmax(0, 1fr) minmax(140px, 30%);
 		}
 
 		.card-meta span:last-child {

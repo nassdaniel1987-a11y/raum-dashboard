@@ -219,17 +219,77 @@ function config(
 }
 
 export const DEMO_CONFIGS = new Map<string, DailyConfig>([
-	['demo-eg-1-6', config('cfg-eg-1', 'demo-eg-1', 'Lesezeit und Ausleihe', '08:00', '15:30')],
+	[
+		'demo-eg-1-6',
+		config(
+			'cfg-eg-1',
+			'demo-eg-1',
+			'Lesezeit und Ausleihe',
+			'08:00',
+			'15:30',
+			'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=70'
+		)
+	],
 	['demo-eg-2-6', config('cfg-eg-2', 'demo-eg-2', 'Bewegungsparcours fuer Klasse 2', '09:00', '10:00')],
 	['demo-eg-3-6', config('cfg-eg-3', 'demo-eg-3', 'Foerderband mit sehr langer Aktivitaetsbeschreibung', '10:00', '12:00')],
-	['demo-eg-4-6', config('cfg-eg-4', 'demo-eg-4', 'Tonarbeiten und freies Gestalten', null, null)],
+	[
+		'demo-eg-4-6',
+		config(
+			'cfg-eg-4',
+			'demo-eg-4',
+			'Tonarbeiten und freies Gestalten',
+			null,
+			null,
+			'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=70'
+		)
+	],
 	['demo-og-1-6', config('cfg-og-1', 'demo-og-1', 'Mathewerkstatt', '08:30', '10:00')],
-	['demo-og-2-6', config('cfg-og-2', 'demo-og-2', 'Experimente mit Licht und Wasser', '09:15', '10:00')],
+	[
+		'demo-og-2-6',
+		config(
+			'cfg-og-2',
+			'demo-og-2',
+			'Experimente mit Licht und Wasser',
+			'09:15',
+			'10:00',
+			'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=900&q=70'
+		)
+	],
 	['demo-og-3-6', config('cfg-og-3', 'demo-og-3', 'Ruhezeit', null, null)],
-	['demo-og-4-6', config('cfg-og-4', 'demo-og-4', 'Bandprobe', '10:05', '12:00')],
-	['demo-essen-1-6', config('cfg-essen-1', 'demo-essen-1', 'Fruehstuecksausgabe', '08:00', '11:30')],
+	[
+		'demo-og-4-6',
+		config(
+			'cfg-og-4',
+			'demo-og-4',
+			'Bandprobe',
+			'10:05',
+			'12:00',
+			'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=900&q=70'
+		)
+	],
+	[
+		'demo-essen-1-6',
+		config(
+			'cfg-essen-1',
+			'demo-essen-1',
+			'Fruehstuecksausgabe',
+			'08:00',
+			'11:30',
+			'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=70'
+		)
+	],
 	['demo-essen-2-6', config('cfg-essen-2', 'demo-essen-2', 'Vorbereitung', '10:05', '12:00')],
-	['demo-ext-1-6', config('cfg-ext-1', 'demo-ext-1', 'Hofpause', '09:00', '10:00')],
+	[
+		'demo-ext-1-6',
+		config(
+			'cfg-ext-1',
+			'demo-ext-1',
+			'Hofpause',
+			'09:00',
+			'10:00',
+			'https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&w=900&q=70'
+		)
+	],
 	['demo-ext-2-6', config('cfg-ext-2', 'demo-ext-2', 'Sportangebot', '10:05', '12:00')]
 ]);
 

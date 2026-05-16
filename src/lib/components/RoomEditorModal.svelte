@@ -30,7 +30,6 @@
 	let closeTime = $state(room.config?.close_time || '');
 	let titleFontSize = $state(room.config?.title_font_size || 42);
 	let textFontSize = $state(room.config?.text_font_size || 28);
-	let imageFile = $state<File | null>(null);
 	let uploading = $state(false);
 
 	// ✅ Aktivitäts-Bild State
@@ -322,26 +321,6 @@
 					);
 			}
 
-			// Upload Image if selected
-			if (imageFile) {
-				const fileExt = imageFile.name.split('.').pop();
-				const fileName = `${room.id}-${Date.now()}.${fileExt}`;
-				const { error: uploadError } = await supabase.storage
-					.from('room-images')
-					.upload(fileName, imageFile);
-
-				if (!uploadError) {
-					const {
-						data: { publicUrl }
-					} = supabase.storage.from('room-images').getPublicUrl(fileName);
-
-					await supabase.from('rooms').update({ image_url: publicUrl }).eq('id', room.id);
-				} else {
-					console.error('Error uploading image:', uploadError);
-					toasts.show('✕ Fehler beim Bild-Upload!', 'error');
-				}
-			}
-
 			toasts.show('✓ Raum erfolgreich aktualisiert!', 'success');
 			onClose();
 		} catch (error) {
@@ -349,13 +328,6 @@
 			toasts.show('✕ Fehler beim Speichern!', 'error');
 		} finally {
 			uploading = false;
-		}
-	}
-
-	function handleFileChange(e: Event) {
-		const target = e.target as HTMLInputElement;
-		if (target.files && target.files[0]) {
-			imageFile = target.files[0];
 		}
 	}
 
@@ -702,6 +674,10 @@
 							<!-- Einfacher Bild-Editor (1:1 Vorschau) -->
 							<SimpleImageEditor
 								imageSrc={activityImagePreview}
+								roomName={name}
+								activity={activity}
+								timeLabel={openTime && closeTime ? `${openTime} - ${closeTime}` : openTime ? `ab ${openTime}` : closeTime ? `bis ${closeTime}` : 'Kein Zeitfenster'}
+								personLabel={selectedPersons.length > 0 ? selectedPersons.join(' / ') : 'Keine Person'}
 								frameSize={activityImageSize}
 								initialZoom={activityImagePosition?.zoom ?? 1}
 								initialX={activityImagePosition?.x ?? 0}
@@ -739,22 +715,6 @@
 				</div>
 			</div>
 
-			<!-- ✅ SEKTION 5: Hintergrundbild -->
-			<div class="section-card">
-				<div class="section-header">
-					<span class="section-icon">🖼️</span>
-					<h3 class="section-title">Hintergrundbild</h3>
-				</div>
-				<div class="section-body">
-					<div class="input-group">
-						<label for="room-image-{room.id}">Bild hochladen</label>
-						<input id="room-image-{room.id}" type="file" accept="image/*" onchange={handleFileChange} class="file-input" />
-						{#if room.image_url}
-							<p class="hint">📷 Aktuell: {room.image_url.split('/').pop()}</p>
-						{/if}
-					</div>
-				</div>
-			</div>
 		</div>
 
 		<div class="modal-footer">

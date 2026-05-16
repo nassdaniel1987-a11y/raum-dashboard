@@ -170,10 +170,6 @@
 	role="button"
 	tabindex="0"
 >
-	{#if room.image_url}
-		<img src={room.image_url} alt={room.name} class="card-bg-image" loading="eager" />
-	{/if}
-
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
 	{#if $isEditMode}
 		<div class="button-container">
@@ -445,18 +441,6 @@
 				0 0 40px rgba(249, 115, 22, 0.9),
 				inset 0 0 30px rgba(249, 115, 22, 0.4);
 		}
-	}
-
-	.card-bg-image {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		opacity: 0.2;
-		z-index: 0;
-		border-radius: 20px; /* ✅ Hält das Bild innerhalb der Kachel */
 	}
 
 	/* ✅ Personen-Badge - Hängendes Schild unten mittig */
