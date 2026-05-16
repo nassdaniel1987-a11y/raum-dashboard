@@ -226,7 +226,7 @@
 					<img
 						src={imageSrc}
 						alt="Aktivitätsbild"
-						class="preview-image calm-preview-image"
+						class="preview-image"
 						style="transform: translate({activePosition.x}%, {activePosition.y}%) scale({activePosition.zoom}) rotate({activePosition.rotation}deg); transform-origin: center;"
 						draggable="false"
 					/>
@@ -261,7 +261,7 @@
 					<img
 						src={imageSrc}
 						alt="Aktivitätsbild"
-						class="preview-image"
+						class="preview-image calm-preview-image"
 						style="transform: translate({activePosition.x}%, {activePosition.y}%) scale({activePosition.zoom}) rotate({activePosition.rotation}deg); transform-origin: center;"
 						draggable="false"
 					/>
