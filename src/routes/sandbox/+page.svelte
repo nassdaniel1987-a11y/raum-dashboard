@@ -17,6 +17,7 @@
 	import type { Room, RoomStatus, RoomWithConfig } from '$lib/types';
 
 	import Header from '$lib/components/Header.svelte';
+	import SandboxLayoutCalm from '$lib/sandbox/layouts/SandboxLayoutCalm.svelte';
 	import SandboxLayoutCarousel from '$lib/sandbox/layouts/SandboxLayoutCarousel.svelte';
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
@@ -196,6 +197,9 @@
 			</div>
 
 			<div class="panel-divider"></div>
+			<button class="panel-exit-btn" onclick={() => goto('/sandbox/demo')}>
+				Demo der ruhigen Ansicht
+			</button>
 			<button class="panel-exit-btn" onclick={exitSandbox}>
 				<span class="exit-arrow">&#8617;</span>
 				Live-Dashboard
@@ -207,6 +211,8 @@
 		<Header onOpenMenu={() => (showMenu = true)} {canvasRef} />
 		{#if $sandboxLayout === 'carousel'}
 			<SandboxLayoutCarousel {handleEditRoom} />
+		{:else if $sandboxLayout === 'calm'}
+			<SandboxLayoutCalm {handleEditRoom} />
 		{:else if $sandboxLayout === 'focus'}
 			<SandboxLayoutFocus {handleEditRoom} />
 		{:else if $sandboxLayout === 'grid'}

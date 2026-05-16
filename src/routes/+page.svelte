@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
+	import CalmCanvas from '$lib/components/CalmCanvas.svelte';
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
 	import RoomEditorModal from '$lib/components/RoomEditorModal.svelte';
 	import DailySchedulerModal from '$lib/components/DailySchedulerModal.svelte';
@@ -8,6 +9,7 @@
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
+	import { dashboardView } from '$lib/stores/appState';
 	import type { RoomWithConfig } from '$lib/types';
 
 	// SVELTE 5 STATE SYNTAX
@@ -52,7 +54,11 @@
 
 <div class="dashboard">
 	<Header onOpenMenu={openMenu} {canvasRef} />
-	<Canvas {handleEditRoom} bind:this={canvasRef} />
+	{#if $dashboardView === 'calm'}
+		<CalmCanvas {handleEditRoom} bind:this={canvasRef} />
+	{:else}
+		<Canvas {handleEditRoom} bind:this={canvasRef} />
+	{/if}
 </div>
 
 <!-- Außerhalb des Containers damit contain: layout sie nicht abschneidet -->
