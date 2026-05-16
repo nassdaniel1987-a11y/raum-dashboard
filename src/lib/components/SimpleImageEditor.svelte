@@ -2,10 +2,8 @@
 	// Props
 	let {
 		imageSrc,
-		initialZoom = 1,
-		initialX = 0,
-		initialY = 0,
-		initialRotation = 0,
+		initialClassic = null,
+		initialCalm = null,
 		frameSize = 'medium',
 		roomName = 'Raumname',
 		activity = 'Aktivitaet',
@@ -14,16 +12,17 @@
 		onUpdate
 	} = $props<{
 		imageSrc: string;
-		initialZoom?: number;
-		initialX?: number;
-		initialY?: number;
-		initialRotation?: number;
+		initialClassic?: { zoom: number; x: number; y: number; rotation?: number } | null;
+		initialCalm?: { zoom: number; x: number; y: number; rotation?: number } | null;
 		frameSize?: 'small' | 'medium' | 'large';
 		roomName?: string;
 		activity?: string;
 		timeLabel?: string;
 		personLabel?: string;
-		onUpdate?: (data: { zoom: number; x: number; y: number; rotation: number }) => void;
+		onUpdate?: (
+			view: 'classic' | 'calm',
+			data: { zoom: number; x: number; y: number; rotation: number }
+		) => void;
 	}>();
 
 	// Tatsaechliche Pixelgroessen wie in RoomCard
@@ -36,10 +35,18 @@
 	let actualFrameSize = $derived(frameSizes[frameSize as keyof typeof frameSizes]);
 
 	// State - Position in PROZENT (wie RoomCard es erwartet)
-	let zoom = $state(initialZoom);
-	let posX = $state(initialX); // Prozent
-	let posY = $state(initialY); // Prozent
-	let rotation = $state(initialRotation); // Grad (0, 90, 180, 270)
+	let classicPosition = $state({
+		zoom: initialClassic?.zoom ?? 1,
+		x: initialClassic?.x ?? 0,
+		y: initialClassic?.y ?? 0,
+		rotation: initialClassic?.rotation ?? 0
+	});
+	let calmPosition = $state({
+		zoom: initialCalm?.zoom ?? initialClassic?.zoom ?? 1,
+		x: initialCalm?.x ?? initialClassic?.x ?? 0,
+		y: initialCalm?.y ?? initialClassic?.y ?? 0,
+		rotation: initialCalm?.rotation ?? initialClassic?.rotation ?? 0
+	});
 	let isDragging = $state(false);
 	let activePreview = $state<'classic' | 'calm'>('classic');
 	let dragStartPos = $state({ x: 0, y: 0 });
@@ -47,55 +54,66 @@
 	let containerRef = $state<HTMLDivElement | null>(null);
 
 	// Konstanten
-	const MIN_ZOOM = 1;
+	const MIN_ZOOM = 0.6;
 	const MAX_ZOOM = 3;
 	const ZOOM_STEP = 0.1;
 
+	let activePosition = $derived(activePreview === 'classic' ? classicPosition : calmPosition);
+
 	// Update parent when values change
 	$effect(() => {
-		onUpdate?.({ zoom, x: posX, y: posY, rotation });
+		onUpdate?.('classic', classicPosition);
+		onUpdate?.('calm', calmPosition);
 	});
 
 	// Wenn Zoom sich ändert, Position begrenzen
 	$effect(() => {
-		const maxOffset = getMaxOffset(zoom);
-		posX = Math.max(-maxOffset, Math.min(maxOffset, posX));
-		posY = Math.max(-maxOffset, Math.min(maxOffset, posY));
+		const maxOffset = getMaxOffset(activePosition.zoom);
+		const nextX = Math.max(-maxOffset, Math.min(maxOffset, activePosition.x));
+		const nextY = Math.max(-maxOffset, Math.min(maxOffset, activePosition.y));
+		if (nextX !== activePosition.x || nextY !== activePosition.y) {
+			updateActivePosition({ x: nextX, y: nextY });
+		}
 	});
 
 	function getMaxOffset(z: number): number {
 		// Bei zoom=1: 0% Offset möglich
 		// Bei zoom=2: 50% Offset möglich (Bild ist doppelt so groß)
 		// Bei zoom=3: 100% Offset möglich
-		return ((z - 1) / z) * 50;
+		return Math.max(0, ((z - 1) / z) * 50);
+	}
+
+	function updateActivePosition(patch: Partial<typeof classicPosition>) {
+		if (activePreview === 'classic') {
+			classicPosition = { ...classicPosition, ...patch };
+		} else {
+			calmPosition = { ...calmPosition, ...patch };
+		}
 	}
 
 	function handleZoomChange(e: Event) {
 		const target = e.target as HTMLInputElement;
-		zoom = parseFloat(target.value);
+		updateActivePosition({ zoom: parseFloat(target.value) });
 	}
 
 	function zoomIn() {
-		zoom = Math.min(MAX_ZOOM, zoom + ZOOM_STEP);
+		updateActivePosition({ zoom: Math.min(MAX_ZOOM, activePosition.zoom + ZOOM_STEP) });
 	}
 
 	function zoomOut() {
-		zoom = Math.max(MIN_ZOOM, zoom - ZOOM_STEP);
+		updateActivePosition({ zoom: Math.max(MIN_ZOOM, activePosition.zoom - ZOOM_STEP) });
 	}
 
 	function reset() {
-		zoom = 1;
-		posX = 0;
-		posY = 0;
-		rotation = 0;
+		updateActivePosition({ zoom: 1, x: 0, y: 0, rotation: 0 });
 	}
 
 	function rotateRight() {
-		rotation = (rotation + 90) % 360;
+		updateActivePosition({ rotation: (activePosition.rotation + 90) % 360 });
 	}
 
 	function rotateLeft() {
-		rotation = (rotation - 90 + 360) % 360;
+		updateActivePosition({ rotation: (activePosition.rotation - 90 + 360) % 360 });
 	}
 
 	// Drag handlers - konvertiert Pixel-Bewegung in Prozent
@@ -103,7 +121,7 @@
 		if (!containerRef) return;
 		isDragging = true;
 		dragStartPos = { x: e.clientX, y: e.clientY };
-		dragStartPercent = { x: posX, y: posY };
+		dragStartPercent = { x: activePosition.x, y: activePosition.y };
 		(e.target as HTMLElement).setPointerCapture(e.pointerId);
 	}
 
@@ -118,20 +136,19 @@
 
 		// Konvertiere Pixel zu Prozent (relativ zur Container-Größe)
 		// Multipliziert mit Zoom weil das Bild gezoomt ist
-		const percentX = (deltaX / containerRect.width) * 100 * zoom;
-		const percentY = (deltaY / containerRect.height) * 100 * zoom;
+		const percentX = (deltaX / containerRect.width) * 100 * activePosition.zoom;
+		const percentY = (deltaY / containerRect.height) * 100 * activePosition.zoom;
 
 		// Neue Position = Start + Delta
 		let newX = dragStartPercent.x + percentX;
 		let newY = dragStartPercent.y + percentY;
 
 		// Begrenze die Position
-		const maxOffset = getMaxOffset(zoom);
+		const maxOffset = getMaxOffset(activePosition.zoom);
 		newX = Math.max(-maxOffset, Math.min(maxOffset, newX));
 		newY = Math.max(-maxOffset, Math.min(maxOffset, newY));
 
-		posX = newX;
-		posY = newY;
+		updateActivePosition({ x: newX, y: newY });
 	}
 
 	function handlePointerUp(e: PointerEvent) {
@@ -152,7 +169,9 @@
 		if (e.touches.length === 2) {
 			const newDistance = getTouchDistance(e.touches);
 			const delta = newDistance - lastTouchDistance;
-			zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta * 0.01));
+			updateActivePosition({
+				zoom: Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, activePosition.zoom + delta * 0.01))
+			});
 			lastTouchDistance = newDistance;
 		}
 	}
@@ -208,11 +227,11 @@
 						src={imageSrc}
 						alt="Aktivitätsbild"
 						class="preview-image"
-						style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
+						style="transform: translate({activePosition.x}%, {activePosition.y}%) scale({activePosition.zoom}) rotate({activePosition.rotation}deg); transform-origin: center;"
 						draggable="false"
 					/>
 
-					{#if zoom > 1 && !isDragging}
+					{#if activePosition.zoom > 1 && !isDragging}
 						<div class="drag-hint">Ziehen zum Verschieben</div>
 					{/if}
 				</div>
@@ -243,10 +262,10 @@
 						src={imageSrc}
 						alt="Aktivitätsbild"
 						class="preview-image"
-						style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
+						style="transform: translate({activePosition.x}%, {activePosition.y}%) scale({activePosition.zoom}) rotate({activePosition.rotation}deg); transform-origin: center;"
 						draggable="false"
 					/>
-					{#if zoom > 1 && !isDragging}
+					{#if activePosition.zoom > 1 && !isDragging}
 						<div class="drag-hint">Ziehen zum Verschieben</div>
 					{/if}
 				</div>
@@ -258,20 +277,20 @@
 	<div class="controls">
 		<!-- Zoom -->
 		<div class="zoom-control">
-			<button class="zoom-btn" onclick={zoomOut} disabled={zoom <= MIN_ZOOM}>−</button>
+			<button class="zoom-btn" onclick={zoomOut} disabled={activePosition.zoom <= MIN_ZOOM}>−</button>
 			<div class="zoom-slider-container">
 				<input
 					type="range"
 					min={MIN_ZOOM}
 					max={MAX_ZOOM}
 					step="0.05"
-					value={zoom}
+					value={activePosition.zoom}
 					oninput={handleZoomChange}
 					class="zoom-slider"
 				/>
-				<span class="zoom-value">{Math.round(zoom * 100)}%</span>
+				<span class="zoom-value">{Math.round(activePosition.zoom * 100)}%</span>
 			</div>
-			<button class="zoom-btn" onclick={zoomIn} disabled={zoom >= MAX_ZOOM}>+</button>
+			<button class="zoom-btn" onclick={zoomIn} disabled={activePosition.zoom >= MAX_ZOOM}>+</button>
 		</div>
 
 		<!-- Rotation + Reset -->
@@ -342,7 +361,7 @@
 
 	.calm-preview-card {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(150px, 30%);
+		grid-template-columns: minmax(0, 1fr) minmax(190px, 38%);
 		width: min(100%, 520px);
 		aspect-ratio: 1.08 / 1;
 		min-height: 360px;

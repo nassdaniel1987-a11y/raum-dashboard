@@ -37,6 +37,9 @@
 	let activityImagePreview = $state<string | null>(room.config?.activity_image_url || null);
 	let activityImageSize = $state<'small' | 'medium' | 'large'>(room.config?.activity_image_size || 'medium');
 	let activityImagePosition = $state<ImagePosition | null>(room.config?.activity_image_position || null);
+	let activityImagePositionCalm = $state<ImagePosition | null>(
+		room.config?.activity_image_position_calm || room.config?.activity_image_position || null
+	);
 
 	// ✅ Bild-Resize State
 	let originalImageDimensions = $state<{ width: number; height: number; size: number } | null>(null);
@@ -230,13 +233,15 @@
 			await supabase.from('daily_configs').update({
 				activity_image_url: null,
 				activity_image_size: 'medium',
-				activity_image_position: null
+				activity_image_position: null,
+				activity_image_position_calm: null
 			}).eq('room_id', room.id).eq('weekday', get(viewWeekday));
 
 			// ✅ Clear local state
 			activityImageFile = null;
 			activityImagePreview = null;
 			activityImagePosition = null;
+			activityImagePositionCalm = null;
 			originalImageDimensions = null;
 			resizedImageFile = null;
 			resizePercentage = 75;
@@ -302,7 +307,8 @@
 				text_color: textColor, // ✅ NEU: Textfarbe speichern
 				activity_image_url: finalActivityImageUrl, // ✅ Storage URL statt Base64
 				activity_image_size: activityImageSize, // ✅ Bildgröße
-				activity_image_position: activityImagePosition // ✅ Position & Zoom-Einstellungen
+				activity_image_position: activityImagePosition, // ✅ Klassische Ansicht
+				activity_image_position_calm: activityImagePositionCalm // ✅ Ruhige Ansicht
 			};
 			await supabase.from('daily_configs').upsert(configData, {
 				onConflict: 'room_id,weekday'
@@ -679,11 +685,15 @@
 								timeLabel={openTime && closeTime ? `${openTime} - ${closeTime}` : openTime ? `ab ${openTime}` : closeTime ? `bis ${closeTime}` : 'Kein Zeitfenster'}
 								personLabel={selectedPersons.length > 0 ? selectedPersons.join(' / ') : 'Keine Person'}
 								frameSize={activityImageSize}
-								initialZoom={activityImagePosition?.zoom ?? 1}
-								initialX={activityImagePosition?.x ?? 0}
-								initialY={activityImagePosition?.y ?? 0}
-								initialRotation={activityImagePosition?.rotation ?? 0}
-								onUpdate={(data) => activityImagePosition = { zoom: data.zoom, x: data.x, y: data.y, rotation: data.rotation }}
+								initialClassic={activityImagePosition}
+								initialCalm={activityImagePositionCalm}
+								onUpdate={(view, data) => {
+									if (view === 'classic') {
+										activityImagePosition = { zoom: data.zoom, x: data.x, y: data.y, rotation: data.rotation };
+									} else {
+										activityImagePositionCalm = { zoom: data.zoom, x: data.x, y: data.y, rotation: data.rotation };
+									}
+								}}
 							/>
 						</div>
 					{/if}

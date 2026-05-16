@@ -48,6 +48,7 @@ export interface DailyConfig {
 	activity_image_size: 'small' | 'medium' | 'large';
 	activity_image_crop: ImageCrop | null; // ✅ Legacy - wird durch activity_image_position ersetzt
 	activity_image_position: ImagePosition | null; // ✅ NEU: WYSIWYG Position & Zoom
+	activity_image_position_calm: ImagePosition | null; // Eigener Zuschnitt fuer ruhige Ansicht
 }
 
 export interface RoomStatus {

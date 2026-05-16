@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { rooms, roomStatuses, runnerName as runnerNameStore, currentTime } from '$lib/stores/appState';
+	import { roomStatuses, runnerName as runnerNameStore, currentTime, visibleRooms } from '$lib/stores/appState';
 	import type { RoomWithConfig } from '$lib/types';
 	import { onMount, onDestroy } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
@@ -57,7 +57,7 @@
 
 	// ── Derive rooms, applying sim overrides ──
 	let allRooms = $derived(
-		$rooms.map((r) => {
+		$visibleRooms.map((r) => {
 			const realStatus = $roomStatuses.get(r.id);
 			const realIsOpen = realStatus?.is_open ?? false;
 			const simIsOpen  = simStatus.has(r.id) ? simStatus.get(r.id)! : realIsOpen;
@@ -81,6 +81,7 @@
 					is_locked: false, activity_image_url: null,
 					activity_image_size: 'medium' as const, activity_image_crop: null,
 					activity_image_position: null,
+					activity_image_position_calm: null,
 					activity:   sc?.activity   ?? null,
 					open_time:  sc?.open_time  ?? null,
 					close_time: sc?.close_time ?? null
@@ -521,7 +522,7 @@
 						<span class="sim-block-icon">⚗</span>
 						<span class="sim-block-title">Sandbox-Simulation</span>
 						{#if panelIsSimulated}
-							<button class="sim-reset-room-btn" onclick={() => resetRoomSim(panelRoom.id)}>
+							<button class="sim-reset-room-btn" onclick={() => panelRoom && resetRoomSim(panelRoom.id)}>
 								Zurücksetzen
 							</button>
 						{/if}
@@ -535,7 +536,7 @@
 							class="sim-status-toggle"
 							class:sim-status-open={!panelIsOpen}
 							class:sim-status-close={panelIsOpen}
-							onclick={() => toggleSimStatus(panelRoom.id, panelIsOpen)}
+							onclick={() => panelRoom && toggleSimStatus(panelRoom.id, panelIsOpen)}
 						>
 							{#if panelIsSimulated && simStatus.has(panelRoom.id)}
 								{panelIsOpen ? '🔴 Als geschlossen simulieren' : '🟢 Als geöffnet simulieren'}

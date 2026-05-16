@@ -2,6 +2,8 @@
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
+	type ToastType = 'success' | 'error' | 'info';
+
 	// Svelte 5 Props Syntax
 	let { 
 		message = 'Erfolg!',
@@ -10,7 +12,7 @@
 		onClose 
 	} = $props<{
 		message?: string;
-		type?: 'success' | 'error' | 'info';
+		type?: ToastType;
 		duration?: number;
 		onClose?: () => void;
 	}>();
@@ -22,13 +24,13 @@
 		}, duration);
 	}
 
-	const icons = {
+	const icons: Record<ToastType, string> = {
 		success: '✓',
 		error: '✕',
 		info: 'ℹ'
 	};
 
-	const colors = {
+	const colors: Record<ToastType, { bg: string; border: string; shadow: string }> = {
 		success: {
 			bg: 'rgba(34, 197, 94, 0.95)',
 			border: '#22c55e',
@@ -45,20 +47,22 @@
 			shadow: 'rgba(59, 130, 246, 0.5)'
 		}
 	};
+
+	let safeType = $derived((type ?? 'success') as ToastType);
 </script>
 
 <div
 	class="toast"
 	style="
-		background: {colors[type].bg};
-		border-color: {colors[type].border};
-		box-shadow: 0 8px 32px {colors[type].shadow}, 0 2px 8px rgba(0, 0, 0, 0.3);
+		background: {colors[safeType].bg};
+		border-color: {colors[safeType].border};
+		box-shadow: 0 8px 32px {colors[safeType].shadow}, 0 2px 8px rgba(0, 0, 0, 0.3);
 	"
 	in:fly={{ y: -50, duration: 400, easing: quintOut }}
 	out:fade={{ duration: 200 }}
 	role="alert"
 >
-	<div class="toast-icon">{icons[type]}</div>
+	<div class="toast-icon">{icons[safeType]}</div>
 	<div class="toast-message">{message}</div>
 	{#if onClose}
 		<button class="toast-close" onclick={onClose} aria-label="Schließen">✕</button>

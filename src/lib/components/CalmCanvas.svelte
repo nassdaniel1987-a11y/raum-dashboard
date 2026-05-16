@@ -149,6 +149,10 @@
 		return `--room-accent: ${room.background_color || '#64748b'};`;
 	}
 
+	function calmImagePosition(room: RoomWithConfig) {
+		return room.config?.activity_image_position_calm ?? room.config?.activity_image_position;
+	}
+
 	export function setPageDuration(seconds: number) {
 		pageDuration = seconds;
 		localStorage.setItem('pageDuration', seconds.toString());
@@ -288,8 +292,8 @@
 									src={room.config.activity_image_url}
 									alt=""
 									loading="eager"
-									style={room.config.activity_image_position
-										? `transform: translate(${room.config.activity_image_position.x}%, ${room.config.activity_image_position.y}%) scale(${room.config.activity_image_position.zoom}) rotate(${room.config.activity_image_position.rotation ?? 0}deg); transform-origin: center;`
+									style={calmImagePosition(room)
+										? `transform: translate(${calmImagePosition(room)!.x}%, ${calmImagePosition(room)!.y}%) scale(${calmImagePosition(room)!.zoom}) rotate(${calmImagePosition(room)!.rotation ?? 0}deg); transform-origin: center;`
 										: ''}
 								/>
 							</div>
@@ -532,7 +536,7 @@
 	}
 
 	.calm-card.has-image .card-layout {
-		grid-template-columns: minmax(0, 1fr) minmax(170px, 30%);
+		grid-template-columns: minmax(0, 1fr) minmax(220px, 38%);
 	}
 
 	.card-body {
@@ -727,7 +731,7 @@
 		}
 
 		.calm-card.has-image .card-layout {
-			grid-template-columns: minmax(0, 1fr) minmax(140px, 30%);
+			grid-template-columns: minmax(0, 1fr) minmax(160px, 36%);
 		}
 
 		.card-meta span:last-child {

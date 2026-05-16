@@ -16,15 +16,7 @@
 </div>
 
 {#if $confirmDialog}
-	<ConfirmDialog
-		title={$confirmDialog.title}
-		message={$confirmDialog.message}
-		confirmText={$confirmDialog.confirmText}
-		cancelText={$confirmDialog.cancelText}
-		type={$confirmDialog.type}
-		onConfirm={$confirmDialog.onConfirm}
-		onCancel={$confirmDialog.onCancel}
-	/>
+	<ConfirmDialog />
 {/if}
 
 <style>

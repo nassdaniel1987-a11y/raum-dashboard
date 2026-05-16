@@ -484,16 +484,16 @@
 						</div>
 
 						<div class="slider-item">
-							<label>Anzeigedauer pro Seite</label>
+							<label for="page-duration">Anzeigedauer pro Seite</label>
 							<div class="slider-control">
-								<input type="range" min="3" max="30" step="1" bind:value={pageDuration} oninput={updatePageDuration} />
+								<input id="page-duration" type="range" min="3" max="30" step="1" bind:value={pageDuration} oninput={updatePageDuration} />
 								<span class="value">{pageDuration}s</span>
 							</div>
 						</div>
 
 						{#if $dashboardView === 'classic'}
 							<div class="animation-selector">
-								<label>Animation</label>
+								<span class="field-label">Animation</span>
 								<div class="animation-options">
 									<button
 										class="anim-btn"
@@ -666,7 +666,7 @@
 			{:else if activeTab === 'design'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
 					<section class="section">
-						<h3>Dashboard-Ansicht</h3>
+						<h3>Ansicht</h3>
 						<div class="view-options">
 							<button
 								class="view-option"
@@ -689,7 +689,7 @@
 
 					<!-- Kachel-Theme -->
 					<section class="section">
-						<h3>Kachel-Theme</h3>
+						<h3>Kachelstil</h3>
 						<div class="theme-grid">
 							{#each allCardThemes as theme}
 								<button
@@ -707,7 +707,7 @@
 
 					<!-- Hintergrund-Theme -->
 					<section class="section">
-						<h3>Hintergrund-Theme</h3>
+						<h3>Hintergrund</h3>
 						<div class="theme-grid compact">
 							{#each allUIThemes as theme}
 								<button
@@ -725,21 +725,21 @@
 
 					<!-- Schriftgrößen -->
 					<section class="section">
-						<h3>Schriftgrößen (alle Kacheln)</h3>
+						<h3>Typografie</h3>
 						<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt für alle Räume am {weekdayNames[$viewWeekday]}</p>
 
 						<div class="slider-item">
-							<label>Titel</label>
+							<label for="global-title-size">Titel</label>
 							<div class="slider-control">
-								<input type="range" min="20" max="60" step="1" bind:value={globalTitleFontSize} oninput={updateGlobalFontSizes} />
+								<input id="global-title-size" type="range" min="20" max="60" step="1" bind:value={globalTitleFontSize} oninput={updateGlobalFontSizes} />
 								<span class="value">{globalTitleFontSize}px</span>
 							</div>
 						</div>
 
 						<div class="slider-item">
-							<label>Inhalt</label>
+							<label for="global-text-size">Inhalt</label>
 							<div class="slider-control">
-								<input type="range" min="14" max="48" step="1" bind:value={globalTextFontSize} oninput={updateGlobalFontSizes} />
+								<input id="global-text-size" type="range" min="14" max="48" step="1" bind:value={globalTextFontSize} oninput={updateGlobalFontSizes} />
 								<span class="value">{globalTextFontSize}px</span>
 							</div>
 						</div>
@@ -747,27 +747,27 @@
 
 				<!-- Größen -->
 					<section class="section">
-						<h3>Größen</h3>
+						<h3>Layout</h3>
 						<div class="slider-item">
-							<label>Kachel-Breite</label>
+							<label for="card-width">Kachel-Breite</label>
 							<div class="slider-control">
-								<input type="range" min="0.6" max="1.4" step="0.05" bind:value={cardWidth} oninput={updateCardWidth} />
+								<input id="card-width" type="range" min="0.6" max="1.4" step="0.05" bind:value={cardWidth} oninput={updateCardWidth} />
 								<span class="value">{(cardWidth * 100).toFixed(0)}%</span>
 							</div>
 						</div>
 
 						<div class="slider-item">
-							<label>Kachel-Höhe</label>
+							<label for="card-height">Kachel-Höhe</label>
 							<div class="slider-control">
-								<input type="range" min="0.6" max="1.4" step="0.05" bind:value={cardHeight} oninput={updateCardHeight} />
+								<input id="card-height" type="range" min="0.6" max="1.4" step="0.05" bind:value={cardHeight} oninput={updateCardHeight} />
 								<span class="value">{(cardHeight * 100).toFixed(0)}%</span>
 							</div>
 						</div>
 
 						<div class="slider-item">
-							<label>Display-Breite</label>
+							<label for="display-width">Display-Breite</label>
 							<div class="slider-control">
-								<input type="range" min="0.5" max="1.0" step="0.01" bind:value={displayScaleX} oninput={updateDisplayScale} />
+								<input id="display-width" type="range" min="0.5" max="1.0" step="0.01" bind:value={displayScaleX} oninput={updateDisplayScale} />
 								<span class="value">{(displayScaleX * 100).toFixed(0)}%</span>
 							</div>
 						</div>
@@ -798,12 +798,12 @@
 							<div class="subsection" transition:slide={{ duration: 200 }}>
 								<div class="time-row">
 									<div class="time-field">
-										<label>Beginnt</label>
-										<input type="time" bind:value={nightStart} onchange={saveNightModeSettings} />
+										<label for="night-start">Beginnt</label>
+										<input id="night-start" type="time" bind:value={nightStart} onchange={saveNightModeSettings} />
 									</div>
 									<div class="time-field">
-										<label>Endet</label>
-										<input type="time" bind:value={nightEnd} onchange={saveNightModeSettings} />
+										<label for="night-end">Endet</label>
+										<input id="night-end" type="time" bind:value={nightEnd} onchange={saveNightModeSettings} />
 									</div>
 								</div>
 							</div>
@@ -1177,16 +1177,6 @@
 		margin-top: 16px;
 	}
 
-	.animation-selector label {
-		display: block;
-		font-size: 13px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		margin-bottom: 8px;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
 	.animation-options {
 		display: flex;
 		gap: 8px;
@@ -1408,6 +1398,16 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		gap: 8px;
+	}
+
+	.field-label {
+		display: block;
+		font-size: 13px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		margin-bottom: 8px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.view-options {
