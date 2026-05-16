@@ -214,7 +214,8 @@ function config(
 		activity_image_url: activityImageUrl,
 		activity_image_size: 'medium',
 		activity_image_crop: null,
-		activity_image_position: null
+		activity_image_position: null,
+		activity_image_position_calm: null
 	};
 }
 

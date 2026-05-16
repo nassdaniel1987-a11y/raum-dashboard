@@ -34,7 +34,7 @@
 		large: 180
 	};
 
-	let frameHeight = $derived(frameDimensions[size]);
+	let frameHeight = $derived(frameDimensions[size as keyof typeof frameDimensions]);
 
 	// ✅ Update callback whenever position/zoom changes
 	function updatePosition() {

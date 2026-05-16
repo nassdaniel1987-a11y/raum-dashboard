@@ -9,10 +9,12 @@
 
 	let { children } = $props();
 
-	onMount(async () => {
-		await loadAllData();
-		subscribeToRealtimeUpdates();
-		await initBlitzIntegration();
+	onMount(() => {
+		void (async () => {
+			await loadAllData();
+			subscribeToRealtimeUpdates();
+			await initBlitzIntegration();
+		})();
 
 		// ✅ GEÄNDERT: Fullscreen nur bei explizitem User-Click
 		// Nicht automatisch, da Browser das blockieren
