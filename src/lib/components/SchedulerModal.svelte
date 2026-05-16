@@ -171,10 +171,16 @@
 			messageType = '';
 		}, 3000);
 	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			onClose();
+		}
+	}
 </script>
 
-<div class="modal-backdrop" on:click={onClose} transition:fade>
-	<div class="modal-wide" on:click|stopPropagation transition:scale={{ duration: 300 }}>
+<div class="modal-backdrop" on:click={handleBackdropClick} on:keydown={(event) => event.key === 'Escape' && onClose()} transition:fade role="dialog" aria-modal="true" tabindex="-1">
+	<div class="modal-wide" transition:scale={{ duration: 300 }} role="document">
 		<div class="modal-header">
 			<div class="header-content">
 				<h2>📅 Wochenplan-Verwaltung</h2>

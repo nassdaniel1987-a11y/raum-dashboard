@@ -136,13 +136,27 @@
 		[reordered[index], reordered[index + 1]] = [reordered[index + 1], reordered[index]];
 		await reorderHighlights(reordered);
 	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			onClose();
+		}
+	}
 </script>
 
-<div class="modal-backdrop" onclick={onClose} transition:fade={{ duration: 200 }}>
+<div
+	class="modal-backdrop"
+	onclick={handleBackdropClick}
+	transition:fade={{ duration: 200 }}
+	role="dialog"
+	aria-modal="true"
+	tabindex="-1"
+	onkeydown={(event) => event.key === 'Escape' && onClose()}
+>
 	<div
 		class="modal-content"
-		onclick={(e) => e.stopPropagation()}
 		transition:fly={{ y: -50, duration: 300 }}
+		role="document"
 	>
 		<div class="modal-header">
 			<h2>Tagesangebote bearbeiten</h2>
@@ -230,7 +244,7 @@
 					<h3>{editingHighlight ? 'Angebot bearbeiten' : 'Neues Angebot erstellen'}</h3>
 
 					<div class="form-group">
-						<label>Icon auswählen:</label>
+						<span class="field-label">Icon auswählen:</span>
 						<div class="icon-selector">
 							{#each iconOptions as icon}
 								<button
@@ -278,7 +292,7 @@
 					</div>
 
 					<div class="form-group">
-						<label>Farbe:</label>
+						<span class="field-label">Farbe:</span>
 						<div class="color-selector">
 							{#each colorOptions as color}
 								<button
@@ -550,7 +564,8 @@
 		margin-bottom: 12px;
 	}
 
-	.form-group label {
+	.form-group label,
+	.field-label {
 		display: block;
 		font-size: 14px;
 		font-weight: 500;

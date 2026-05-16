@@ -19,6 +19,12 @@
 		confirmDialog.close();
 	}
 
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			handleCancel();
+		}
+	}
+
 	const typeStyles = {
 		warning: {
 			icon: '⚠️',
@@ -41,14 +47,15 @@
 {#if dialog}
 	<div
 		class="confirm-backdrop"
-		onclick={handleCancel}
+		onclick={handleBackdropClick}
 		transition:fade={{ duration: 200 }}
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
+		onkeydown={(event) => event.key === 'Escape' && handleCancel()}
 	>
 		<div
 			class="confirm-dialog"
-			onclick={(e) => e.stopPropagation()}
 			transition:scale={{ duration: 300, start: 0.9 }}
 			role="document"
 		>

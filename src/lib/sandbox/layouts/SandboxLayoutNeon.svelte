@@ -69,6 +69,7 @@
 						class="neon-dot"
 						class:active={i === currentPage}
 						onclick={() => (currentPage = i)}
+						aria-label={`Seite ${i + 1}`}
 						style={i === currentPage ? `box-shadow: 0 0 8px #f59e0b; background: #f59e0b;` : ''}
 					></button>
 				{/each}

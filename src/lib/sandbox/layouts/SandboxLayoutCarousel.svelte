@@ -1346,6 +1346,7 @@
 		width: 100%;
 		box-sizing: border-box;
 		-webkit-appearance: none;
+		appearance: none;
 	}
 
 	.sim-input:focus { border-color: rgba(251,191,36,.45); }

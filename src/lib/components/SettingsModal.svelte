@@ -15,7 +15,7 @@
 	let nightStart = $state($appSettings?.night_start || '17:00');
 	let nightEnd = $state($appSettings?.night_end || '07:00');
 	let currentTheme = $state($userTheme); // Aus LocalStorage
-	let previewTheme = $state(currentTheme); // Für Live-Vorschau
+	let previewTheme = $state($userTheme); // Für Live-Vorschau
 
 	const themeList = Object.values(themes);
 
@@ -57,17 +57,24 @@
 		applyTheme($userTheme);
 		onClose();
 	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			handleCancel();
+		}
+	}
 </script>
 
 <div
 	class="modal-backdrop"
-	onclick={handleCancel}
+	onclick={handleBackdropClick}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
+	tabindex="-1"
 	onkeydown={(e) => e.key === 'Escape' && handleCancel()}
 >
-	<div class="modal" onclick={(e) => e.stopPropagation()} transition:scale role="document">
+	<div class="modal" transition:scale role="document">
 		<div class="modal-header">
 			<h2>⚙️ Einstellungen</h2>
 			<button class="close-btn" onclick={handleCancel}>✕</button>

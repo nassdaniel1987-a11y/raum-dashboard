@@ -136,7 +136,7 @@
 
 	<!-- Zoom Control -->
 	<div class="zoom-control">
-		<label>🔍 Zoom</label>
+		<span class="field-label">🔍 Zoom</span>
 		<div class="zoom-slider-group">
 			<button type="button" onclick={() => { zoom = Math.max(0.5, zoom - 0.1); handleZoomChange(); }}>−</button>
 			<input
@@ -162,12 +162,15 @@
 
 		<!-- ✅ EXAKT wie Polaroid auf Kachel -->
 		<div class="polaroid-frame" style="height: {frameHeight}px;">
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div
 				bind:this={containerRef}
 				class="image-viewport"
 				class:dragging={isDragging}
 				onmousedown={handlePointerDown}
 				ontouchstart={handlePointerDown}
+				role="application"
+				aria-label="Bild positionieren"
 			>
 				<img
 					src={imageSrc}
@@ -223,7 +226,7 @@
 		margin-bottom: 20px;
 	}
 
-	.zoom-control label {
+	.zoom-control .field-label {
 		display: block;
 		font-weight: 600;
 		margin-bottom: 8px;

@@ -209,7 +209,7 @@
 	<div class="controls">
 		<!-- Zoom -->
 		<div class="control-group">
-			<label>🔍 Zoom</label>
+			<span class="field-label">🔍 Zoom</span>
 			<div class="zoom-controls">
 				<button type="button" onclick={() => { zoom = Math.max(0.5, zoom - 0.25); handleZoomChange(); }}>−</button>
 				<input type="range" bind:value={zoom} oninput={handleZoomChange} min="0.5" max="3" step="0.25" />
@@ -220,7 +220,7 @@
 
 		<!-- Aspect Ratio -->
 		<div class="control-group">
-			<label>📐 Seitenverhältnis</label>
+			<span class="field-label">📐 Seitenverhältnis</span>
 			<div class="aspect-buttons">
 				<button type="button" class:active={aspectRatio === 'free'} onclick={() => aspectRatio = 'free'}>Frei</button>
 				<button type="button" class:active={aspectRatio === '1:1'} onclick={() => aspectRatio = '1:1'}>1:1</button>
@@ -232,7 +232,7 @@
 
 		<!-- Rotation -->
 		<div class="control-group">
-			<label>🔄 Drehen</label>
+			<span class="field-label">🔄 Drehen</span>
 			<div class="rotation-controls">
 				<button type="button" onclick={rotateLeft}>↶ 90° Links</button>
 				<button type="button" onclick={rotateRight}>↷ 90° Rechts</button>
@@ -242,6 +242,7 @@
 	</div>
 
 	<!-- Crop Container -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		bind:this={containerRef}
 		class="crop-container"
@@ -253,6 +254,8 @@
 		ontouchend={handlePointerUp}
 		bind:clientWidth={containerWidth}
 		bind:clientHeight={containerHeight}
+		role="application"
+		aria-label="Bildausschnitt verschieben"
 	>
 		<img
 			src={imageSrc}
@@ -265,10 +268,13 @@
 			class="crop-overlay"
 			style="left: {cropX}px; top: {cropY}px; width: {cropWidth}px; height: {cropHeight}px;"
 		>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div
 				class="crop-handle"
 				onmousedown={handleResizePointerDown}
 				ontouchstart={handleResizePointerDown}
+				role="application"
+				aria-label="Bildausschnitt vergrößern"
 			></div>
 		</div>
 	</div>
@@ -323,7 +329,7 @@
 		gap: 6px;
 	}
 
-	.control-group label {
+	.control-group .field-label {
 		font-size: 13px;
 		font-weight: 600;
 		color: rgba(255, 255, 255, 0.7);

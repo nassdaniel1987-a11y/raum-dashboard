@@ -261,19 +261,25 @@
 			showMessage('Fehler beim Umschalten!', 'error');
 		}
 	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			onClose();
+		}
+	}
 </script>
 
 <div
 	class="modal-backdrop"
-	onclick={onClose}
+	onclick={handleBackdropClick}
 	transition:fade
 	role="dialog"
 	aria-modal="true"
+	tabindex="-1"
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
 	<div
 		class="modal-scheduler"
-		onclick={(e) => e.stopPropagation()}
 		transition:scale={{ duration: 300 }}
 		role="document"
 	>

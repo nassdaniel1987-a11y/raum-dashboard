@@ -12,8 +12,16 @@
 	}
 </script>
 
-<div class="modal-backdrop" onclick={handleBackdropClick} transition:fade={{ duration: 200 }}>
-	<div class="help-modal" transition:scale={{ duration: 300, start: 0.9 }}>
+<div
+	class="modal-backdrop"
+	onclick={handleBackdropClick}
+	onkeydown={(event) => event.key === 'Escape' && onClose()}
+	transition:fade={{ duration: 200 }}
+	role="dialog"
+	aria-modal="true"
+	tabindex="-1"
+>
+	<div class="help-modal" transition:scale={{ duration: 300, start: 0.9 }} role="document">
 		<div class="modal-header">
 			<h2>📖 Hilfe & Anleitung</h2>
 			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
