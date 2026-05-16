@@ -486,7 +486,7 @@
 		min-height: 0;
 		padding: 0;
 		border: 1px solid rgba(226, 232, 240, 0.16);
-		background: rgba(15, 23, 42, 0.74);
+		background: rgba(15, 23, 42, 0.94);
 		color: inherit;
 		text-align: left;
 		cursor: pointer;
@@ -507,7 +507,7 @@
 	.calm-card:hover {
 		transform: translateY(-2px);
 		border-color: rgba(248, 250, 252, 0.3);
-		background: rgba(15, 23, 42, 0.86);
+		background: rgba(15, 23, 42, 0.98);
 	}
 
 	.calm-card:focus-visible {
@@ -516,7 +516,7 @@
 	}
 
 	.calm-card.is-closed {
-		background: rgba(15, 23, 42, 0.58);
+		background: rgba(15, 23, 42, 0.88);
 	}
 
 	.calm-card.is-opening,
