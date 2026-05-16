@@ -878,7 +878,7 @@
 		left: 50%;
 		/* transform wird per inline-style gesetzt */
 		width: 90%;
-		max-width: 500px;
+		max-width: 560px;
 		max-height: 85vh;
 		background: rgba(20, 25, 35, 0.98);
 		box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -926,7 +926,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 16px 20px 16px 20px;
+		padding: 18px 22px;
 		background: transparent;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
@@ -940,9 +940,9 @@
 	}
 
 	.close-btn {
-		width: 32px;
-		height: 32px;
-		border-radius: 6px;
+		width: 44px;
+		height: 44px;
+		border-radius: 10px;
 		background: rgba(239, 68, 68, 0.2);
 		border: 1px solid rgba(239, 68, 68, 0.4);
 		color: white;
@@ -960,13 +960,16 @@
 
 	.tabs {
 		display: flex;
+		gap: 4px;
+		padding: 6px;
 		background: rgba(0, 0, 0, 0.2);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.tab {
 		flex: 1;
-		padding: 12px 8px;
+		min-height: 48px;
+		padding: 12px 10px;
 		background: transparent;
 		border: none;
 		border-bottom: 2px solid transparent;
@@ -993,21 +996,21 @@
 	.content {
 		flex: 1;
 		overflow-y: auto;
-		padding: 20px;
+		padding: 22px;
 		min-height: 500px;
 	}
 
 	.tab-content {
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: 22px;
 	}
 
 	.section {
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		padding: 16px;
+		border-radius: 10px;
+		padding: 18px;
 	}
 
 	.section-lead {
@@ -1043,7 +1046,7 @@
 	.quick-actions {
 		display: flex;
 		flex: 0 0 auto;
-		gap: 8px;
+		gap: 10px;
 	}
 
 	.quick-actions .btn {
@@ -1063,7 +1066,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 12px 0;
+		min-height: 56px;
+		padding: 14px 0;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
@@ -1092,8 +1096,8 @@
 	.switch {
 		position: relative;
 		display: inline-block;
-		width: 44px;
-		height: 24px;
+		width: 54px;
+		height: 30px;
 	}
 
 	.switch input {
@@ -1110,15 +1114,15 @@
 		right: 0;
 		bottom: 0;
 		background: rgba(255, 255, 255, 0.2);
-		border-radius: 12px;
+		border-radius: 15px;
 		transition: all 0.2s;
 	}
 
 	.switch-slider:before {
 		position: absolute;
 		content: "";
-		height: 18px;
-		width: 18px;
+		height: 24px;
+		width: 24px;
 		left: 3px;
 		bottom: 3px;
 		background: white;
@@ -1131,7 +1135,7 @@
 	}
 
 	.switch input:checked + .switch-slider:before {
-		transform: translateX(20px);
+		transform: translateX(24px);
 	}
 
 	.subsection {
@@ -1170,8 +1174,8 @@
 		flex: 1;
 		-webkit-appearance: none;
 		appearance: none;
-		height: 6px;
-		border-radius: 3px;
+		height: 10px;
+		border-radius: 999px;
 		background: rgba(255, 255, 255, 0.2);
 		outline: none;
 	}
@@ -1179,8 +1183,8 @@
 	.slider-control input[type="range"]::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 16px;
-		height: 16px;
+		width: 28px;
+		height: 28px;
 		border-radius: 50%;
 		background: white;
 		cursor: pointer;
@@ -1192,8 +1196,8 @@
 	}
 
 	.slider-control input[type="range"]::-moz-range-thumb {
-		width: 16px;
-		height: 16px;
+		width: 28px;
+		height: 28px;
 		border-radius: 50%;
 		background: white;
 		cursor: pointer;
@@ -1226,6 +1230,7 @@
 
 	.anim-btn {
 		flex: 1;
+		min-height: 50px;
 		padding: 12px;
 		font-size: 22px;
 		background: rgba(255, 255, 255, 0.1);
@@ -1283,7 +1288,8 @@
 
 	.runner-input input {
 		flex: 1;
-		padding: 12px 14px;
+		min-height: 48px;
+		padding: 13px 14px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.08);
@@ -1304,9 +1310,9 @@
 	}
 
 	.runner-input .clear-btn {
-		width: 32px;
-		height: 32px;
-		border-radius: 6px;
+		width: 44px;
+		height: 44px;
+		border-radius: 10px;
 		background: rgba(239, 68, 68, 0.2);
 		border: 1px solid rgba(239, 68, 68, 0.4);
 		color: rgba(255, 255, 255, 0.8);
@@ -1337,10 +1343,11 @@
 		background: rgba(255, 255, 255, 0.1);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		color: white;
-		font-size: 13px;
+		font-size: 14px;
 		font-weight: 500;
-		padding: 10px 16px;
-		border-radius: 6px;
+		min-height: 48px;
+		padding: 12px 16px;
+		border-radius: 10px;
 		cursor: pointer;
 		transition: all 0.2s;
 		flex: 1;
@@ -1462,8 +1469,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		min-height: 72px;
-		padding: 12px;
+		min-height: 84px;
+		padding: 14px;
 		border: 1px solid rgba(255, 255, 255, 0.14);
 		border-radius: 10px;
 		background: rgba(255, 255, 255, 0.04);
@@ -1492,7 +1499,7 @@
 
 	.view-hint {
 		color: rgba(255, 255, 255, 0.68);
-		font-size: 12px;
+		font-size: 13px;
 		line-height: 1.25;
 	}
 
@@ -1564,7 +1571,8 @@
 
 	.time-field input[type="time"] {
 		width: 100%;
-		padding: 8px 10px;
+		min-height: 46px;
+		padding: 10px 12px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.05);
@@ -1592,7 +1600,8 @@
 
 	.create-form input[type="text"],
 	.create-form select {
-		padding: 10px 12px;
+		min-height: 46px;
+		padding: 11px 12px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.05);
@@ -1637,7 +1646,8 @@
 
 	.person-add-row input {
 		flex: 1;
-		padding: 10px 12px;
+		min-height: 48px;
+		padding: 12px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.08);
@@ -1656,7 +1666,7 @@
 	}
 
 	.person-add-row .btn {
-		flex: 0 0 40px;
+		flex: 0 0 48px;
 		padding: 0;
 		font-size: 20px;
 		display: flex;
@@ -1674,7 +1684,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 8px 10px;
+		min-height: 52px;
+		padding: 10px 12px;
 		background: rgba(255, 255, 255, 0.05);
 		border-radius: 6px;
 		border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1704,7 +1715,8 @@
 
 	.person-edit-row input {
 		flex: 1;
-		padding: 6px 10px;
+		min-height: 44px;
+		padding: 8px 10px;
 		border: 1px solid rgba(59, 130, 246, 0.5);
 		border-radius: 4px;
 		background: rgba(255, 255, 255, 0.1);
@@ -1718,9 +1730,9 @@
 	}
 
 	.icon-btn {
-		width: 28px;
-		height: 28px;
-		border-radius: 4px;
+		width: 40px;
+		height: 40px;
+		border-radius: 8px;
 		border: none;
 		cursor: pointer;
 		display: flex;

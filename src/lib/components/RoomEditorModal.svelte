@@ -402,7 +402,7 @@
 					</div>
 
 					<div class="input-group">
-						<label>👤 Person im Raum</label>
+						<span class="field-label">👤 Person im Raum</span>
 
 						<!-- Zugewiesene Personen -->
 						{#if selectedPersons.length > 0}
@@ -483,7 +483,7 @@
 					</div>
 
 					<div class="preview-card">
-						<label>Live-Vorschau</label>
+						<span class="field-label">Live-Vorschau</span>
 						<div class="color-preview" style="background: {backgroundColor}; color: {textColor};">
 							<div class="preview-title" style="font-size: {titleFontSize}px;">{name || 'Raumname'}</div>
 							<div class="preview-text" style="font-size: {textFontSize}px;">{activity || 'Aktivitätstext'}</div>
@@ -537,7 +537,7 @@
 
 					<!-- Größen-Auswahl -->
 					<div class="input-group">
-						<label>Bildgröße auf Kachel</label>
+						<span class="field-label">Bildgröße auf Kachel</span>
 						<div class="size-buttons">
 							<button
 								type="button"
@@ -571,7 +571,7 @@
 
 					<!-- Bild Upload mit Drag & Drop -->
 					<div class="input-group">
-						<label>Bild hochladen</label>
+						<span class="field-label">Bild hochladen</span>
 						<div
 							class="drop-zone"
 							class:dragging={isDragging}
@@ -641,7 +641,7 @@
 								</div>
 								<div class="slider-group">
 									<div class="slider-header">
-										<label>Größe anpassen</label>
+										<span class="field-label">Größe anpassen</span>
 										<span class="slider-value">{resizePercentage}%</span>
 									</div>
 									<input
@@ -709,7 +709,7 @@
 				<div class="section-body">
 					<div class="slider-group">
 						<div class="slider-header">
-							<label>Titel-Schriftgröße</label>
+							<span class="field-label">Titel-Schriftgröße</span>
 							<span class="slider-value">{titleFontSize}px</span>
 						</div>
 						<input type="range" bind:value={titleFontSize} min="10" max="100" class="premium-slider" />
@@ -717,7 +717,7 @@
 
 					<div class="slider-group">
 						<div class="slider-header">
-							<label>Text-Schriftgröße</label>
+							<span class="field-label">Text-Schriftgröße</span>
 							<span class="slider-value">{textFontSize}px</span>
 						</div>
 						<input type="range" bind:value={textFontSize} min="8" max="80" class="premium-slider" />
@@ -926,17 +926,17 @@
 
 	.modal-content {
 		flex: 1;
-		padding: 20px;
+		padding: 24px;
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
 
 	/* ✅ Section Cards */
 	.section-card {
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		margin-bottom: 16px;
+		background: rgba(255, 255, 255, 0.055);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 12px;
+		margin-bottom: 20px;
 		overflow: visible; /* ✅ Verhindert Abschneiden von ColorPicker */
 		position: relative; /* ✅ Für z-index Stacking */
 	}
@@ -949,21 +949,21 @@
 	.section-header {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 12px 16px;
+		gap: 10px;
+		padding: 15px 18px;
 		background: rgba(0, 0, 0, 0.2);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.section-icon {
-		font-size: 18px;
-		min-width: 24px;
+		font-size: 20px;
+		min-width: 28px;
 		text-align: center;
 	}
 
 	.section-title {
 		margin: 0;
-		font-size: 13px;
+		font-size: 14px;
 		font-weight: 600;
 		color: rgba(255, 255, 255, 0.9);
 		text-transform: uppercase;
@@ -971,7 +971,7 @@
 	}
 
 	.section-body {
-		padding: 16px;
+		padding: 20px;
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
@@ -993,7 +993,8 @@
 		gap: 14px;
 	}
 
-	label {
+	label,
+	.field-label {
 		display: block;
 		font-weight: 500;
 		font-size: 14px;
@@ -1014,7 +1015,8 @@
 	select,
 	textarea {
 		width: 100%;
-		padding: 14px 16px;
+		min-height: 52px;
+		padding: 15px 16px;
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 12px;
 		background: rgba(255, 255, 255, 0.08);
@@ -1067,7 +1069,8 @@
 		position: relative;
 		border: 2px dashed rgba(59, 130, 246, 0.5);
 		border-radius: 12px;
-		padding: 24px;
+		min-height: 132px;
+		padding: 28px 24px;
 		text-align: center;
 		cursor: pointer;
 		transition: all 0.2s ease;
@@ -1137,7 +1140,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		padding: 14px 16px;
+		min-height: 56px;
+		padding: 16px 18px;
 		border-radius: 12px;
 		cursor: pointer;
 		transition: all 0.2s ease;
@@ -1211,7 +1215,7 @@
 		-webkit-appearance: none;
 		appearance: none;
 		width: 100%;
-		height: 8px;
+		height: 10px;
 		border-radius: 4px;
 		background: rgba(255, 255, 255, 0.2);
 		outline: none;
@@ -1226,8 +1230,8 @@
 	.premium-slider::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 24px;
-		height: 24px;
+		width: 30px;
+		height: 30px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
@@ -1247,8 +1251,8 @@
 	}
 
 	.premium-slider::-moz-range-thumb {
-		width: 24px;
-		height: 24px;
+		width: 30px;
+		height: 30px;
 		border-radius: 50%;
 		background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 		cursor: pointer;
@@ -1310,11 +1314,11 @@
 
 	/* ✅ Modal Footer - Premium Buttons */
 	.modal-footer {
-		padding: 16px 20px;
+		padding: 18px 24px;
 		border-top: 1px solid rgba(255, 255, 255, 0.1);
 		background: rgba(0, 0, 0, 0.3);
 		display: flex;
-		gap: 8px;
+		gap: 12px;
 		justify-content: flex-end;
 	}
 
@@ -1322,10 +1326,11 @@
 		background: rgba(255, 255, 255, 0.1);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		color: white;
-		font-size: 13px;
+		font-size: 15px;
 		font-weight: 500;
-		padding: 10px 16px;
-		border-radius: 6px;
+		min-height: 48px;
+		padding: 12px 20px;
+		border-radius: 10px;
 		cursor: pointer;
 		transition: all 0.2s;
 		min-width: 100px;
@@ -1391,7 +1396,8 @@
 
 	.size-btn {
 		flex: 1;
-		padding: 10px 16px;
+		min-height: 58px;
+		padding: 12px 16px;
 		background: rgba(255, 255, 255, 0.1);
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
@@ -1434,7 +1440,7 @@
 
 	.image-preview-container {
 		margin-top: 16px;
-		padding: 16px;
+		padding: 18px;
 		background: rgba(0, 0, 0, 0.2);
 		border-radius: 8px;
 	}
@@ -1448,7 +1454,8 @@
 	}
 
 	.remove-btn {
-		padding: 6px 12px;
+		min-height: 42px;
+		padding: 10px 14px;
 		background: rgba(239, 68, 68, 0.2);
 		border: 1px solid rgba(239, 68, 68, 0.4);
 		border-radius: 6px;
@@ -1460,163 +1467,6 @@
 
 	.remove-btn:hover {
 		background: rgba(239, 68, 68, 0.3);
-	}
-
-	/* ✅ Crop-Bereich */
-	.crop-section {
-		margin-bottom: 20px;
-		padding: 16px;
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 8px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.crop-label {
-		display: block;
-		font-weight: 600;
-		margin-bottom: 12px;
-		color: var(--color-text-primary);
-		font-size: 14px;
-	}
-
-	/* ✅ Alle 3 Größen nebeneinander */
-	.all-sizes-preview {
-		display: flex;
-		gap: 12px;
-		justify-content: center;
-		padding: 16px;
-		background: rgba(0, 0, 0, 0.15);
-		border-radius: 8px;
-		margin-top: 16px;
-		flex-wrap: wrap;
-	}
-
-	.size-preview-item {
-		flex: 1;
-		min-width: 150px;
-		max-width: 250px;
-		padding: 12px;
-		background: rgba(0, 0, 0, 0.2);
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		transition: all 0.3s;
-	}
-
-	.size-preview-item.selected {
-		border-color: rgba(59, 130, 246, 0.6);
-		background: rgba(59, 130, 246, 0.1);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-	}
-
-	.size-preview-label {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 8px;
-		padding-bottom: 6px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.label-text {
-		font-weight: 700;
-		font-size: 13px;
-		color: var(--color-text-primary);
-	}
-
-	.label-dim {
-		font-size: 11px;
-		opacity: 0.6;
-		font-weight: 400;
-	}
-
-	.size-preview-item.selected .label-text {
-		color: #60a5fa;
-	}
-
-	.size-preview-item.selected .label-dim {
-		opacity: 1;
-		color: #60a5fa;
-	}
-
-	.preview-hint {
-		text-align: center;
-		margin-top: 12px;
-		font-size: 13px;
-		opacity: 0.8;
-		font-style: italic;
-	}
-
-	.preview-hint strong {
-		color: #60a5fa;
-		font-weight: 700;
-	}
-
-	/* ✅ Preview - Exakt wie auf der Kachel */
-	.card-preview-wrapper {
-		display: flex;
-		justify-content: center;
-		padding: 20px;
-		background: rgba(0, 0, 0, 0.1);
-		border-radius: 8px;
-	}
-
-	.preview-activity-image-container {
-		width: 100%;
-		max-width: 300px;
-		padding: 6px;
-		padding-bottom: 10px;
-		background: rgba(255, 255, 255, 0.98);
-		border-radius: 3px;
-		box-shadow:
-			0 2px 8px rgba(0, 0, 0, 0.3),
-			0 1px 3px rgba(0, 0, 0, 0.2);
-	}
-
-	.preview-image-wrapper {
-		width: 100%;
-		overflow: hidden;
-		background: rgba(0, 0, 0, 0.05);
-		border-radius: 2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.preview-image-wrapper img {
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		display: block;
-	}
-
-	/* Größen-Varianten für Preview */
-	.preview-activity-image-container.size-small .preview-image-wrapper {
-		height: 80px;
-	}
-
-	.preview-activity-image-container.size-medium .preview-image-wrapper {
-		height: 120px;
-	}
-
-	.preview-activity-image-container.size-large .preview-image-wrapper {
-		height: 180px;
-	}
-
-	.crop-btn {
-		width: 100%;
-		margin-top: 12px;
-		padding: 10px;
-		background: rgba(59, 130, 246, 0.2);
-		border: 2px solid rgba(59, 130, 246, 0.4);
-		border-radius: 6px;
-		color: #60a5fa;
-		cursor: pointer;
-		transition: all 0.2s;
-		font-weight: 600;
-	}
-
-	.crop-btn:hover {
-		background: rgba(59, 130, 246, 0.3);
 	}
 
 	/* ✅ Resize Control Styles */

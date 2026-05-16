@@ -275,11 +275,13 @@
 	<div class="fab-container">
 		<!-- Overlay wenn offen -->
 		{#if isOpen}
-			<div
+			<button
+				type="button"
 				class="fab-overlay"
 				onclick={closeMenu}
 				transition:fade={{ duration: 150 }}
-			></div>
+				aria-label="Schnellaktionen schließen"
+			></button>
 		{/if}
 
 		<!-- Main FAB Button (jetzt oben) -->
@@ -341,10 +343,20 @@
 													{#each personSelections[room.id] as name}
 														<span class="assigned-chip">
 															{name}
-															<button
+															<span
 																class="chip-remove"
 																onclick={(e) => { e.stopPropagation(); removePersonFromRoom(room.id, name); }}
-															>✕</button>
+																onkeydown={(e) => {
+																	if (e.key === 'Enter' || e.key === ' ') {
+																		e.preventDefault();
+																		e.stopPropagation();
+																		removePersonFromRoom(room.id, name);
+																	}
+																}}
+																role="button"
+																tabindex="0"
+																aria-label={`${name} entfernen`}
+															>✕</span>
 														</span>
 													{/each}
 												</div>

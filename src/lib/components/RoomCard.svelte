@@ -166,9 +166,6 @@
 	class:selected={isSelected}
 	class:has-activity-image={room.config?.activity_image_url}
 	style="{roomStyle}; border: {currentTheme.borderWidth} {currentTheme.borderStyle} {currentTheme.borderColor}; box-shadow: {currentTheme.boxShadow};"
-	onkeydown={(e) => e.key === 'Enter' && handleClick()}
-	role="button"
-	tabindex="0"
 >
 	<!-- ✅ Button-Container rechts oben im Edit-Modus -->
 	{#if $isEditMode}
@@ -200,17 +197,19 @@
 		</div>
 	{/if}
 
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="card-content"
 		class:long-pressing={isLongPressing}
 		onclick={handleClick}
+		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
 		onmousedown={handlePressStart}
 		onmouseup={handlePressEnd}
 		onmouseleave={handlePressEnd}
 		ontouchstart={handlePressStart}
 		ontouchend={handlePressEnd}
 		ontouchcancel={handlePressEnd}
+		role="button"
+		tabindex="0"
 	>
 		<h3 class="room-title" style="font-size: {titleFontSize}px; color: {textColor};">{room.name}</h3>
 
