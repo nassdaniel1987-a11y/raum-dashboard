@@ -71,6 +71,10 @@ export const userTheme = writable<string>('default');
 // ===== CARD THEME HANDLING (NEU) =====
 export const cardTheme = writable<string>('default');
 
+// ===== DASHBOARD-ANSICHT (BENUTZERSPEZIFISCH) =====
+export type DashboardView = 'classic' | 'calm';
+export const dashboardView = writable<DashboardView>('classic');
+
 // Theme aus LocalStorage laden beim Start
 if (typeof window !== 'undefined') {
 	const savedTheme = localStorage.getItem('user-theme');
@@ -83,6 +87,11 @@ if (typeof window !== 'undefined') {
 		cardTheme.set(savedCardTheme);
 	}
 
+	const savedDashboardView = localStorage.getItem('dashboard-view');
+	if (savedDashboardView === 'classic' || savedDashboardView === 'calm') {
+		dashboardView.set(savedDashboardView);
+	}
+
 	// Wenn sich das User-Theme ändert, speichern und anwenden
 	userTheme.subscribe(($theme) => {
 		localStorage.setItem('user-theme', $theme);
@@ -92,6 +101,11 @@ if (typeof window !== 'undefined') {
 	// Wenn sich das Card-Theme ändert, speichern
 	cardTheme.subscribe(($theme) => {
 		localStorage.setItem('card-theme', $theme);
+	});
+
+	// Wenn sich die Dashboard-Ansicht ändert, benutzerspezifisch speichern
+	dashboardView.subscribe(($view) => {
+		localStorage.setItem('dashboard-view', $view);
 	});
 }
 

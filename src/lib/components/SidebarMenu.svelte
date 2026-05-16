@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, dashboardView, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -286,6 +286,10 @@
 		applyTheme(themeId);
 	}
 
+	function selectDashboardView(view: 'classic' | 'calm') {
+		dashboardView.set(view);
+	}
+
 	function copyCurrentDay() {
 		copiedDay = get(viewWeekday);
 		toasts.show(`📋 ${weekdayNames[copiedDay]} kopiert!`, 'success');
@@ -487,53 +491,57 @@
 							</div>
 						</div>
 
-						<div class="animation-selector">
-							<label>Animation</label>
-							<div class="animation-options">
-								<button
-									class="anim-btn"
-									class:active={animationType === 'book'}
-									onclick={() => selectAnimationType('book')}
-									title="Buchseite"
-								>📖</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'slide'}
-									onclick={() => selectAnimationType('slide')}
-									title="Schieben"
-								>➡️</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'fade'}
-									onclick={() => selectAnimationType('fade')}
-									title="Überblenden"
-								>✨</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'cube'}
-									onclick={() => selectAnimationType('cube')}
-									title="Würfel"
-								>🎲</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'morph'}
-									onclick={() => selectAnimationType('morph')}
-									title="Morphen"
-								>🫧</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'ripple'}
-									onclick={() => selectAnimationType('ripple')}
-									title="Welle"
-								>🌊</button>
-								<button
-									class="anim-btn"
-									class:active={animationType === 'zoom'}
-									onclick={() => selectAnimationType('zoom')}
-									title="Zoom"
-								>🔍</button>
+						{#if $dashboardView === 'classic'}
+							<div class="animation-selector">
+								<label>Animation</label>
+								<div class="animation-options">
+									<button
+										class="anim-btn"
+										class:active={animationType === 'book'}
+										onclick={() => selectAnimationType('book')}
+										title="Buchseite"
+									>📖</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'slide'}
+										onclick={() => selectAnimationType('slide')}
+										title="Schieben"
+									>➡️</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'fade'}
+										onclick={() => selectAnimationType('fade')}
+										title="Überblenden"
+									>✨</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'cube'}
+										onclick={() => selectAnimationType('cube')}
+										title="Würfel"
+									>🎲</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'morph'}
+										onclick={() => selectAnimationType('morph')}
+										title="Morphen"
+									>🫧</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'ripple'}
+										onclick={() => selectAnimationType('ripple')}
+										title="Welle"
+									>🌊</button>
+									<button
+										class="anim-btn"
+										class:active={animationType === 'zoom'}
+										onclick={() => selectAnimationType('zoom')}
+										title="Zoom"
+									>🔍</button>
+								</div>
 							</div>
-						</div>
+						{:else}
+							<p class="hint-text">Die ruhige Ansicht nutzt einen festen, dezenten Seitenwechsel.</p>
+						{/if}
 					</section>
 
 					<!-- Läufer (Ansprechpartner) -->
@@ -657,6 +665,28 @@
 
 			{:else if activeTab === 'design'}
 				<div class="tab-content" transition:fade={{ duration: 150 }}>
+					<section class="section">
+						<h3>Dashboard-Ansicht</h3>
+						<div class="view-options">
+							<button
+								class="view-option"
+								class:active={$dashboardView === 'classic'}
+								onclick={() => selectDashboardView('classic')}
+							>
+								<span class="view-name">Klassisch</span>
+								<span class="view-hint">Aktuelle Live-Ansicht</span>
+							</button>
+							<button
+								class="view-option"
+								class:active={$dashboardView === 'calm'}
+								onclick={() => selectDashboardView('calm')}
+							>
+								<span class="view-name">Ruhig</span>
+								<span class="view-hint">TV/iPad lesefreundlich</span>
+							</button>
+						</div>
+					</section>
+
 					<!-- Kachel-Theme -->
 					<section class="section">
 						<h3>Kachel-Theme</h3>
@@ -1378,6 +1408,50 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		gap: 8px;
+	}
+
+	.view-options {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.view-option {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-height: 72px;
+		padding: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.04);
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition: border-color 0.2s, background 0.2s, transform 0.2s;
+	}
+
+	.view-option:hover {
+		transform: translateY(-1px);
+		border-color: rgba(255, 255, 255, 0.28);
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.view-option.active {
+		border-color: rgba(59, 130, 246, 0.7);
+		background: rgba(59, 130, 246, 0.18);
+		box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.22);
+	}
+
+	.view-name {
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.view-hint {
+		color: rgba(255, 255, 255, 0.68);
+		font-size: 12px;
+		line-height: 1.25;
 	}
 
 	.theme-grid.compact {

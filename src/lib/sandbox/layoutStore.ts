@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 export type SandboxLayoutId =
 	| 'carousel'
+	| 'calm'
 	| 'focus'
 	| 'grid'
 	| 'compact'
@@ -26,6 +27,7 @@ export interface LayoutOption {
 
 export const LAYOUT_OPTIONS: LayoutOption[] = [
 	{ id: 'carousel',    label: 'Karussell',   icon: '⊞',  description: '2×2 Seiten-Ansicht' },
+	{ id: 'calm',        label: 'Ruhig',       icon: '▤',  description: 'TV-Ansicht mit klarer Lesbarkeit' },
 	{ id: 'focus',       label: 'Fokus',        icon: '⬜',  description: 'Ein Raum groß' },
 	{ id: 'grid',        label: 'Raster',       icon: '⊟',  description: '3-Spalten Übersicht' },
 	{ id: 'compact',     label: 'Kompakt',      icon: '▦',   description: '4-Spalten dicht' },
