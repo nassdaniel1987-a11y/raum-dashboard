@@ -7,6 +7,10 @@
 		initialY = 0,
 		initialRotation = 0,
 		frameSize = 'medium',
+		roomName = 'Raumname',
+		activity = 'Aktivitaet',
+		timeLabel = 'Kein Zeitfenster',
+		personLabel = 'Keine Person',
 		onUpdate
 	} = $props<{
 		imageSrc: string;
@@ -15,6 +19,10 @@
 		initialY?: number;
 		initialRotation?: number;
 		frameSize?: 'small' | 'medium' | 'large';
+		roomName?: string;
+		activity?: string;
+		timeLabel?: string;
+		personLabel?: string;
 		onUpdate?: (data: { zoom: number; x: number; y: number; rotation: number }) => void;
 	}>();
 
@@ -25,7 +33,7 @@
 		large: 180
 	};
 
-	let actualFrameSize = $derived(frameSizes[frameSize]);
+	let actualFrameSize = $derived(frameSizes[frameSize as keyof typeof frameSizes]);
 
 	// State - Position in PROZENT (wie RoomCard es erwartet)
 	let zoom = $state(initialZoom);
@@ -33,9 +41,10 @@
 	let posY = $state(initialY); // Prozent
 	let rotation = $state(initialRotation); // Grad (0, 90, 180, 270)
 	let isDragging = $state(false);
+	let activePreview = $state<'classic' | 'calm'>('classic');
 	let dragStartPos = $state({ x: 0, y: 0 });
 	let dragStartPercent = $state({ x: 0, y: 0 });
-	let containerRef: HTMLDivElement;
+	let containerRef = $state<HTMLDivElement | null>(null);
 
 	// Konstanten
 	const MIN_ZOOM = 1;
@@ -156,38 +165,93 @@
 </script>
 
 <div class="editor-container">
-	<!-- Vorschau im Polaroid-Stil (wie in der echten Kachel) -->
+	<div class="preview-tabs" role="tablist" aria-label="Vorschau-Modus">
+		<button
+			class:active={activePreview === 'classic'}
+			onclick={() => (activePreview = 'classic')}
+			role="tab"
+			aria-selected={activePreview === 'classic'}
+		>
+			Klassisch
+		</button>
+		<button
+			class:active={activePreview === 'calm'}
+			onclick={() => (activePreview = 'calm')}
+			role="tab"
+			aria-selected={activePreview === 'calm'}
+		>
+			Ruhig
+		</button>
+	</div>
+
 	<div class="preview-label">
-		Vorschau (1:1 wie in der Kachel - {actualFrameSize}px):
+		{activePreview === 'classic'
+			? `Klassische Kachel - ${actualFrameSize}px Bildmarke`
+			: 'Ruhige Kachel - rechter Bildbereich'}
 	</div>
 
 	<div class="frame-container">
-		<div class="polaroid-frame" style="--frame-size: {actualFrameSize}px;">
-			<div
-			class="image-viewport"
-			bind:this={containerRef}
-			onpointerdown={handlePointerDown}
-			onpointermove={handlePointerMove}
-			onpointerup={handlePointerUp}
-			onpointercancel={handlePointerUp}
-			ontouchstart={handleTouchStart}
-			ontouchmove={handleTouchMove}
-			class:dragging={isDragging}
-		>
-			<img
-				src={imageSrc}
-				alt="Aktivitätsbild"
-				class="preview-image"
-				style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
-				draggable="false"
-			/>
+		{#if activePreview === 'classic'}
+			<div class="polaroid-frame" style="--frame-size: {actualFrameSize}px;">
+				<div
+					class="image-viewport"
+					bind:this={containerRef}
+					onpointerdown={handlePointerDown}
+					onpointermove={handlePointerMove}
+					onpointerup={handlePointerUp}
+					onpointercancel={handlePointerUp}
+					ontouchstart={handleTouchStart}
+					ontouchmove={handleTouchMove}
+					class:dragging={isDragging}
+				>
+					<img
+						src={imageSrc}
+						alt="Aktivitätsbild"
+						class="preview-image"
+						style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
+						draggable="false"
+					/>
 
-			<!-- Drag-Hinweis -->
-			{#if zoom > 1 && !isDragging}
-				<div class="drag-hint">Ziehen zum Verschieben</div>
-			{/if}
+					{#if zoom > 1 && !isDragging}
+						<div class="drag-hint">Ziehen zum Verschieben</div>
+					{/if}
+				</div>
 			</div>
-		</div>
+		{:else}
+			<div class="calm-preview-card">
+				<div class="calm-copy">
+					<span class="calm-state">Offen</span>
+					<strong>{roomName || 'Raumname'}</strong>
+					<span>{activity || 'Keine Aktivitaet eingetragen'}</span>
+					<footer>
+						<span>{timeLabel}</span>
+						<span>{personLabel}</span>
+					</footer>
+				</div>
+				<div
+					class="calm-viewport"
+					bind:this={containerRef}
+					onpointerdown={handlePointerDown}
+					onpointermove={handlePointerMove}
+					onpointerup={handlePointerUp}
+					onpointercancel={handlePointerUp}
+					ontouchstart={handleTouchStart}
+					ontouchmove={handleTouchMove}
+					class:dragging={isDragging}
+				>
+					<img
+						src={imageSrc}
+						alt="Aktivitätsbild"
+						class="preview-image"
+						style="transform: translate({posX}%, {posY}%) scale({zoom}) rotate({rotation}deg); transform-origin: center;"
+						draggable="false"
+					/>
+					{#if zoom > 1 && !isDragging}
+						<div class="drag-hint">Ziehen zum Verschieben</div>
+					{/if}
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Controls -->
@@ -244,12 +308,112 @@
 		text-align: center;
 	}
 
+	.preview-tabs {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 6px;
+		max-width: 280px;
+		margin: 0 auto;
+	}
+
+	.preview-tabs button {
+		padding: 8px 12px;
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		background: rgba(255, 255, 255, 0.06);
+		color: rgba(255, 255, 255, 0.72);
+		font-size: 13px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.preview-tabs button.active {
+		border-color: rgba(96, 165, 250, 0.7);
+		background: rgba(59, 130, 246, 0.22);
+		color: white;
+	}
+
 	.frame-container {
 		display: flex;
 		justify-content: center;
 		padding: 16px;
 		background: rgba(0, 0, 0, 0.2);
 		border-radius: 12px;
+	}
+
+	.calm-preview-card {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(150px, 30%);
+		width: min(100%, 520px);
+		min-height: 180px;
+		overflow: hidden;
+		border: 1px solid rgba(226, 232, 240, 0.16);
+		background: rgba(15, 23, 42, 0.82);
+		box-shadow: 0 14px 28px rgba(2, 6, 23, 0.24);
+		color: #f8fafc;
+	}
+
+	.calm-copy {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		padding: 16px 18px;
+	}
+
+	.calm-state {
+		color: rgba(248, 250, 252, 0.76);
+		font-size: 11px;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.calm-copy strong {
+		margin-top: 10px;
+		font-size: 24px;
+		line-height: 1;
+		overflow-wrap: anywhere;
+	}
+
+	.calm-copy > span:not(.calm-state) {
+		margin-top: 10px;
+		color: rgba(241, 245, 249, 0.78);
+		font-size: 15px;
+		font-weight: 700;
+		line-height: 1.15;
+	}
+
+	.calm-copy footer {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+		margin-top: auto;
+		padding-top: 14px;
+		color: rgba(226, 232, 240, 0.72);
+		font-size: 12px;
+		font-weight: 800;
+	}
+
+	.calm-copy footer span {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.calm-viewport {
+		position: relative;
+		min-width: 0;
+		min-height: 0;
+		margin: 10px 10px 10px 0;
+		overflow: hidden;
+		border: 1px solid rgba(226, 232, 240, 0.16);
+		background: rgba(2, 6, 23, 0.42);
+		cursor: grab;
+		touch-action: none;
+	}
+
+	.calm-viewport.dragging {
+		cursor: grabbing;
 	}
 
 	/* Polaroid-Rahmen wie in RoomCard - exakt passend zur Bildgroesse */

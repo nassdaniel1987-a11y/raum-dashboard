@@ -130,7 +130,7 @@
 	}
 
 	function getImageUrl(room: RoomWithConfig): string {
-		return room.config?.activity_image_url ?? room.image_url ?? '';
+		return room.config?.activity_image_url ?? '';
 	}
 </script>
 

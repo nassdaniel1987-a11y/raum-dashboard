@@ -342,11 +342,6 @@
 							onclick={() => openPanel(room)}
 							aria-label="{room.name} — Details"
 						>
-							<!-- Background image -->
-							{#if room.image_url}
-								<img src={room.image_url} alt="" class="tile-bg" aria-hidden="true" />
-							{/if}
-
 							<!-- Color wash -->
 							<div
 								class="tile-wash"
@@ -857,15 +852,6 @@
 	.sc-tile.tile-soon      { border-color: rgba(251,191,36,.3); }
 	.sc-tile.tile-closing   { border-color: rgba(251,146,60,.3); }
 	.sc-tile.tile-simulated { border-color: rgba(251,191,36,.42); box-shadow: 0 0 0 1px rgba(251,191,36,.12); }
-
-	.tile-bg {
-		position: absolute;
-		inset: 0;
-		width: 100%; height: 100%;
-		object-fit: cover;
-		opacity: .14;
-		z-index: 0;
-	}
 
 	.tile-wash {
 		position: absolute;
