@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
+	import CalmHeader from '$lib/components/CalmHeader.svelte';
 	import Canvas from '$lib/components/Canvas.svelte';
 	import CalmCanvas from '$lib/components/CalmCanvas.svelte';
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
@@ -53,10 +54,11 @@
 </script>
 
 <div class="dashboard">
-	<Header onOpenMenu={openMenu} {canvasRef} />
 	{#if $dashboardView === 'calm'}
+		<CalmHeader onOpenMenu={openMenu} {canvasRef} />
 		<CalmCanvas {handleEditRoom} bind:this={canvasRef} />
 	{:else}
+		<Header onOpenMenu={openMenu} {canvasRef} />
 		<Canvas {handleEditRoom} bind:this={canvasRef} />
 	{/if}
 </div>

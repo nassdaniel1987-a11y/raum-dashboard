@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, dashboardView, updateRunnerName as updateRunnerNameInDb, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, dashboardView, updateRunnerName as updateRunnerNameInDb, updateCalmTypography, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -100,6 +100,9 @@
 	let globalTitleFontSize = $state(42);
 	let globalTextFontSize = $state(28);
 	let fontSizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let calmTitleFontSize = $state($appSettings?.calm_title_font_size ?? 42);
+	let calmTextFontSize = $state($appSettings?.calm_text_font_size ?? 24);
+	let calmTypographyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Schriftgrößen aus den aktuellen Configs laden wenn sich der Tag ändert
 	$effect(() => {
@@ -284,6 +287,20 @@
 		currentUITheme = themeId;
 		userTheme.set(themeId);
 		applyTheme(themeId);
+	}
+
+	$effect(() => {
+		if ($appSettings) {
+			calmTitleFontSize = $appSettings.calm_title_font_size ?? 42;
+			calmTextFontSize = $appSettings.calm_text_font_size ?? 24;
+		}
+	});
+
+	function updateCalmFontSizes() {
+		if (calmTypographyDebounceTimer) clearTimeout(calmTypographyDebounceTimer);
+		calmTypographyDebounceTimer = setTimeout(() => {
+			updateCalmTypography(calmTitleFontSize, calmTextFontSize);
+		}, 300);
 	}
 
 	function selectDashboardView(view: 'classic' | 'calm') {
@@ -761,23 +778,43 @@
 					<!-- Schriftgrößen -->
 					<section class="section">
 						<h3>Typografie</h3>
-						<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt für alle Räume am {weekdayNames[$viewWeekday]}</p>
+						{#if $dashboardView === 'calm'}
+							<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt systemweit nur für die ruhige Ansicht</p>
 
-						<div class="slider-item">
-							<label for="global-title-size">Titel</label>
-							<div class="slider-control">
-								<input id="global-title-size" type="range" min="20" max="60" step="1" bind:value={globalTitleFontSize} oninput={updateGlobalFontSizes} />
-								<span class="value">{globalTitleFontSize}px</span>
+							<div class="slider-item">
+								<label for="calm-title-size">Titel ruhig</label>
+								<div class="slider-control">
+									<input id="calm-title-size" type="range" min="24" max="64" step="1" bind:value={calmTitleFontSize} oninput={updateCalmFontSizes} />
+									<span class="value">{calmTitleFontSize}px</span>
+								</div>
 							</div>
-						</div>
 
-						<div class="slider-item">
-							<label for="global-text-size">Inhalt</label>
-							<div class="slider-control">
-								<input id="global-text-size" type="range" min="14" max="48" step="1" bind:value={globalTextFontSize} oninput={updateGlobalFontSizes} />
-								<span class="value">{globalTextFontSize}px</span>
+							<div class="slider-item">
+								<label for="calm-text-size">Inhalt ruhig</label>
+								<div class="slider-control">
+									<input id="calm-text-size" type="range" min="16" max="36" step="1" bind:value={calmTextFontSize} oninput={updateCalmFontSizes} />
+									<span class="value">{calmTextFontSize}px</span>
+								</div>
 							</div>
-						</div>
+						{:else}
+							<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt für alle Räume am {weekdayNames[$viewWeekday]}</p>
+
+							<div class="slider-item">
+								<label for="global-title-size">Titel</label>
+								<div class="slider-control">
+									<input id="global-title-size" type="range" min="20" max="60" step="1" bind:value={globalTitleFontSize} oninput={updateGlobalFontSizes} />
+									<span class="value">{globalTitleFontSize}px</span>
+								</div>
+							</div>
+
+							<div class="slider-item">
+								<label for="global-text-size">Inhalt</label>
+								<div class="slider-control">
+									<input id="global-text-size" type="range" min="14" max="48" step="1" bind:value={globalTextFontSize} oninput={updateGlobalFontSizes} />
+									<span class="value">{globalTextFontSize}px</span>
+								</div>
+							</div>
+						{/if}
 					</section>
 
 				<!-- Größen -->
