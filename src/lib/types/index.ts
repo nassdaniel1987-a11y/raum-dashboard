@@ -65,6 +65,8 @@ export interface AppSettings {
 	night_end: string; // HH:MM format
 	current_theme: string;
 	runner_name: string | null; // Läufer/Ansprechpartner im Haus
+	calm_title_font_size: number;
+	calm_text_font_size: number;
 	last_daily_reset: string | null; // YYYY-MM-DD - wann wurden die Zeiten zuletzt zurückgesetzt
 }
 

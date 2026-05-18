@@ -301,5 +301,7 @@ export const DEMO_APP_SETTINGS: AppSettings = {
 	night_end: '07:00',
 	current_theme: 'default',
 	runner_name: 'Frau Sommer',
+	calm_title_font_size: 42,
+	calm_text_font_size: 24,
 	last_daily_reset: '2026-05-16'
 };

@@ -755,6 +755,32 @@ export async function updateRunnerName(name: string) {
 	});
 }
 
+export async function updateCalmTypography(titleFontSize: number, textFontSize: number) {
+	const { error } = await supabase
+		.from('app_settings')
+		.update({
+			calm_title_font_size: titleFontSize,
+			calm_text_font_size: textFontSize
+		})
+		.eq('id', 1);
+
+	if (error) {
+		console.error('Error updating calm typography:', error);
+		throw error;
+	}
+
+	appSettings.update(settings => {
+		if (settings) {
+			return {
+				...settings,
+				calm_title_font_size: titleFontSize,
+				calm_text_font_size: textFontSize
+			};
+		}
+		return settings;
+	});
+}
+
 // ========== DAILY HIGHLIGHTS VERWALTUNG ==========
 
 export async function createHighlight(

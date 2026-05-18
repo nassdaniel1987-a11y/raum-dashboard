@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { currentTime, runnerName as runnerNameStore, visibleRooms } from '$lib/stores/appState';
+	import { appSettings, currentTime, runnerName as runnerNameStore, visibleRooms } from '$lib/stores/appState';
+	import { calmCurrentPageLabel } from '$lib/stores/calmViewState';
 	import { onDestroy, onMount } from 'svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
@@ -35,12 +36,18 @@
 	let currentRooms = $derived((): RoomWithConfig[] => currentPage()?.rooms ?? []);
 	let totalOpen = $derived($visibleRooms.filter((room: RoomWithConfig) => room.isOpen).length);
 	let pageOpen = $derived(currentRooms().filter((room: RoomWithConfig) => room.isOpen).length);
+	let calmTitleFontSize = $derived($appSettings?.calm_title_font_size ?? 42);
+	let calmTextFontSize = $derived($appSettings?.calm_text_font_size ?? 24);
 
 	$effect(() => {
 		const pages = activePages();
 		if (pages.length > 0 && pageIndex >= pages.length) {
 			pageIndex = 0;
 		}
+	});
+
+	$effect(() => {
+		calmCurrentPageLabel.set(currentPage()?.label ?? 'Ruhige Ansicht');
 	});
 
 	function clearAutoPage() {
@@ -190,7 +197,13 @@
 	onDestroy(clearAutoPage);
 </script>
 
-<div class="calm-shell" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
+<div
+	class="calm-shell"
+	lang="de"
+	style={`--calm-title-size: ${calmTitleFontSize}px; --calm-text-size: ${calmTextFontSize}px;`}
+	ontouchstart={handleTouchStart}
+	ontouchend={handleTouchEnd}
+>
 	{#if activePages().length === 0}
 		<div class="empty-state">
 			<h2>Keine Raeume vorhanden</h2>
@@ -198,11 +211,6 @@
 		</div>
 	{:else}
 		<header class="calm-topline">
-			<div class="page-copy">
-				<span class="section-kicker">Ruhige Ansicht</span>
-				<h2>{currentPage()?.label}</h2>
-			</div>
-
 			<div class="status-strip" aria-label="Statusuebersicht">
 				<div class="strip-item">
 					<span class="strip-number">{pageOpen}</span>
@@ -314,8 +322,8 @@
 	.calm-shell {
 		position: relative;
 		width: 100%;
-		height: calc(100vh - 50px);
-		padding: 28px 32px 34px;
+		height: calc(100vh - 74px);
+		padding: 22px 32px 34px;
 		box-sizing: border-box;
 		overflow: hidden;
 		background:
@@ -327,34 +335,10 @@
 
 	.calm-topline {
 		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		gap: 28px;
-		min-height: 88px;
-		margin-bottom: 14px;
-	}
-
-	.page-copy {
-		min-width: 0;
-	}
-
-	.section-kicker {
-		display: block;
-		margin-bottom: 6px;
-		color: rgba(226, 232, 240, 0.62);
-		font-size: 12px;
-		font-weight: 800;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
-	h2 {
-		margin: 0;
-		font-size: clamp(34px, 4.5vw, 64px);
-		line-height: 0.94;
-		font-weight: 850;
-		letter-spacing: 0;
-		text-wrap: balance;
+		align-items: center;
+		justify-content: flex-end;
+		min-height: 54px;
+		margin-bottom: 12px;
 	}
 
 	.status-strip {
@@ -466,7 +450,7 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-auto-rows: minmax(210px, 1fr);
 		gap: 14px;
-		height: calc(100% - 178px);
+		height: calc(100% - 142px);
 		min-height: 430px;
 	}
 
@@ -616,22 +600,24 @@
 	h3 {
 		margin: 0;
 		max-width: 92%;
-		font-size: clamp(30px, 3.2vw, 52px);
-		line-height: 0.98;
+		font-size: var(--calm-title-size);
+		line-height: 1.02;
 		font-weight: 900;
 		letter-spacing: 0;
-		overflow-wrap: anywhere;
+		hyphens: auto;
+		overflow-wrap: normal;
+		word-break: normal;
 	}
 
 	.calm-card.has-image h3 {
-		font-size: clamp(28px, 2.7vw, 46px);
+		font-size: max(calc(var(--calm-title-size) - 4px), 24px);
 	}
 
 	.activity {
 		margin: 14px 0 0;
 		max-width: 84%;
 		color: rgba(241, 245, 249, 0.78);
-		font-size: clamp(18px, 1.6vw, 28px);
+		font-size: var(--calm-text-size);
 		font-weight: 700;
 		line-height: 1.12;
 		display: -webkit-box;
@@ -705,12 +691,6 @@
 		.calm-shell {
 			padding: 18px 16px 72px;
 			overflow-y: auto;
-		}
-
-		.calm-topline {
-			align-items: start;
-			flex-direction: column;
-			min-height: auto;
 		}
 
 		.status-strip {
