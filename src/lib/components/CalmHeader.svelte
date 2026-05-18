@@ -98,27 +98,63 @@
 </script>
 
 <header class="calm-header" transition:fade>
-	<div class="header-top">
-		<div class="header-main">
-			<div class="page-copy">
-				<span class="eyebrow">Ruhige Ansicht</span>
-				<h1>{$calmCurrentPageLabel}</h1>
-			</div>
+	<div class="header-left">
+		<div class="page-copy">
+			<span class="eyebrow">Ruhige Ansicht</span>
+			<h1>{$calmCurrentPageLabel}</h1>
+		</div>
 
-			<div class="day-cluster">
-				<button class="quiet-icon" onclick={previousDay} aria-label="Vorheriger Tag">‹</button>
-				<div class="day-copy">
-					<span class="weekday" class:today={isToday}>{viewWeekdayName}</span>
-					{#if !isToday}
-						<button class="today-chip" onclick={goToToday}>Heute: {weekdayName}</button>
-					{/if}
-				</div>
-				<button class="quiet-icon" onclick={nextDay} aria-label="Nächster Tag">›</button>
-			</div>
+		<nav class="page-tabs" aria-label="Etagen">
+			{#each $calmPageSummaries as page, index (page.id)}
+				<button
+					class="page-tab"
+					class:active={index === $calmActivePageIndex}
+					onclick={() => calmPageChangeRequest.set(index)}
+					aria-current={index === $calmActivePageIndex ? 'page' : undefined}
+				>
+					<span>{page.short}</span>
+					<small>{page.openCount}/{page.roomCount}</small>
+				</button>
+			{/each}
+		</nav>
+	</div>
 
-			<div class="meta-copy">
-				<span>{formattedDate}</span>
-				<span>{formattedTime}</span>
+	{#if $runnerNameStore}
+		<div class="runner-feature">
+			<span>Ansprechpartner</span>
+			<strong>{$runnerNameStore}</strong>
+		</div>
+	{/if}
+
+	<div class="header-right">
+		<div class="day-cluster">
+			<button class="quiet-icon" onclick={previousDay} aria-label="Vorheriger Tag">‹</button>
+			<div class="day-copy">
+				<span class="weekday" class:today={isToday}>{viewWeekdayName}</span>
+				{#if !isToday}
+					<button class="today-chip" onclick={goToToday}>Heute: {weekdayName}</button>
+				{/if}
+			</div>
+			<button class="quiet-icon" onclick={nextDay} aria-label="Nächster Tag">›</button>
+		</div>
+
+		<div class="meta-copy">
+			<span>{formattedDate}</span>
+			<span>{formattedTime}</span>
+		</div>
+
+		<div class="header-status">
+			<div class="metric">
+				<strong>{$calmHeaderStats.pageOpen}</strong>
+				<span>offen hier</span>
+			</div>
+			<div class="metric">
+				<strong>{$calmHeaderStats.pageRooms}</strong>
+				<span>Räume</span>
+			</div>
+			<div class="metric">
+				<strong>{$calmHeaderStats.totalOpen}</strong>
+				<span>offen gesamt</span>
 			</div>
 		</div>
 
@@ -152,43 +188,6 @@
 			{/if}
 		</div>
 	</div>
-
-	<div class="header-bottom">
-		<nav class="page-tabs" aria-label="Etagen">
-			{#each $calmPageSummaries as page, index (page.id)}
-				<button
-					class="page-tab"
-					class:active={index === $calmActivePageIndex}
-					onclick={() => calmPageChangeRequest.set(index)}
-					aria-current={index === $calmActivePageIndex ? 'page' : undefined}
-				>
-					<span>{page.short}</span>
-					<small>{page.openCount}/{page.roomCount}</small>
-				</button>
-			{/each}
-		</nav>
-
-		<div class="header-status">
-			<div class="metric">
-				<strong>{$calmHeaderStats.pageOpen}</strong>
-				<span>offen hier</span>
-			</div>
-			<div class="metric">
-				<strong>{$calmHeaderStats.pageRooms}</strong>
-				<span>Räume</span>
-			</div>
-			<div class="metric">
-				<strong>{$calmHeaderStats.totalOpen}</strong>
-				<span>offen gesamt</span>
-			</div>
-			{#if $runnerNameStore}
-				<div class="runner-feature">
-					<span>Ansprechpartner</span>
-					<strong>{$runnerNameStore}</strong>
-				</div>
-			{/if}
-		</div>
-	</div>
 </header>
 
 <style>
@@ -196,41 +195,41 @@
 		position: fixed;
 		inset: 0 0 auto;
 		z-index: 100;
-		height: 132px;
-		padding: 10px 24px 12px;
+		height: 74px;
+		padding: 10px 20px;
 		box-sizing: border-box;
 		display: grid;
-		grid-template-rows: 52px 48px;
-		gap: 10px;
+		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		align-items: center;
+		gap: 18px;
 		background: rgba(15, 23, 42, 0.72);
 		border-bottom: 1px solid rgba(226, 232, 240, 0.12);
 		backdrop-filter: blur(16px);
 	}
 
-	.header-top,
-	.header-bottom,
-	.header-main,
-	.header-actions,
+	.header-left,
+	.header-right,
 	.day-cluster,
-	.meta-copy {
+	.meta-copy,
+	.header-status,
+	.header-actions {
 		display: flex;
 		align-items: center;
 	}
 
-	.header-top,
-	.header-bottom {
-		justify-content: space-between;
-		gap: 18px;
+	.header-left {
+		min-width: 0;
+		gap: 16px;
+		justify-self: start;
 	}
 
-	.header-main {
-		min-width: 0;
-		gap: 20px;
-		flex: 1;
+	.header-right {
+		gap: 12px;
+		justify-self: end;
 	}
 
 	.page-copy {
-		min-width: 210px;
+		min-width: 190px;
 	}
 
 	.eyebrow {
@@ -246,14 +245,81 @@
 	h1 {
 		margin: 0;
 		color: #f8fafc;
-		font-size: 28px;
+		font-size: 26px;
 		line-height: 1;
 		font-weight: 850;
 		letter-spacing: 0;
 	}
 
+	.page-tabs {
+		display: flex;
+		min-width: 0;
+		gap: 6px;
+	}
+
+	.page-tab {
+		min-width: 72px;
+		min-height: 42px;
+		padding: 5px 10px;
+		border: 1px solid rgba(226, 232, 240, 0.12);
+		background: rgba(15, 23, 42, 0.4);
+		color: rgba(248, 250, 252, 0.72);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.page-tab.active {
+		border-color: rgba(248, 250, 252, 0.32);
+		background: rgba(248, 250, 252, 0.1);
+		color: #ffffff;
+	}
+
+	.page-tab span,
+	.page-tab small,
+	.metric strong,
+	.metric span,
+	.runner-feature span,
+	.runner-feature strong {
+		display: block;
+	}
+
+	.page-tab span {
+		font-size: 13px;
+		font-weight: 850;
+	}
+
+	.page-tab small {
+		margin-top: 2px;
+		font-size: 10px;
+		color: rgba(226, 232, 240, 0.62);
+	}
+
+	.runner-feature {
+		justify-self: center;
+		min-width: 210px;
+		padding: 8px 18px;
+		border: 1px solid rgba(134, 239, 172, 0.34);
+		background: rgba(20, 83, 45, 0.3);
+		text-align: center;
+	}
+
+	.runner-feature span {
+		color: rgba(226, 232, 240, 0.62);
+		font-size: 10px;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.runner-feature strong {
+		margin-top: 2px;
+		font-size: 19px;
+		font-weight: 850;
+		color: #f8fafc;
+	}
+
 	.day-cluster {
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.quiet-icon,
@@ -267,7 +333,7 @@
 	}
 
 	.quiet-icon {
-		font-size: 28px;
+		font-size: 26px;
 	}
 
 	.day-copy {
@@ -275,12 +341,12 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 3px;
-		min-width: 116px;
+		min-width: 104px;
 	}
 
 	.weekday {
 		color: rgba(248, 250, 252, 0.84);
-		font-size: 16px;
+		font-size: 15px;
 		font-weight: 850;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -300,14 +366,35 @@
 	}
 
 	.meta-copy {
-		gap: 14px;
+		gap: 10px;
 		color: rgba(226, 232, 240, 0.72);
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 700;
 	}
 
-	.header-actions {
-		gap: 10px;
+	.header-status {
+		gap: 6px;
+	}
+
+	.metric {
+		min-width: 68px;
+		padding: 6px 8px;
+		border: 1px solid rgba(226, 232, 240, 0.14);
+		background: rgba(15, 23, 42, 0.42);
+	}
+
+	.metric strong {
+		font-size: 19px;
+		line-height: 1;
+	}
+
+	.metric span {
+		margin-top: 3px;
+		color: rgba(226, 232, 240, 0.62);
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 	}
 
 	.extras-wrap {
@@ -349,126 +436,45 @@
 	}
 
 	.menu-btn {
-		min-width: 84px;
+		min-width: 76px;
 	}
 
-	.page-tabs {
-		display: flex;
-		flex: 1;
-		min-width: 0;
-		gap: 8px;
-	}
-
-	.page-tab {
-		min-width: 92px;
-		min-height: 48px;
-		padding: 6px 12px;
-		border: 1px solid rgba(226, 232, 240, 0.12);
-		background: rgba(15, 23, 42, 0.4);
-		color: rgba(248, 250, 252, 0.72);
-		text-align: left;
-		cursor: pointer;
-	}
-
-	.page-tab.active {
-		border-color: rgba(248, 250, 252, 0.32);
-		background: rgba(248, 250, 252, 0.1);
-		color: #ffffff;
-	}
-
-	.page-tab span,
-	.page-tab small {
-		display: block;
-	}
-
-	.page-tab span {
-		font-size: 14px;
-		font-weight: 850;
-	}
-
-	.page-tab small {
-		margin-top: 2px;
-		font-size: 11px;
-		color: rgba(226, 232, 240, 0.62);
-	}
-
-	.header-status {
-		display: flex;
-		align-items: stretch;
-		gap: 8px;
-	}
-
-	.metric,
-	.runner-feature {
-		border: 1px solid rgba(226, 232, 240, 0.14);
-		background: rgba(15, 23, 42, 0.42);
-	}
-
-	.metric {
-		min-width: 74px;
-		padding: 7px 10px;
-	}
-
-	.metric strong,
-	.metric span,
-	.runner-feature span,
-	.runner-feature strong {
-		display: block;
-	}
-
-	.metric strong {
-		font-size: 22px;
-		line-height: 1;
-	}
-
-	.metric span,
-	.runner-feature span {
-		margin-top: 3px;
-		color: rgba(226, 232, 240, 0.62);
-		font-size: 10px;
-		font-weight: 800;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	.runner-feature {
-		min-width: 180px;
-		padding: 7px 12px;
-		border-color: rgba(134, 239, 172, 0.34);
-		background: rgba(20, 83, 45, 0.3);
-	}
-
-	.runner-feature strong {
-		margin-top: 1px;
-		font-size: 18px;
-		font-weight: 850;
-		color: #f8fafc;
-	}
-
-	@media (max-width: 900px) {
-		.calm-header {
-			height: auto;
-			min-height: 74px;
-			grid-template-rows: auto;
+	@media (max-width: 1400px) {
+		.page-copy {
+			min-width: 168px;
 		}
 
-		.header-top,
-		.header-bottom,
-		.header-main {
+		h1 {
+			font-size: 22px;
+		}
+
+		.page-tab {
+			min-width: 62px;
+		}
+
+		.runner-feature {
+			min-width: 180px;
+		}
+
+		.meta-copy {
+			display: none;
+		}
+	}
+
+	@media (max-width: 1100px) {
+		.calm-header {
+			height: auto;
+			grid-template-columns: 1fr;
+		}
+
+		.header-left,
+		.header-right {
+			justify-self: stretch;
 			flex-wrap: wrap;
 		}
 
-		.page-copy {
-			min-width: 0;
-		}
-
-		.header-actions {
-			justify-content: flex-end;
-		}
-
-		.header-bottom {
-			align-items: stretch;
-			flex-direction: column;
+		.runner-feature {
+			justify-self: stretch;
 		}
 	}
 </style>
