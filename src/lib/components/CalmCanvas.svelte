@@ -309,7 +309,8 @@
 	.calm-shell {
 		position: relative;
 		width: 100%;
-		height: calc(100vh - 132px);
+		height: calc(100vh - 74px);
+		margin-top: 74px;
 		padding: 22px 32px 34px;
 		box-sizing: border-box;
 		overflow: hidden;
