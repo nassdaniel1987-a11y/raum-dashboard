@@ -6,7 +6,14 @@
 	import SimpleImageEditor from './SimpleImageEditor.svelte';
 	import type { RoomWithConfig, ImagePosition } from '$lib/types';
 	import { scale, fade } from 'svelte/transition';
-	import { viewWeekday, currentTime, persons } from '$lib/stores/appState';
+	import {
+		appSettings,
+		currentTime,
+		dashboardView,
+		persons,
+		updateCalmTypography,
+		viewWeekday
+	} from '$lib/stores/appState';
 	import { get } from 'svelte/store';
 
 	// Svelte 5 Props Syntax
@@ -30,6 +37,9 @@
 	let closeTime = $state(room.config?.close_time || '');
 	let titleFontSize = $state(room.config?.title_font_size || 42);
 	let textFontSize = $state(room.config?.text_font_size || 28);
+	let calmTitleFontSize = $state($appSettings?.calm_title_font_size ?? 42);
+	let calmTextFontSize = $state($appSettings?.calm_text_font_size ?? 24);
+	let calmTypographyTimer: ReturnType<typeof setTimeout> | null = null;
 	let uploading = $state(false);
 
 	// ✅ Aktivitäts-Bild State
@@ -345,6 +355,20 @@
 
 	function handleModalClick(e: MouseEvent) {
 		e.stopPropagation();
+	}
+
+	$effect(() => {
+		if ($appSettings) {
+			calmTitleFontSize = $appSettings.calm_title_font_size ?? 42;
+			calmTextFontSize = $appSettings.calm_text_font_size ?? 24;
+		}
+	});
+
+	function updateCalmFontSizesFromEditor() {
+		if (calmTypographyTimer) clearTimeout(calmTypographyTimer);
+		calmTypographyTimer = setTimeout(() => {
+			updateCalmTypography(calmTitleFontSize, calmTextFontSize);
+		}, 300);
 	}
 </script>
 
@@ -707,21 +731,55 @@
 					<h3 class="section-title">Schriftgrößen</h3>
 				</div>
 				<div class="section-body">
-					<div class="slider-group">
-						<div class="slider-header">
-							<span class="field-label">Titel-Schriftgröße</span>
-							<span class="slider-value">{titleFontSize}px</span>
-						</div>
-						<input type="range" bind:value={titleFontSize} min="10" max="100" class="premium-slider" />
-					</div>
+					{#if $dashboardView === 'calm'}
+						<p class="hint typography-hint">Gilt systemweit nur für die ruhige Ansicht.</p>
 
-					<div class="slider-group">
-						<div class="slider-header">
-							<span class="field-label">Text-Schriftgröße</span>
-							<span class="slider-value">{textFontSize}px</span>
+						<div class="slider-group">
+							<div class="slider-header">
+								<span class="field-label">Titel ruhig</span>
+								<span class="slider-value">{calmTitleFontSize}px</span>
+							</div>
+							<input
+								type="range"
+								bind:value={calmTitleFontSize}
+								min="24"
+								max="64"
+								class="premium-slider"
+								oninput={updateCalmFontSizesFromEditor}
+							/>
 						</div>
-						<input type="range" bind:value={textFontSize} min="8" max="80" class="premium-slider" />
-					</div>
+
+						<div class="slider-group">
+							<div class="slider-header">
+								<span class="field-label">Text ruhig</span>
+								<span class="slider-value">{calmTextFontSize}px</span>
+							</div>
+							<input
+								type="range"
+								bind:value={calmTextFontSize}
+								min="16"
+								max="36"
+								class="premium-slider"
+								oninput={updateCalmFontSizesFromEditor}
+							/>
+						</div>
+					{:else}
+						<div class="slider-group">
+							<div class="slider-header">
+								<span class="field-label">Titel-Schriftgröße</span>
+								<span class="slider-value">{titleFontSize}px</span>
+							</div>
+							<input type="range" bind:value={titleFontSize} min="10" max="100" class="premium-slider" />
+						</div>
+
+						<div class="slider-group">
+							<div class="slider-header">
+								<span class="field-label">Text-Schriftgröße</span>
+								<span class="slider-value">{textFontSize}px</span>
+							</div>
+							<input type="range" bind:value={textFontSize} min="8" max="80" class="premium-slider" />
+						</div>
+					{/if}
 				</div>
 			</div>
 
@@ -1186,6 +1244,11 @@
 		margin: 0;
 		padding: 6px 0 0 0;
 		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.typography-hint {
+		padding-top: 0;
+		font-size: 13px;
 	}
 
 	/* ✅ Slider Groups */

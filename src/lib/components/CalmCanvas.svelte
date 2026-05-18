@@ -1,6 +1,12 @@
 <script lang="ts">
-	import { appSettings, currentTime, runnerName as runnerNameStore, visibleRooms } from '$lib/stores/appState';
-	import { calmCurrentPageLabel } from '$lib/stores/calmViewState';
+	import { appSettings, currentTime, visibleRooms } from '$lib/stores/appState';
+	import {
+		calmActivePageIndex,
+		calmCurrentPageLabel,
+		calmHeaderStats,
+		calmPageChangeRequest,
+		calmPageSummaries
+	} from '$lib/stores/calmViewState';
 	import { onDestroy, onMount } from 'svelte';
 	import type { RoomWithConfig } from '$lib/types';
 
@@ -48,6 +54,29 @@
 
 	$effect(() => {
 		calmCurrentPageLabel.set(currentPage()?.label ?? 'Ruhige Ansicht');
+		calmActivePageIndex.set(pageIndex);
+		calmHeaderStats.set({
+			pageOpen,
+			pageRooms: currentRooms().length,
+			totalOpen
+		});
+		calmPageSummaries.set(
+			activePages().map((page) => ({
+				id: page.id,
+				label: page.label,
+				short: page.short,
+				openCount: page.rooms.filter((room) => room.isOpen).length,
+				roomCount: page.rooms.length
+			}))
+		);
+	});
+
+	$effect(() => {
+		const requestedIndex = $calmPageChangeRequest;
+		if (requestedIndex !== null) {
+			goToPage(requestedIndex);
+			calmPageChangeRequest.set(null);
+		}
 	});
 
 	function clearAutoPage() {
@@ -210,48 +239,6 @@
 			<p>Fuer diesen Tag sind noch keine Raeume konfiguriert.</p>
 		</div>
 	{:else}
-		<header class="calm-topline">
-			<div class="status-strip" aria-label="Statusuebersicht">
-				<div class="strip-item">
-					<span class="strip-number">{pageOpen}</span>
-					<span class="strip-label">offen hier</span>
-				</div>
-				<div class="strip-item">
-					<span class="strip-number">{currentRooms().length}</span>
-					<span class="strip-label">Raeume</span>
-				</div>
-				<div class="strip-item">
-					<span class="strip-number">{totalOpen}</span>
-					<span class="strip-label">offen gesamt</span>
-				</div>
-				{#if $runnerNameStore}
-					<div class="runner-pill">
-						<span class="runner-label">Ansprechpartner</span>
-						<span class="runner-name">{$runnerNameStore}</span>
-					</div>
-				{/if}
-			</div>
-		</header>
-
-		<nav class="page-tabs" aria-label="Etagen">
-			{#each activePages() as page, index (page.id)}
-				<button
-					class="page-tab"
-					class:active={index === pageIndex}
-					onclick={() => goToPage(index)}
-					aria-current={index === pageIndex ? 'page' : undefined}
-				>
-					<span class="tab-short">{page.short}</span>
-					<span class="tab-count">{page.rooms.filter((room) => room.isOpen).length}/{page.rooms.length}</span>
-					{#if index === pageIndex && autoPageEnabled}
-						{#key `${pageIndex}-${pageDuration}`}
-							<span class="tab-progress" style="animation-duration: {pageDuration}s;"></span>
-						{/key}
-					{/if}
-				</button>
-			{/each}
-		</nav>
-
 		<section
 			class="room-grid"
 			class:grid-one={currentRooms().length === 1}
@@ -322,7 +309,7 @@
 	.calm-shell {
 		position: relative;
 		width: 100%;
-		height: calc(100vh - 74px);
+		height: calc(100vh - 132px);
 		padding: 22px 32px 34px;
 		box-sizing: border-box;
 		overflow: hidden;
@@ -331,113 +318,6 @@
 			radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.12), transparent 36%);
 		color: #f8fafc;
 		touch-action: pan-x;
-	}
-
-	.calm-topline {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		min-height: 54px;
-		margin-bottom: 12px;
-	}
-
-	.status-strip {
-		display: flex;
-		align-items: stretch;
-		justify-content: flex-end;
-		gap: 8px;
-		flex-wrap: wrap;
-	}
-
-	.strip-item,
-	.runner-pill {
-		min-width: 94px;
-		padding: 10px 12px;
-		border: 1px solid rgba(226, 232, 240, 0.16);
-		background: rgba(15, 23, 42, 0.54);
-		box-shadow: 0 10px 26px rgba(2, 6, 23, 0.18);
-	}
-
-	.strip-number {
-		display: block;
-		font-size: 26px;
-		font-weight: 850;
-		line-height: 1;
-	}
-
-	.strip-label,
-	.runner-label {
-		display: block;
-		margin-top: 4px;
-		color: rgba(226, 232, 240, 0.64);
-		font-size: 10px;
-		font-weight: 800;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	.runner-pill {
-		min-width: 180px;
-		border-color: rgba(125, 211, 252, 0.26);
-	}
-
-	.runner-name {
-		display: block;
-		margin-top: 3px;
-		font-size: 18px;
-		font-weight: 800;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.page-tabs {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
-		gap: 8px;
-		margin-bottom: 18px;
-	}
-
-	.page-tab {
-		position: relative;
-		min-height: 48px;
-		padding: 9px 12px 10px;
-		border: 1px solid rgba(226, 232, 240, 0.12);
-		background: rgba(15, 23, 42, 0.42);
-		color: rgba(248, 250, 252, 0.72);
-		text-align: left;
-		cursor: pointer;
-		overflow: hidden;
-	}
-
-	.page-tab.active {
-		border-color: rgba(248, 250, 252, 0.34);
-		background: rgba(248, 250, 252, 0.1);
-		color: #ffffff;
-	}
-
-	.tab-short {
-		display: block;
-		font-size: 15px;
-		font-weight: 850;
-	}
-
-	.tab-count {
-		display: block;
-		margin-top: 2px;
-		font-size: 11px;
-		color: rgba(226, 232, 240, 0.62);
-	}
-
-	.tab-progress {
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		height: 3px;
-		width: 100%;
-		background: linear-gradient(90deg, #38bdf8, #22c55e);
-		transform-origin: left center;
-		animation: calm-progress linear forwards;
 	}
 
 	@keyframes calm-progress {
@@ -450,7 +330,7 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-auto-rows: minmax(210px, 1fr);
 		gap: 14px;
-		height: calc(100% - 142px);
+		height: 100%;
 		min-height: 430px;
 	}
 
@@ -691,11 +571,6 @@
 		.calm-shell {
 			padding: 18px 16px 72px;
 			overflow-y: auto;
-		}
-
-		.status-strip {
-			justify-content: start;
-			width: 100%;
 		}
 
 		.room-grid,
