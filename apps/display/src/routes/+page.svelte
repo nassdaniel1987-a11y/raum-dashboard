@@ -27,7 +27,6 @@
 	let activePageIndex = $state(0);
 	let autoRotate = $state(true);
 	let pageSeconds = $state(DEFAULT_PAGE_SECONDS);
-	let progressKey = $state(0);
 	let menuOpen = $state(false);
 	let fullscreen = $state(false);
 	let fullscreenSupported = $state(false);
@@ -68,7 +67,6 @@
 		clearPageTimer();
 		if (!shouldRotate) return;
 
-		progressKey += 1;
 		pageTimer = setTimeout(() => {
 			activePageIndex = (currentPage + 1) % pageCount;
 		}, seconds * 1000);
@@ -329,7 +327,7 @@
 		{/if}
 
 		{#if autoRotate && $displayPages.length > 1}
-			{#key `${activePageIndex}-${progressKey}`}
+			{#key `${activePageIndex}-${pageSeconds}-${autoRotate}`}
 				<div class="page-progress" style={`animation-duration: ${pageSeconds}s;`}></div>
 			{/key}
 		{/if}
