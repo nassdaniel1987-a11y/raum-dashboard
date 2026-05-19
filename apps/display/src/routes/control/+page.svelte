@@ -170,6 +170,11 @@
 		message = 'Bild wird beim Speichern entfernt.';
 	}
 
+	function fitImage() {
+		imagePosition = { x: 0, y: 0, zoom: 1, rotation: 0 };
+		message = 'Bild ist vollständig eingepasst.';
+	}
+
 	async function saveRoom() {
 		if (!selectedRoom) return;
 
@@ -358,6 +363,7 @@
 								<input type="file" accept="image/*" onchange={handleImageSelect} />
 								<span>Bild auswählen</span>
 							</label>
+							<button type="button" onclick={fitImage} disabled={!activityImageUrl}>Bild einpassen</button>
 							<button type="button" onclick={removeImage} disabled={!activityImageUrl}>Bild entfernen</button>
 						</div>
 					</div>
@@ -381,7 +387,7 @@
 						</label>
 						<label>
 							<span>Zoom</span>
-							<input type="range" min="0.35" max="2.5" step="0.05" value={imagePosition.zoom} oninput={(event) => updateImagePosition({ zoom: Number(event.currentTarget.value) })} />
+							<input type="range" min="0.2" max="2.5" step="0.05" value={imagePosition.zoom} oninput={(event) => updateImagePosition({ zoom: Number(event.currentTarget.value) })} />
 							<strong>{Math.round(imagePosition.zoom * 100)}%</strong>
 						</label>
 						<label>
@@ -654,7 +660,9 @@
 		overflow: hidden;
 		place-items: center;
 		border: 1px solid rgba(246, 243, 232, 0.2);
-		background: rgba(4, 10, 18, 0.62);
+		background:
+			linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+			rgba(4, 10, 18, 0.62);
 	}
 
 	.image-preview img {
@@ -662,7 +670,7 @@
 		inset: 0;
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 		transform-origin: center;
 	}
 

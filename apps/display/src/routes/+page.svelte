@@ -759,7 +759,9 @@
 		margin: clamp(12px, 1.5vw, 20px) 0 0;
 		overflow: hidden;
 		border: 1px solid rgba(246, 243, 232, 0.2);
-		background: rgba(255, 255, 255, 0.06);
+		background:
+			linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+			rgba(4, 10, 18, 0.46);
 		aspect-ratio: 16 / 7;
 		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
 	}
@@ -779,7 +781,7 @@
 		inset: 0;
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 		transform-origin: center;
 	}
 
