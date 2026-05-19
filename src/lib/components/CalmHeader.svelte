@@ -508,20 +508,201 @@
 		}
 	}
 
-	@media (max-width: 1100px) {
+	@media (max-width: 1280px) {
 		.calm-header {
-			height: auto;
-			grid-template-columns: 1fr;
+			height: 116px;
+			padding: 8px 12px 10px;
+			grid-template-columns: minmax(160px, 0.75fr) minmax(260px, 1fr) minmax(280px, 0.85fr);
+			grid-template-rows: 44px 42px;
+			grid-template-areas:
+				"page runner actions"
+				"tabs day stats";
+			align-items: center;
+			gap: 8px 12px;
+		}
+
+		.calm-header.comfortable {
+			height: 132px;
+			padding-top: 12px;
+			padding-bottom: 12px;
+			grid-template-rows: 50px 46px;
 		}
 
 		.header-left,
 		.header-right {
-			justify-self: stretch;
-			flex-wrap: wrap;
+			display: contents;
+		}
+
+		.page-copy {
+			grid-area: page;
+			min-width: 0;
+			overflow: hidden;
+		}
+
+		.eyebrow {
+			margin-bottom: 1px;
+			font-size: 9px;
+		}
+
+		h1 {
+			font-size: 21px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.calm-header.comfortable h1 {
+			font-size: 24px;
+		}
+
+		.page-tabs {
+			grid-area: tabs;
+			align-self: stretch;
+			gap: 5px;
+			overflow: hidden;
+		}
+
+		.page-tab {
+			flex: 1 1 0;
+			min-width: 0;
+			min-height: 40px;
+			padding: 5px 8px;
+		}
+
+		.page-tab span {
+			font-size: 12px;
 		}
 
 		.runner-feature {
-			justify-self: stretch;
+			grid-area: runner;
+			justify-self: center;
+			align-self: stretch;
+			display: flex;
+			width: min(360px, 100%);
+			min-width: 0;
+			box-sizing: border-box;
+			flex-direction: column;
+			justify-content: center;
+			padding: 6px 12px;
+		}
+
+		.runner-feature strong {
+			font-size: 18px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.day-cluster {
+			grid-area: day;
+			justify-self: center;
+			align-self: stretch;
+			gap: 6px;
+		}
+
+		.quiet-icon,
+		.extras-trigger,
+		.menu-btn {
+			width: 40px;
+			height: 40px;
+			min-height: 40px;
+		}
+
+		.day-copy {
+			min-width: 94px;
+		}
+
+		.weekday {
+			font-size: 13px;
+		}
+
+		.header-status {
+			grid-area: stats;
+			justify-self: end;
+			align-self: stretch;
+			gap: 5px;
+		}
+
+		.metric {
+			display: flex;
+			min-width: 56px;
+			flex-direction: column;
+			justify-content: center;
+			padding: 4px 6px;
+		}
+
+		.metric strong {
+			font-size: 17px;
+		}
+
+		.metric span {
+			font-size: 8px;
+		}
+
+		.header-actions {
+			grid-area: actions;
+			justify-self: end;
+			align-self: center;
+			gap: 6px;
+		}
+
+		.menu-btn {
+			min-width: 68px;
+			padding: 0 10px;
+		}
+	}
+
+	@media (max-width: 1100px) {
+		.calm-header {
+			height: 154px;
+			grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1fr) minmax(190px, 0.8fr);
+			grid-template-rows: 42px 40px 38px;
+			grid-template-areas:
+				"page runner actions"
+				"tabs tabs tabs"
+				"day stats stats";
+		}
+
+		.calm-header.comfortable {
+			height: 172px;
+			grid-template-rows: 48px 44px 42px;
+		}
+
+		.runner-feature {
+			width: min(300px, 100%);
+		}
+
+		.header-status {
+			justify-self: end;
+		}
+	}
+
+	@media (max-width: 760px) {
+		.calm-header {
+			grid-template-columns: 1fr auto;
+			grid-template-rows: 42px 38px 38px 36px;
+			grid-template-areas:
+				"page actions"
+				"runner runner"
+				"tabs tabs"
+				"day stats";
+			height: 176px;
+		}
+
+		.calm-header.comfortable {
+			height: 194px;
+		}
+
+		.runner-feature {
+			width: 100%;
+		}
+
+		.page-tabs {
+			overflow-x: auto;
+		}
+
+		.page-tab {
+			flex: 0 0 64px;
 		}
 	}
 </style>
