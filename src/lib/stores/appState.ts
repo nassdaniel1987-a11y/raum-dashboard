@@ -781,6 +781,40 @@ export async function updateCalmTypography(titleFontSize: number, textFontSize: 
 	});
 }
 
+export async function updateCalmDisplaySettings(settingsUpdate: {
+	cardGapPx: number;
+	cardPaddingPx: number;
+	imageWidthPercent: number;
+	headerDensity: 'compact' | 'comfortable';
+}) {
+	const dbUpdate = {
+		calm_card_gap_px: settingsUpdate.cardGapPx,
+		calm_card_padding_px: settingsUpdate.cardPaddingPx,
+		calm_image_width_percent: settingsUpdate.imageWidthPercent,
+		calm_header_density: settingsUpdate.headerDensity
+	};
+
+	const { error } = await supabase
+		.from('app_settings')
+		.update(dbUpdate)
+		.eq('id', 1);
+
+	if (error) {
+		console.error('Error updating calm display settings:', error);
+		throw error;
+	}
+
+	appSettings.update(settings => {
+		if (settings) {
+			return {
+				...settings,
+				...dbUpdate
+			};
+		}
+		return settings;
+	});
+}
+
 // ========== DAILY HIGHLIGHTS VERWALTUNG ==========
 
 export async function createHighlight(

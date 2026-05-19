@@ -67,6 +67,10 @@ export interface AppSettings {
 	runner_name: string | null; // Läufer/Ansprechpartner im Haus
 	calm_title_font_size: number;
 	calm_text_font_size: number;
+	calm_card_gap_px: number;
+	calm_card_padding_px: number;
+	calm_image_width_percent: number;
+	calm_header_density: 'compact' | 'comfortable';
 	last_daily_reset: string | null; // YYYY-MM-DD - wann wurden die Zeiten zuletzt zurückgesetzt
 }
 

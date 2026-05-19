@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, dashboardView, updateRunnerName as updateRunnerNameInDb, updateCalmTypography, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
+	import { isEditMode, bulkOpenAllRooms, bulkCloseAllRooms, createNewRoom, swapSelection, swapRoomPositions, visibleRooms, viewWeekday, copyDayConfigs, deleteDayConfigs, cardTheme, appSettings, userTheme, dashboardView, updateRunnerName as updateRunnerNameInDb, updateCalmTypography, updateCalmDisplaySettings, bulkUpdateFontSizes, dailyConfigs, persons, createPerson, updatePerson, deletePerson } from '$lib/stores/appState';
 	import { getAllThemes } from '$lib/cardThemes';
 	import { themes as uiThemes, applyTheme } from '$lib/themes';
 	import { toasts } from '$lib/stores/toastStore';
@@ -103,6 +103,11 @@
 	let calmTitleFontSize = $state($appSettings?.calm_title_font_size ?? 42);
 	let calmTextFontSize = $state($appSettings?.calm_text_font_size ?? 24);
 	let calmTypographyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let calmCardGapPx = $state($appSettings?.calm_card_gap_px ?? 14);
+	let calmCardPaddingPx = $state($appSettings?.calm_card_padding_px ?? 18);
+	let calmImageWidthPercent = $state($appSettings?.calm_image_width_percent ?? 38);
+	let calmHeaderDensity = $state<'compact' | 'comfortable'>($appSettings?.calm_header_density ?? 'compact');
+	let calmDisplayDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Schriftgrößen aus den aktuellen Configs laden wenn sich der Tag ändert
 	$effect(() => {
@@ -293,6 +298,10 @@
 		if ($appSettings) {
 			calmTitleFontSize = $appSettings.calm_title_font_size ?? 42;
 			calmTextFontSize = $appSettings.calm_text_font_size ?? 24;
+			calmCardGapPx = $appSettings.calm_card_gap_px ?? 14;
+			calmCardPaddingPx = $appSettings.calm_card_padding_px ?? 18;
+			calmImageWidthPercent = $appSettings.calm_image_width_percent ?? 38;
+			calmHeaderDensity = $appSettings.calm_header_density ?? 'compact';
 		}
 	});
 
@@ -300,6 +309,18 @@
 		if (calmTypographyDebounceTimer) clearTimeout(calmTypographyDebounceTimer);
 		calmTypographyDebounceTimer = setTimeout(() => {
 			updateCalmTypography(calmTitleFontSize, calmTextFontSize);
+		}, 300);
+	}
+
+	function updateCalmDisplayControls() {
+		if (calmDisplayDebounceTimer) clearTimeout(calmDisplayDebounceTimer);
+		calmDisplayDebounceTimer = setTimeout(() => {
+			updateCalmDisplaySettings({
+				cardGapPx: calmCardGapPx,
+				cardPaddingPx: calmCardPaddingPx,
+				imageWidthPercent: calmImageWidthPercent,
+				headerDensity: calmHeaderDensity
+			});
 		}, 300);
 	}
 
@@ -816,6 +837,94 @@
 							</div>
 						{/if}
 					</section>
+
+					{#if $dashboardView === 'calm'}
+						<section class="section">
+							<h3>TV-Profil ruhig</h3>
+							<p class="hint-text" style="margin-top: 0; margin-bottom: 12px;">Gilt systemweit nur für die ruhige Ansicht</p>
+
+							<div class="slider-item">
+								<label for="calm-card-gap">Kachelabstand</label>
+								<div class="slider-control">
+									<input id="calm-card-gap" type="range" min="8" max="28" step="1" bind:value={calmCardGapPx} oninput={updateCalmDisplayControls} />
+									<span class="value">{calmCardGapPx}px</span>
+								</div>
+							</div>
+
+							<div class="slider-item">
+								<label for="calm-card-padding">Innenabstand</label>
+								<div class="slider-control">
+									<input id="calm-card-padding" type="range" min="12" max="30" step="1" bind:value={calmCardPaddingPx} oninput={updateCalmDisplayControls} />
+									<span class="value">{calmCardPaddingPx}px</span>
+								</div>
+							</div>
+
+							<div class="slider-item">
+								<label for="calm-image-width">Bildbereich</label>
+								<div class="slider-control">
+									<input id="calm-image-width" type="range" min="26" max="48" step="1" bind:value={calmImageWidthPercent} oninput={updateCalmDisplayControls} />
+									<span class="value">{calmImageWidthPercent}%</span>
+								</div>
+							</div>
+
+							<div class="density-options">
+								<button
+									class="density-option"
+									class:active={calmHeaderDensity === 'compact'}
+									onclick={() => { calmHeaderDensity = 'compact'; updateCalmDisplayControls(); }}
+								>
+									Kompakt
+								</button>
+								<button
+									class="density-option"
+									class:active={calmHeaderDensity === 'comfortable'}
+									onclick={() => { calmHeaderDensity = 'comfortable'; updateCalmDisplayControls(); }}
+								>
+									Luftiger
+								</button>
+							</div>
+						</section>
+
+						<section class="section">
+							<h3>Calm-Vorschau</h3>
+							<div
+								class="calm-settings-preview"
+								style={`--preview-gap: ${calmCardGapPx}px; --preview-padding: ${calmCardPaddingPx}px; --preview-image-width: ${calmImageWidthPercent}%; --preview-title: ${calmTitleFontSize}px; --preview-text: ${calmTextFontSize}px;`}
+							>
+								{#if $visibleRooms.length > 0}
+									{#each $visibleRooms.slice(0, 2) as room (room.id)}
+										<div class="preview-calm-card" class:with-image={!!room.config?.activity_image_url}>
+											<div class="preview-calm-copy">
+												<span class="preview-state" class:open={room.isOpen}>{room.isOpen ? 'Offen' : 'Geschlossen'}</span>
+												<strong>{room.name}</strong>
+												<p>{room.config?.activity || 'Keine Aktivität eingetragen'}</p>
+											</div>
+											{#if room.config?.activity_image_url}
+												<div class="preview-calm-image">
+													<img src={room.config.activity_image_url} alt="" />
+												</div>
+											{/if}
+										</div>
+									{/each}
+								{:else}
+									<div class="preview-calm-card">
+										<div class="preview-calm-copy">
+											<span class="preview-state open">Offen</span>
+											<strong>Treffpunkt</strong>
+											<p>Kreativangebot</p>
+										</div>
+									</div>
+									<div class="preview-calm-card">
+										<div class="preview-calm-copy">
+											<span class="preview-state">Geschlossen</span>
+											<strong>Werkstatt</strong>
+											<p>Keine Aktivität eingetragen</p>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</section>
+					{/if}
 
 				<!-- Größen -->
 					<section class="section">
@@ -1538,6 +1647,104 @@
 		color: rgba(255, 255, 255, 0.68);
 		font-size: 13px;
 		line-height: 1.25;
+	}
+
+	.density-options {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.density-option {
+		min-height: 48px;
+		padding: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.05);
+		color: rgba(255, 255, 255, 0.78);
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.density-option.active {
+		border-color: rgba(134, 239, 172, 0.54);
+		background: rgba(20, 83, 45, 0.28);
+		color: white;
+	}
+
+	.calm-settings-preview {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--preview-gap);
+		padding: 14px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 10px;
+		background: rgba(2, 6, 23, 0.42);
+	}
+
+	.preview-calm-card {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 142px;
+		overflow: hidden;
+		border: 1px solid rgba(226, 232, 240, 0.14);
+		background: rgba(15, 23, 42, 0.9);
+	}
+
+	.preview-calm-card.with-image {
+		grid-template-columns: minmax(0, 1fr) minmax(90px, var(--preview-image-width));
+	}
+
+	.preview-calm-copy {
+		padding: var(--preview-padding);
+		min-width: 0;
+	}
+
+	.preview-state {
+		display: block;
+		margin-bottom: 8px;
+		color: rgba(226, 232, 240, 0.68);
+		font-size: 10px;
+		font-weight: 850;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.preview-state.open {
+		color: #86efac;
+	}
+
+	.preview-calm-copy strong {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: clamp(22px, calc(var(--preview-title) * 0.62), 34px);
+		line-height: 1;
+	}
+
+	.preview-calm-copy p {
+		margin: 8px 0 0;
+		display: -webkit-box;
+		overflow: hidden;
+		color: rgba(241, 245, 249, 0.78);
+		font-size: clamp(14px, calc(var(--preview-text) * 0.7), 22px);
+		font-weight: 700;
+		line-clamp: 2;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	.preview-calm-image {
+		margin: 8px 8px 8px 0;
+		overflow: hidden;
+		background: rgba(2, 6, 23, 0.56);
+	}
+
+	.preview-calm-image img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
 	}
 
 	.theme-grid.compact {

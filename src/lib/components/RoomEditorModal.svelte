@@ -399,9 +399,9 @@
 			<button class="close-btn" onclick={onClose} aria-label="Schließen">✕</button>
 		</div>
 
-		<div class="modal-content">
+		<div class="modal-content" class:calm-editor={$dashboardView === 'calm'}>
 			<!-- ✅ SEKTION 1: Grunddaten -->
-			<div class="section-card">
+			<div class="section-card editor-section-basics">
 				<div class="section-header">
 					<span class="section-icon">📝</span>
 					<h3 class="section-title">Grunddaten</h3>
@@ -425,66 +425,129 @@
 						</select>
 					</div>
 
-					<div class="input-group">
-						<span class="field-label">👤 Person im Raum</span>
+					{#if $dashboardView !== 'calm'}
+						<div class="input-group">
+							<span class="field-label">👤 Person im Raum</span>
 
-						<!-- Zugewiesene Personen -->
-						{#if selectedPersons.length > 0}
-							<div class="editor-assigned-row">
-								{#each selectedPersons as pName}
-									<span class="editor-assigned-chip">
-										{pName}
-										<button
-											class="editor-chip-remove"
-											onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}
-										>✕</button>
-									</span>
-								{/each}
-							</div>
-						{/if}
-
-						<!-- Toggle-Button -->
-						<button
-							class="editor-picker-toggle"
-							onclick={() => showPersonPicker = !showPersonPicker}
-						>
-							{showPersonPicker ? '▲ Personen ausblenden' : '＋ Person zuweisen'}
-						</button>
-
-						<!-- Chip-Grid -->
-						{#if showPersonPicker}
-							<div class="editor-chips-grid">
-								{#if $persons.length === 0}
-									<p class="editor-chips-empty">Keine Personen angelegt. Bitte in Einstellungen &rarr; Personen eintragen.</p>
-								{:else}
-									{#each $persons as p (p.id)}
-										{@const isSelected = selectedPersons.includes(p.name)}
-										<button
-											class="editor-person-chip"
-											class:chip-active={isSelected}
-											onclick={() => {
-												if (isSelected) {
-													selectedPersons = selectedPersons.filter(n => n !== p.name);
-												} else {
-													selectedPersons = [...selectedPersons, p.name];
-												}
-											}}
-										>
-											<span class="editor-chip-check">{isSelected ? '✓' : ''}</span>
-											<span>{p.name}</span>
-										</button>
+							<!-- Zugewiesene Personen -->
+							{#if selectedPersons.length > 0}
+								<div class="editor-assigned-row">
+									{#each selectedPersons as pName}
+										<span class="editor-assigned-chip">
+											{pName}
+											<button
+												class="editor-chip-remove"
+												onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}
+											>✕</button>
+										</span>
 									{/each}
-								{/if}
-							</div>
-						{/if}
+								</div>
+							{/if}
 
-						<p class="hint">💡 Optional: Zeigt an, wer aktuell in diesem Raum ist</p>
-					</div>
+							<!-- Toggle-Button -->
+							<button
+								class="editor-picker-toggle"
+								onclick={() => showPersonPicker = !showPersonPicker}
+							>
+								{showPersonPicker ? '▲ Personen ausblenden' : '＋ Person zuweisen'}
+							</button>
+
+							<!-- Chip-Grid -->
+							{#if showPersonPicker}
+								<div class="editor-chips-grid">
+									{#if $persons.length === 0}
+										<p class="editor-chips-empty">Keine Personen angelegt. Bitte in Einstellungen &rarr; Personen eintragen.</p>
+									{:else}
+										{#each $persons as p (p.id)}
+											{@const isSelected = selectedPersons.includes(p.name)}
+											<button
+												class="editor-person-chip"
+												class:chip-active={isSelected}
+												onclick={() => {
+													if (isSelected) {
+														selectedPersons = selectedPersons.filter(n => n !== p.name);
+													} else {
+														selectedPersons = [...selectedPersons, p.name];
+													}
+												}}
+											>
+												<span class="editor-chip-check">{isSelected ? '✓' : ''}</span>
+												<span>{p.name}</span>
+											</button>
+										{/each}
+									{/if}
+								</div>
+							{/if}
+
+							<p class="hint">💡 Optional: Zeigt an, wer aktuell in diesem Raum ist</p>
+						</div>
+					{/if}
 				</div>
 			</div>
 
+			{#if $dashboardView === 'calm'}
+				<div class="section-card editor-section-person">
+					<div class="section-header">
+						<span class="section-icon">👤</span>
+						<h3 class="section-title">Person im Raum</h3>
+					</div>
+					<div class="section-body">
+						<div class="input-group">
+							{#if selectedPersons.length > 0}
+								<div class="editor-assigned-row">
+									{#each selectedPersons as pName}
+										<span class="editor-assigned-chip">
+											{pName}
+											<button
+												class="editor-chip-remove"
+												onclick={() => { selectedPersons = selectedPersons.filter(p => p !== pName); }}
+											>✕</button>
+										</span>
+									{/each}
+								</div>
+							{/if}
+
+							<button
+								class="editor-picker-toggle"
+								onclick={() => showPersonPicker = !showPersonPicker}
+							>
+								{showPersonPicker ? '▲ Personen ausblenden' : '＋ Person zuweisen'}
+							</button>
+
+							{#if showPersonPicker}
+								<div class="editor-chips-grid">
+									{#if $persons.length === 0}
+										<p class="editor-chips-empty">Keine Personen angelegt. Bitte in Einstellungen &rarr; Personen eintragen.</p>
+									{:else}
+										{#each $persons as p (p.id)}
+											{@const isSelected = selectedPersons.includes(p.name)}
+											<button
+												class="editor-person-chip"
+												class:chip-active={isSelected}
+												onclick={() => {
+													if (isSelected) {
+														selectedPersons = selectedPersons.filter(n => n !== p.name);
+													} else {
+														selectedPersons = [...selectedPersons, p.name];
+													}
+												}}
+											>
+												<span class="editor-chip-check">{isSelected ? '✓' : ''}</span>
+												<span>{p.name}</span>
+											</button>
+										{/each}
+									{/if}
+								</div>
+							{/if}
+
+							<p class="hint">💡 Wird in der ruhigen Ansicht auf der Kachel und im Ablauf sichtbar.</p>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<!-- ✅ SEKTION 2: Design & Farben -->
-			<div class="section-card section-card-colors">
+			<div class="section-card section-card-colors editor-section-design">
 				<div class="section-header">
 					<span class="section-icon">🎨</span>
 					<h3 class="section-title">Design & Farben</h3>
@@ -517,7 +580,7 @@
 			</div>
 
 			<!-- ✅ SEKTION 3: Inhalt -->
-			<div class="section-card">
+			<div class="section-card editor-section-content">
 				<div class="section-header">
 					<span class="section-icon">📄</span>
 					<h3 class="section-title">Inhalt</h3>
@@ -551,7 +614,7 @@
 			</div>
 
 			<!-- ✅ SEKTION 3.5: Aktivitäts-Bild -->
-			<div class="section-card">
+			<div class="section-card editor-section-image">
 				<div class="section-header">
 					<span class="section-icon">🖼️</span>
 					<h3 class="section-title">Aktivitäts-Bild</h3>
@@ -725,7 +788,7 @@
 			</div>
 
 			<!-- ✅ SEKTION 4: Schriftgrößen -->
-			<div class="section-card">
+			<div class="section-card editor-section-typography">
 				<div class="section-header">
 					<span class="section-icon">🔤</span>
 					<h3 class="section-title">Schriftgrößen</h3>
@@ -987,6 +1050,35 @@
 		padding: 24px;
 		overflow-y: auto;
 		overflow-x: hidden;
+	}
+
+	.modal-content.calm-editor {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.calm-editor .editor-section-content {
+		order: 1;
+	}
+
+	.calm-editor .editor-section-person {
+		order: 2;
+	}
+
+	.calm-editor .editor-section-image {
+		order: 3;
+	}
+
+	.calm-editor .editor-section-typography {
+		order: 4;
+	}
+
+	.calm-editor .editor-section-basics {
+		order: 5;
+	}
+
+	.calm-editor .editor-section-design {
+		order: 6;
 	}
 
 	/* ✅ Section Cards */
