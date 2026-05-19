@@ -28,6 +28,9 @@
 	let autoPageActive = $state(true);
 	let isFullscreen = $state(false);
 	let showExtras = $state(false);
+	let viewportWidth = $state(1920);
+	let viewportHeight = $state(1080);
+	let isTouchDevice = $state(false);
 	let extrasMenuEl: HTMLDivElement | undefined;
 
 	let formattedTime = $derived($currentTime.toLocaleTimeString('de-DE', {
@@ -43,6 +46,7 @@
 	let weekdayName = $derived(weekdayNames[$currentWeekday % 7]);
 	let isToday = $derived($viewWeekday === $currentWeekday);
 	let headerDensity = $derived($appSettings?.calm_header_density ?? 'compact');
+	let isTabletLandscape = $derived(isTouchDevice && viewportWidth <= 1366 && viewportWidth > viewportHeight);
 
 	function previousDay() {
 		viewWeekday.update((day) => (day - 1 < 0 ? 6 : day - 1));
@@ -79,6 +83,11 @@
 		if (savedAutoPage !== null) {
 			autoPageActive = savedAutoPage === 'true';
 		}
+		const updateViewport = () => {
+			viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+			viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+			isTouchDevice = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
+		};
 
 		const handleFullscreenChange = () => {
 			isFullscreen = !!document.fullscreenElement;
@@ -91,16 +100,26 @@
 
 		document.addEventListener('fullscreenchange', handleFullscreenChange);
 		document.addEventListener('pointerdown', handlePointerDown);
+		window.addEventListener('resize', updateViewport);
+		window.visualViewport?.addEventListener('resize', updateViewport);
+		updateViewport();
 		handleFullscreenChange();
 
 		return () => {
 			document.removeEventListener('fullscreenchange', handleFullscreenChange);
 			document.removeEventListener('pointerdown', handlePointerDown);
+			window.removeEventListener('resize', updateViewport);
+			window.visualViewport?.removeEventListener('resize', updateViewport);
 		};
 	});
 </script>
 
-<header class="calm-header" class:comfortable={headerDensity === 'comfortable'} transition:fade>
+<header
+	class="calm-header"
+	class:comfortable={headerDensity === 'comfortable'}
+	class:tablet-landscape={isTabletLandscape}
+	transition:fade
+>
 	<div class="header-left">
 		<div class="page-copy">
 			<span class="eyebrow">Ruhige Ansicht</span>
@@ -510,229 +529,197 @@
 
 	@media (max-width: 1280px) {
 		.calm-header {
-			height: 116px;
-			padding: 8px 12px 10px;
-			grid-template-columns: minmax(160px, 0.75fr) minmax(260px, 1fr) minmax(280px, 0.85fr);
-			grid-template-rows: 44px 42px;
-			grid-template-areas:
-				"page runner actions"
-				"tabs day stats";
-			align-items: center;
-			gap: 8px 12px;
-		}
-
-		.calm-header.comfortable {
-			height: 132px;
-			padding-top: 12px;
-			padding-bottom: 12px;
-			grid-template-rows: 50px 46px;
-		}
-
-		.header-left,
-		.header-right {
-			display: contents;
-		}
-
-		.page-copy {
-			grid-area: page;
-			min-width: 0;
-			overflow: hidden;
-		}
-
-		.eyebrow {
-			margin-bottom: 1px;
-			font-size: 9px;
-		}
-
-		h1 {
-			font-size: 21px;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-
-		.calm-header.comfortable h1 {
-			font-size: 24px;
-		}
-
-		.page-tabs {
-			grid-area: tabs;
-			align-self: stretch;
-			gap: 5px;
-			overflow: hidden;
-		}
-
-		.page-tab {
-			flex: 1 1 0;
-			min-width: 0;
-			min-height: 40px;
-			padding: 5px 8px;
-		}
-
-		.page-tab span {
-			font-size: 12px;
-		}
-
-		.runner-feature {
-			grid-area: runner;
-			justify-self: center;
-			align-self: stretch;
-			display: flex;
-			width: min(360px, 100%);
-			min-width: 0;
-			box-sizing: border-box;
-			flex-direction: column;
-			justify-content: center;
-			padding: 6px 12px;
-		}
-
-		.runner-feature strong {
-			font-size: 18px;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-
-		.day-cluster {
-			grid-area: day;
-			justify-self: center;
-			align-self: stretch;
-			gap: 6px;
-		}
-
-		.quiet-icon,
-		.extras-trigger,
-		.menu-btn {
-			width: 40px;
-			height: 40px;
-			min-height: 40px;
-		}
-
-		.day-copy {
-			min-width: 94px;
-		}
-
-		.weekday {
-			font-size: 13px;
-		}
-
-		.header-status {
-			grid-area: stats;
-			justify-self: end;
-			align-self: stretch;
-			gap: 5px;
-		}
-
-		.metric {
-			display: flex;
-			min-width: 56px;
-			flex-direction: column;
-			justify-content: center;
-			padding: 4px 6px;
-		}
-
-		.metric strong {
-			font-size: 17px;
-		}
-
-		.metric span {
-			font-size: 8px;
-		}
-
-		.header-actions {
-			grid-area: actions;
-			justify-self: end;
-			align-self: center;
-			gap: 6px;
-		}
-
-		.menu-btn {
-			min-width: 68px;
-			padding: 0 10px;
+			gap: 12px;
 		}
 	}
 
 	@media (max-width: 1100px) {
-		.calm-header {
-			height: 112px;
-			padding: 7px max(10px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));
-			grid-template-columns: minmax(170px, 0.78fr) minmax(230px, 1fr) minmax(210px, 0.82fr);
-			grid-template-rows: 42px 39px;
-			grid-template-areas:
-				"page runner actions"
-				"tabs day stats";
-			gap: 7px 9px;
+		.calm-header:not(.tablet-landscape) {
+			grid-template-columns: minmax(0, 1fr);
+			height: auto;
 		}
 
-		.calm-header.comfortable {
-			height: 126px;
-			grid-template-rows: 48px 43px;
+		.calm-header:not(.tablet-landscape) .header-left,
+		.calm-header:not(.tablet-landscape) .header-right {
+			justify-self: stretch;
+			flex-wrap: wrap;
 		}
 
-		.runner-feature {
-			width: min(330px, 100%);
-			padding-inline: 10px;
-		}
-
-		.runner-feature span {
-			font-size: 9px;
-		}
-
-		.runner-feature strong {
-			font-size: 17px;
-		}
-
-		.page-tab {
-			min-height: 38px;
-			padding-inline: 7px;
-		}
-
-		.quiet-icon,
-		.extras-trigger,
-		.menu-btn {
-			width: 38px;
-			height: 38px;
-			min-height: 38px;
-		}
-
-		.day-copy {
-			min-width: 88px;
-		}
-
-		.metric {
-			min-width: 52px;
-		}
-
-		.header-status {
-			justify-self: end;
+		.calm-header:not(.tablet-landscape) .runner-feature {
+			justify-self: stretch;
 		}
 	}
 
+	.calm-header.tablet-landscape {
+		height: 122px;
+		padding: 7px max(10px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));
+		grid-template-columns: minmax(170px, 0.78fr) minmax(230px, 1fr) minmax(210px, 0.82fr);
+		grid-template-rows: 48px 43px;
+		grid-template-areas:
+			"page runner actions"
+			"tabs day stats";
+		align-items: center;
+		gap: 7px 9px;
+	}
+
+	.calm-header.tablet-landscape.comfortable {
+		height: 136px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+		grid-template-rows: 54px 45px;
+	}
+
+	.calm-header.tablet-landscape .header-left,
+	.calm-header.tablet-landscape .header-right {
+		display: contents;
+	}
+
+	.calm-header.tablet-landscape .page-copy {
+		grid-area: page;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.calm-header.tablet-landscape .eyebrow {
+		margin-bottom: 1px;
+		font-size: 9px;
+	}
+
+	.calm-header.tablet-landscape h1 {
+		font-size: 21px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.calm-header.tablet-landscape.comfortable h1 {
+		font-size: 24px;
+	}
+
+	.calm-header.tablet-landscape .page-tabs {
+		grid-area: tabs;
+		align-self: stretch;
+		gap: 5px;
+		overflow: hidden;
+	}
+
+	.calm-header.tablet-landscape .page-tab {
+		flex: 1 1 0;
+		min-width: 0;
+		min-height: 38px;
+		padding: 5px 7px;
+	}
+
+	.calm-header.tablet-landscape .page-tab span {
+		font-size: 12px;
+	}
+
+	.calm-header.tablet-landscape .runner-feature {
+		grid-area: runner;
+		justify-self: center;
+		align-self: stretch;
+		display: flex;
+		width: min(330px, 100%);
+		min-width: 0;
+		box-sizing: border-box;
+		flex-direction: column;
+		justify-content: center;
+		padding: 6px 10px;
+	}
+
+	.calm-header.tablet-landscape .runner-feature span {
+		font-size: 9px;
+	}
+
+	.calm-header.tablet-landscape .runner-feature strong {
+		font-size: 17px;
+		line-height: 1.12;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.calm-header.tablet-landscape .day-cluster {
+		grid-area: day;
+		justify-self: center;
+		align-self: stretch;
+		gap: 6px;
+	}
+
+	.calm-header.tablet-landscape .quiet-icon,
+	.calm-header.tablet-landscape .extras-trigger,
+	.calm-header.tablet-landscape .menu-btn {
+		width: 38px;
+		height: 38px;
+		min-height: 38px;
+	}
+
+	.calm-header.tablet-landscape .day-copy {
+		min-width: 88px;
+	}
+
+	.calm-header.tablet-landscape .weekday {
+		font-size: 13px;
+	}
+
+	.calm-header.tablet-landscape .header-status {
+		grid-area: stats;
+		justify-self: end;
+		align-self: stretch;
+		gap: 5px;
+	}
+
+	.calm-header.tablet-landscape .metric {
+		display: flex;
+		min-width: 52px;
+		flex-direction: column;
+		justify-content: center;
+		padding: 4px 6px;
+	}
+
+	.calm-header.tablet-landscape .metric strong {
+		font-size: 17px;
+	}
+
+	.calm-header.tablet-landscape .metric span {
+		font-size: 8px;
+	}
+
+	.calm-header.tablet-landscape .header-actions {
+		grid-area: actions;
+		justify-self: end;
+		align-self: center;
+		gap: 6px;
+	}
+
+	.calm-header.tablet-landscape .menu-btn {
+		min-width: 68px;
+		padding: 0 10px;
+	}
+
 	@media (max-width: 760px) {
-		.calm-header {
-			grid-template-columns: 1fr auto;
-			grid-template-rows: 42px 38px 38px 36px;
+		.calm-header.tablet-landscape {
+			height: 122px;
+			grid-template-columns: minmax(130px, 0.7fr) minmax(190px, 1fr) auto;
+			grid-template-rows: 48px 43px;
 			grid-template-areas:
-				"page actions"
-				"runner runner"
-				"tabs tabs"
-				"day stats";
-			height: 176px;
+				"page runner actions"
+				"tabs day stats";
 		}
 
-		.calm-header.comfortable {
-			height: 194px;
+		.calm-header.tablet-landscape.comfortable {
+			height: 136px;
 		}
 
-		.runner-feature {
-			width: 100%;
+		.calm-header.tablet-landscape .runner-feature {
+			width: min(280px, 100%);
 		}
 
-		.page-tabs {
+		.calm-header.tablet-landscape .page-tabs {
 			overflow-x: auto;
 		}
 
-		.page-tab {
+		.calm-header.tablet-landscape .page-tab {
 			flex: 0 0 64px;
 		}
 	}

@@ -50,11 +50,12 @@
 	let calmCardPadding = $derived($appSettings?.calm_card_padding_px ?? 18);
 	let calmImageWidth = $derived($appSettings?.calm_image_width_percent ?? 38);
 	let viewportWidth = $state(1920);
+	let viewportHeight = $state(1080);
+	let isTouchDevice = $state(false);
+	let isTabletLandscape = $derived(isTouchDevice && viewportWidth <= 1366 && viewportWidth > viewportHeight);
 	let calmHeaderHeight = $derived(() => {
 		const isComfortable = ($appSettings?.calm_header_density ?? 'compact') === 'comfortable';
-		if (viewportWidth <= 760) return isComfortable ? 194 : 176;
-		if (viewportWidth <= 1100) return isComfortable ? 126 : 112;
-		if (viewportWidth <= 1280) return isComfortable ? 132 : 116;
+		if (isTabletLandscape) return isComfortable ? 136 : 122;
 		return isComfortable ? 88 : 74;
 	});
 
@@ -241,6 +242,8 @@
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
 		const updateViewportWidth = () => {
 			viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+			viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+			isTouchDevice = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
 		};
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
@@ -261,6 +264,7 @@
 
 <div
 	class="calm-shell"
+	class:is-tablet-landscape={isTabletLandscape}
 	lang="de"
 	style={`--calm-title-size: ${calmTitleFontSize}px; --calm-text-size: ${calmTextFontSize}px; --calm-card-gap: ${calmCardGap}px; --calm-card-padding: ${calmCardPadding}px; --calm-image-width: ${calmImageWidth}%; --calm-header-height: ${calmHeaderHeight}px;`}
 	ontouchstart={handleTouchStart}
@@ -615,15 +619,13 @@
 		font-size: 18px;
 	}
 
-	@media (max-width: 1280px) {
-		.calm-shell {
-			padding: 16px 22px 28px;
-		}
+	.calm-shell.is-tablet-landscape {
+		padding: 16px 22px 28px;
+	}
 
-		.room-grid.grid-three {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-			grid-auto-rows: minmax(220px, 1fr);
-		}
+	.calm-shell.is-tablet-landscape .room-grid.grid-three {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-auto-rows: minmax(220px, 1fr);
 	}
 
 	@media (max-width: 900px) {
