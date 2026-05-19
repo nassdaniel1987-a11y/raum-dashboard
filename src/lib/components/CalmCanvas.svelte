@@ -53,7 +53,7 @@
 	let calmHeaderHeight = $derived(() => {
 		const isComfortable = ($appSettings?.calm_header_density ?? 'compact') === 'comfortable';
 		if (viewportWidth <= 760) return isComfortable ? 194 : 176;
-		if (viewportWidth <= 1100) return isComfortable ? 172 : 154;
+		if (viewportWidth <= 1100) return isComfortable ? 126 : 112;
 		if (viewportWidth <= 1280) return isComfortable ? 132 : 116;
 		return isComfortable ? 88 : 74;
 	});
@@ -613,6 +613,17 @@
 	.empty-state p {
 		margin-top: 10px;
 		font-size: 18px;
+	}
+
+	@media (max-width: 1280px) {
+		.calm-shell {
+			padding: 16px 22px 28px;
+		}
+
+		.room-grid.grid-three {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			grid-auto-rows: minmax(220px, 1fr);
+		}
 	}
 
 	@media (max-width: 900px) {
