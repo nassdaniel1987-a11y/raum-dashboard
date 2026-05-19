@@ -46,6 +46,10 @@
 	let pageOpen = $derived(currentRooms().filter((room: RoomWithConfig) => room.isOpen).length);
 	let calmTitleFontSize = $derived($appSettings?.calm_title_font_size ?? 42);
 	let calmTextFontSize = $derived($appSettings?.calm_text_font_size ?? 24);
+	let calmCardGap = $derived($appSettings?.calm_card_gap_px ?? 14);
+	let calmCardPadding = $derived($appSettings?.calm_card_padding_px ?? 18);
+	let calmImageWidth = $derived($appSettings?.calm_image_width_percent ?? 38);
+	let calmHeaderHeight = $derived(($appSettings?.calm_header_density ?? 'compact') === 'comfortable' ? 88 : 74);
 
 	$effect(() => {
 		const pages = activePages();
@@ -166,8 +170,8 @@
 	function stateLabel(room: RoomWithConfig): string {
 		const state = roomState(room);
 		if (state === 'open') return 'Offen';
-		if (state === 'opening') return `Offnet ${formatTime(room.config?.open_time)}`;
-		if (state === 'closing') return `Schliesst ${formatTime(room.config?.close_time)}`;
+		if (state === 'opening') return `Öffnet bald ${formatTime(room.config?.open_time)}`;
+		if (state === 'closing') return `Schließt bald ${formatTime(room.config?.close_time)}`;
 		return 'Geschlossen';
 	}
 
@@ -240,7 +244,7 @@
 <div
 	class="calm-shell"
 	lang="de"
-	style={`--calm-title-size: ${calmTitleFontSize}px; --calm-text-size: ${calmTextFontSize}px;`}
+	style={`--calm-title-size: ${calmTitleFontSize}px; --calm-text-size: ${calmTextFontSize}px; --calm-card-gap: ${calmCardGap}px; --calm-card-padding: ${calmCardPadding}px; --calm-image-width: ${calmImageWidth}%; --calm-header-height: ${calmHeaderHeight}px;`}
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
 >
@@ -320,8 +324,8 @@
 	.calm-shell {
 		position: relative;
 		width: 100%;
-		height: calc(100vh - 74px);
-		margin-top: 74px;
+		height: calc(100vh - var(--calm-header-height));
+		margin-top: var(--calm-header-height);
 		padding: 22px 32px 34px;
 		box-sizing: border-box;
 		overflow: hidden;
@@ -341,7 +345,7 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-auto-rows: minmax(210px, 1fr);
-		gap: 14px;
+		gap: var(--calm-card-gap);
 		height: 100%;
 		min-height: 430px;
 	}
@@ -404,6 +408,20 @@
 		border-color: rgba(251, 191, 36, 0.48);
 	}
 
+	.calm-card.is-opening::before {
+		background: #facc15;
+		opacity: 0.96;
+	}
+
+	.calm-card.is-closing::before {
+		background: #fb923c;
+		opacity: 0.96;
+	}
+
+	.calm-card.is-closed::before {
+		opacity: 0.34;
+	}
+
 	.card-layout {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
@@ -412,7 +430,7 @@
 	}
 
 	.calm-card.has-image .card-layout {
-		grid-template-columns: minmax(0, 1fr) minmax(220px, 38%);
+		grid-template-columns: minmax(0, 1fr) minmax(180px, var(--calm-image-width));
 	}
 
 	.card-body {
@@ -422,7 +440,7 @@
 		flex-direction: column;
 		width: 100%;
 		min-width: 0;
-		padding: 18px 20px 18px 28px;
+		padding: var(--calm-card-padding) calc(var(--calm-card-padding) + 2px) var(--calm-card-padding) calc(var(--calm-card-padding) + 10px);
 	}
 
 	.card-visual {

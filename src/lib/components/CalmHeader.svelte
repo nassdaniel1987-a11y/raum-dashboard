@@ -2,6 +2,7 @@
 	import {
 		currentTime,
 		currentWeekday,
+		appSettings,
 		isEditMode,
 		runnerName as runnerNameStore,
 		viewWeekday
@@ -41,6 +42,7 @@
 	let viewWeekdayName = $derived(weekdayNames[$viewWeekday % 7]);
 	let weekdayName = $derived(weekdayNames[$currentWeekday % 7]);
 	let isToday = $derived($viewWeekday === $currentWeekday);
+	let headerDensity = $derived($appSettings?.calm_header_density ?? 'compact');
 
 	function previousDay() {
 		viewWeekday.update((day) => (day - 1 < 0 ? 6 : day - 1));
@@ -98,7 +100,7 @@
 	});
 </script>
 
-<header class="calm-header" transition:fade>
+<header class="calm-header" class:comfortable={headerDensity === 'comfortable'} transition:fade>
 	<div class="header-left">
 		<div class="page-copy">
 			<span class="eyebrow">Ruhige Ansicht</span>
@@ -215,6 +217,23 @@
 		background: rgba(15, 23, 42, 0.72);
 		border-bottom: 1px solid rgba(226, 232, 240, 0.12);
 		backdrop-filter: blur(16px);
+	}
+
+	.calm-header.comfortable {
+		height: 88px;
+		padding-top: 14px;
+		padding-bottom: 14px;
+	}
+
+	.calm-header.comfortable h1 {
+		font-size: 30px;
+	}
+
+	.calm-header.comfortable .page-tab,
+	.calm-header.comfortable .quiet-icon,
+	.calm-header.comfortable .extras-trigger,
+	.calm-header.comfortable .menu-btn {
+		min-height: 48px;
 	}
 
 	.header-left,

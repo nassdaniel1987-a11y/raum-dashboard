@@ -83,5 +83,9 @@ export const FALLBACK_APP_SETTINGS: AppSettings = {
 	runner_name: null,
 	calm_title_font_size: 42,
 	calm_text_font_size: 24,
+	calm_card_gap_px: 14,
+	calm_card_padding_px: 18,
+	calm_image_width_percent: 38,
+	calm_header_density: 'compact',
 	last_daily_reset: null
 };
