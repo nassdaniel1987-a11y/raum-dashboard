@@ -49,7 +49,14 @@
 	let calmCardGap = $derived($appSettings?.calm_card_gap_px ?? 14);
 	let calmCardPadding = $derived($appSettings?.calm_card_padding_px ?? 18);
 	let calmImageWidth = $derived($appSettings?.calm_image_width_percent ?? 38);
-	let calmHeaderHeight = $derived(($appSettings?.calm_header_density ?? 'compact') === 'comfortable' ? 88 : 74);
+	let viewportWidth = $state(1920);
+	let calmHeaderHeight = $derived(() => {
+		const isComfortable = ($appSettings?.calm_header_density ?? 'compact') === 'comfortable';
+		if (viewportWidth <= 760) return isComfortable ? 194 : 176;
+		if (viewportWidth <= 1100) return isComfortable ? 172 : 154;
+		if (viewportWidth <= 1280) return isComfortable ? 132 : 116;
+		return isComfortable ? 88 : 74;
+	});
 
 	$effect(() => {
 		const pages = activePages();
@@ -232,10 +239,21 @@
 	onMount(() => {
 		const savedDuration = localStorage.getItem('pageDuration');
 		const savedEnabled = localStorage.getItem('autoPageEnabled');
+		const updateViewportWidth = () => {
+			viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+		};
 
 		if (savedDuration) pageDuration = parseInt(savedDuration);
 		if (savedEnabled) autoPageEnabled = savedEnabled === 'true';
+		updateViewportWidth();
+		window.addEventListener('resize', updateViewportWidth);
+		window.visualViewport?.addEventListener('resize', updateViewportWidth);
 		scheduleAutoPage();
+
+		return () => {
+			window.removeEventListener('resize', updateViewportWidth);
+			window.visualViewport?.removeEventListener('resize', updateViewportWidth);
+		};
 	});
 
 	onDestroy(clearAutoPage);
