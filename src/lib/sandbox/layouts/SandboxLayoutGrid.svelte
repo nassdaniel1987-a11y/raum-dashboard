@@ -90,8 +90,6 @@
 
 	.grid-slot {
 		min-height: 180px;
-		max-height: 220px;
-		overflow: hidden;
 		position: relative;
 		border-radius: 8px;
 	}
