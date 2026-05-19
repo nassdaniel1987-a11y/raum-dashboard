@@ -18,3 +18,8 @@ export const calmHeaderStats = writable({
 	pageRooms: 0,
 	totalOpen: 0
 });
+export const calmPageProgress = writable({
+	enabled: true,
+	duration: 10,
+	cycleKey: 0
+});

@@ -11,6 +11,7 @@
 		calmCurrentPageLabel,
 		calmHeaderStats,
 		calmPageChangeRequest,
+		calmPageProgress,
 		calmPageSummaries
 	} from '$lib/stores/calmViewState';
 	import { fade } from 'svelte/transition';
@@ -114,6 +115,15 @@
 				>
 					<span>{page.short}</span>
 					<small>{page.openCount}/{page.roomCount}</small>
+					{#if index === $calmActivePageIndex && $calmPageProgress.enabled}
+						{#key `${$calmActivePageIndex}-${$calmPageProgress.cycleKey}`}
+							<i
+								class="tab-progress"
+								aria-hidden="true"
+								style={`animation-duration: ${$calmPageProgress.duration}s;`}
+							></i>
+						{/key}
+					{/if}
 				</button>
 			{/each}
 		</nav>
@@ -258,6 +268,7 @@
 	}
 
 	.page-tab {
+		position: relative;
 		min-width: 72px;
 		min-height: 42px;
 		padding: 5px 10px;
@@ -266,6 +277,7 @@
 		color: rgba(248, 250, 252, 0.72);
 		text-align: left;
 		cursor: pointer;
+		overflow: hidden;
 	}
 
 	.page-tab.active {
@@ -292,6 +304,22 @@
 		margin-top: 2px;
 		font-size: 10px;
 		color: rgba(226, 232, 240, 0.62);
+	}
+
+	.tab-progress {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 3px;
+		background: linear-gradient(90deg, #38bdf8, #86efac);
+		transform-origin: left center;
+		animation: calm-tab-progress linear forwards;
+	}
+
+	@keyframes calm-tab-progress {
+		from { transform: scaleX(0); }
+		to { transform: scaleX(1); }
 	}
 
 	.runner-feature {
