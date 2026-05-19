@@ -5,6 +5,7 @@
 		calmCurrentPageLabel,
 		calmHeaderStats,
 		calmPageChangeRequest,
+		calmPageProgress,
 		calmPageSummaries
 	} from '$lib/stores/calmViewState';
 	import { onDestroy, onMount } from 'svelte';
@@ -26,6 +27,7 @@
 	let pageIndex = $state(0);
 	let autoPageEnabled = $state(true);
 	let pageDuration = $state(DEFAULT_PAGE_SECONDS);
+	let progressCycleKey = $state(0);
 	let pageTimer: ReturnType<typeof setTimeout> | undefined;
 	let touchStartX = 0;
 
@@ -69,6 +71,11 @@
 				roomCount: page.rooms.length
 			}))
 		);
+		calmPageProgress.set({
+			enabled: autoPageEnabled && activePages().length > 1,
+			duration: pageDuration,
+			cycleKey: progressCycleKey
+		});
 	});
 
 	$effect(() => {
@@ -89,6 +96,7 @@
 	function scheduleAutoPage() {
 		clearAutoPage();
 		if (!autoPageEnabled || activePages().length < 2) return;
+		progressCycleKey += 1;
 		pageTimer = setTimeout(() => {
 			nextPage(false);
 			scheduleAutoPage();
@@ -198,6 +206,9 @@
 	export function toggleAutoPage(): boolean {
 		autoPageEnabled = !autoPageEnabled;
 		localStorage.setItem('autoPageEnabled', autoPageEnabled.toString());
+		if (!autoPageEnabled) {
+			progressCycleKey += 1;
+		}
 		scheduleAutoPage();
 		return autoPageEnabled;
 	}
