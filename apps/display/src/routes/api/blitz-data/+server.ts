@@ -5,15 +5,26 @@ import { env } from '$env/dynamic/private';
 export const GET: RequestHandler = async ({ url }) => {
 	const apiUrl = env.BLITZ_PROTOKOLL_API_URL;
 	const apiKey = env.BLITZ_PROTOKOLL_API_KEY;
+	const datum = url.searchParams.get('datum');
 
-	if (!apiUrl || !apiKey) {
-		return json({ error: 'Blitz-Protokoll nicht konfiguriert.' }, { status: 503 });
+	async function fetchLegacyProxy() {
+		const fallbackUrl = new URL('https://dash-board09.netlify.app/api/blitz-data');
+		if (datum) fallbackUrl.searchParams.set('datum', datum);
+		const response = await fetch(fallbackUrl);
+		if (!response.ok) {
+			return json({ error: `Blitz-Fallback Fehler: ${response.status}` }, { status: response.status });
+		}
+		return json(await response.json());
 	}
 
-	const datum = url.searchParams.get('datum');
-	let fetchUrl = apiUrl;
+	if (!apiUrl || !apiKey) {
+		return fetchLegacyProxy();
+	}
+
+	const normalizedApiUrl = /^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`;
+	const fetchUrl = new URL(normalizedApiUrl);
 	if (datum) {
-		fetchUrl += `?datum=${encodeURIComponent(datum)}`;
+		fetchUrl.searchParams.set('datum', datum);
 	}
 
 	try {
@@ -25,12 +36,12 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 
 		if (!response.ok) {
-			return json({ error: `Blitz-API Fehler: ${response.status}` }, { status: response.status });
+			return fetchLegacyProxy();
 		}
 
 		return json(await response.json());
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Unbekannter Fehler';
-		return json({ error: `Verbindung fehlgeschlagen: ${message}` }, { status: 502 });
+		console.error('[Display Blitz] Direkter Fetch fehlgeschlagen, nutze Fallback:', error);
+		return fetchLegacyProxy();
 	}
 };
