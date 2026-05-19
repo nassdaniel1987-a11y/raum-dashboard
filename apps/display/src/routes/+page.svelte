@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import {
 		blitzError,
 		connection,
@@ -356,6 +357,10 @@
 				<button onclick={() => void refreshBlitzData()}>
 					<span>Daten</span>
 					<strong>Blitz aktualisieren</strong>
+				</button>
+				<button onclick={() => goto('/control')}>
+					<span>Pflege</span>
+					<strong>Texte & Bilder</strong>
 				</button>
 				<button onclick={toggleFullscreen} disabled={!fullscreenSupported}>
 					<span>Anzeige</span>
