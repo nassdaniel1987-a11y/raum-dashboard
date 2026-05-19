@@ -296,6 +296,7 @@
 		grid-template-columns: minmax(260px, 18vw) minmax(0, 1fr);
 		width: 100vw;
 		height: 100vh;
+		height: 100dvh;
 		overflow: hidden;
 		background:
 			linear-gradient(135deg, rgba(7, 16, 22, 0.88), rgba(8, 18, 31, 0.7)),
@@ -668,20 +669,20 @@
 		font-size: 20px;
 	}
 
-	@media (orientation: landscape) and (max-width: 1180px) and (pointer: coarse) {
+	@media (orientation: landscape) and (max-width: 1180px) {
 		.display-shell {
 			grid-template-columns: 1fr;
-			grid-template-rows: 132px minmax(0, 1fr);
+			grid-template-rows: 104px minmax(0, 1fr);
 		}
 
 		.status-rail {
-			grid-template-columns: minmax(140px, 0.8fr) minmax(230px, 1fr) minmax(170px, 0.7fr) minmax(260px, 1fr);
-			grid-template-rows: 54px 50px;
+			grid-template-columns: minmax(178px, 0.86fr) minmax(270px, 1.18fr) minmax(150px, 0.62fr) minmax(190px, 0.84fr) 56px;
+			grid-template-rows: 48px 40px;
 			grid-template-areas:
-				"brand runner time system"
-				"floors ops metrics metrics";
-			gap: 8px 10px;
-			padding: 10px 14px;
+				"brand runner time metrics system"
+				"floors floors ops metrics system";
+			gap: 6px 8px;
+			padding: 7px 10px 8px;
 			border-right: 0;
 			border-bottom: 1px solid var(--line);
 		}
@@ -695,10 +696,19 @@
 		.system-row { grid-area: system; }
 
 		.brand-block strong {
-			font-size: 26px;
+			font-size: 24px;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+		}
+
+		.brand-block span,
+		.runner-block span,
+		.metric-row span,
+		.system-row,
+		.time-block span {
+			font-size: 9px;
+			letter-spacing: 0.08em;
 		}
 
 		.floor-nav {
@@ -710,37 +720,62 @@
 		.floor-nav button {
 			flex: 1 1 0;
 			min-width: 0;
-			min-height: 48px;
-			padding: 6px;
+			min-height: 38px;
+			padding: 5px 6px;
+		}
+
+		.floor-nav span {
+			font-size: 13px;
+			line-height: 1;
+		}
+
+		.floor-nav small {
+			margin-top: 2px;
+			font-size: 10px;
+			line-height: 1;
 		}
 
 		.runner-block {
 			align-self: stretch;
-			padding: 8px 12px;
+			padding: 6px 10px;
+			overflow: hidden;
 		}
 
 		.runner-block strong {
-			font-size: 18px;
-			line-height: 1.12;
+			font-size: 17px;
+			line-height: 1.05;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
 		}
 
 		.time-block strong {
-			font-size: 30px;
+			font-size: 29px;
 		}
 
 		.ops-block {
-			grid-template-columns: 40px 1fr 40px;
+			grid-template-columns: 38px minmax(104px, 1fr) 38px;
+			gap: 6px;
 		}
 
 		.ops-block > button {
-			min-height: 40px;
+			min-height: 38px;
+			font-size: 21px;
+		}
+
+		.ops-block strong {
+			font-size: 14px;
+			line-height: 1;
+		}
+
+		.today-button {
+			margin-top: 1px;
+			font-size: 10px;
+			line-height: 1;
 		}
 
 		.metric-row div {
-			padding: 6px;
+			padding: 5px 7px;
 		}
 
 		.metric-row strong {
@@ -748,23 +783,92 @@
 		}
 
 		.system-row {
-			font-size: 10px;
+			grid-template-columns: 1fr;
+			place-items: center;
+			gap: 4px;
+			text-align: center;
+			font-size: 9px;
+		}
+
+		.system-row > span:not(.connection-dot) {
+			display: none;
+		}
+
+		.connection-dot {
+			width: 9px;
+			height: 9px;
+		}
+
+		.menu-trigger {
+			width: 54px;
+			min-height: 36px;
+			padding: 0;
+			font-size: 12px;
 		}
 
 		.stage {
-			padding: 14px 18px 24px;
+			padding: 10px 12px 15px;
+			min-height: 0;
+		}
+
+		.room-grid {
+			grid-auto-rows: minmax(0, 1fr);
+			gap: 9px;
 		}
 
 		.room-grid.three {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
+		.room-card {
+			padding: 18px 20px 16px 24px;
+			box-shadow: none;
+		}
+
+		.room-card::before {
+			width: 7px;
+		}
+
+		.state-line {
+			gap: 8px;
+			font-size: 11px;
+		}
+
+		.state-line span {
+			width: 10px;
+			height: 10px;
+		}
+
 		.room-card h2 {
-			font-size: clamp(34px, 5vw, 54px);
+			margin-top: 12px;
+			font-size: clamp(34px, 4.4vw, 48px);
+			line-height: 0.98;
 		}
 
 		.room-card p {
-			font-size: clamp(20px, 3vw, 30px);
+			margin-top: 10px;
+			max-width: 23ch;
+			font-size: clamp(20px, 2.7vw, 28px);
+			line-height: 1.08;
+		}
+
+		.room-card footer {
+			gap: 10px;
+			padding-top: 14px;
+			font-size: clamp(16px, 2vw, 20px);
+		}
+
+		.page-progress {
+			left: 12px;
+			right: 12px;
+			bottom: 6px;
+			height: 3px;
+		}
+
+		.control-panel {
+			right: 12px;
+			bottom: 12px;
+			width: min(320px, calc(100vw - 24px));
 		}
 	}
 
