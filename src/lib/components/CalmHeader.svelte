@@ -654,22 +654,53 @@
 
 	@media (max-width: 1100px) {
 		.calm-header {
-			height: 154px;
-			grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1fr) minmax(190px, 0.8fr);
-			grid-template-rows: 42px 40px 38px;
+			height: 112px;
+			padding: 7px max(10px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));
+			grid-template-columns: minmax(170px, 0.78fr) minmax(230px, 1fr) minmax(210px, 0.82fr);
+			grid-template-rows: 42px 39px;
 			grid-template-areas:
 				"page runner actions"
-				"tabs tabs tabs"
-				"day stats stats";
+				"tabs day stats";
+			gap: 7px 9px;
 		}
 
 		.calm-header.comfortable {
-			height: 172px;
-			grid-template-rows: 48px 44px 42px;
+			height: 126px;
+			grid-template-rows: 48px 43px;
 		}
 
 		.runner-feature {
-			width: min(300px, 100%);
+			width: min(330px, 100%);
+			padding-inline: 10px;
+		}
+
+		.runner-feature span {
+			font-size: 9px;
+		}
+
+		.runner-feature strong {
+			font-size: 17px;
+		}
+
+		.page-tab {
+			min-height: 38px;
+			padding-inline: 7px;
+		}
+
+		.quiet-icon,
+		.extras-trigger,
+		.menu-btn {
+			width: 38px;
+			height: 38px;
+			min-height: 38px;
+		}
+
+		.day-copy {
+			min-width: 88px;
+		}
+
+		.metric {
+			min-width: 52px;
 		}
 
 		.header-status {
