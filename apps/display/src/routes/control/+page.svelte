@@ -19,6 +19,7 @@
 	type ImagePosition = {
 		x: number;
 		y: number;
+		width: number;
 		zoom: number;
 		rotation: number;
 	};
@@ -36,9 +37,13 @@
 	let fallbackPerson = $state('');
 	let activityImageUrl = $state<string | null>(null);
 	let activityImageSize = $state<ImageSize>('medium');
-	let imagePosition = $state<ImagePosition>({ x: 0, y: 0, zoom: 1, rotation: 0 });
+	let imagePosition = $state<ImagePosition>({ x: 68, y: 58, width: 36, zoom: 1, rotation: 0 });
 	let selectedImageFile = $state<File | null>(null);
 	let imageDragStart = $state<{ pointerId: number; x: number; y: number; position: ImagePosition } | null>(null);
+	let editingTimeRoomId = $state<string | null>(null);
+	let plannerOpenTime = $state('');
+	let plannerCloseTime = $state('');
+	let plannerSavingRoomId = $state<string | null>(null);
 
 	let allRooms = $derived($displayPages.flatMap((page) => page.rooms));
 	let selectedRoom = $derived(
@@ -74,7 +79,8 @@
 		activityImageUrl = selectedRoom.config.activity_image_url;
 		activityImageSize = selectedRoom.config.activity_image_size ?? 'medium';
 		imagePosition = normalizeImagePosition(
-			selectedRoom.config.activity_image_position_calm ?? selectedRoom.config.activity_image_position
+			selectedRoom.config.activity_image_position_calm ?? selectedRoom.config.activity_image_position,
+			selectedRoom.config.activity_image_size
 		);
 		selectedImageFile = null;
 		message = '';
@@ -84,20 +90,31 @@
 		return time ? time.substring(0, 5) : '';
 	}
 
-	function normalizeImagePosition(position: unknown): ImagePosition {
+	function clamp(value: number, min: number, max: number) {
+		return Math.min(max, Math.max(min, value));
+	}
+
+	function normalizeImagePosition(position: unknown, size: ImageSize | null | undefined = 'medium'): ImagePosition {
 		const candidate =
 			typeof position === 'object' && position !== null ? (position as Partial<ImagePosition>) : {};
+		const legacyWidth = size === 'small' ? 26 : size === 'large' ? 46 : 36;
+		const hasFreePosition = Number.isFinite(candidate.width);
 
 		return {
-			x: Number.isFinite(candidate.x) ? Number(candidate.x) : 0,
-			y: Number.isFinite(candidate.y) ? Number(candidate.y) : 0,
+			x: hasFreePosition
+				? clamp(Number(candidate.x), 8, 92)
+				: clamp(68 + Number(candidate.x ?? 0) * 0.12, 8, 92),
+			y: hasFreePosition
+				? clamp(Number(candidate.y), 12, 88)
+				: clamp(58 + Number(candidate.y ?? 0) * 0.12, 12, 88),
+			width: clamp(Number.isFinite(candidate.width) ? Number(candidate.width) : legacyWidth, 16, 86),
 			zoom: Number.isFinite(candidate.zoom) ? Math.max(0.2, Number(candidate.zoom)) : 1,
 			rotation: Number.isFinite(candidate.rotation) ? Number(candidate.rotation) : 0
 		};
 	}
 
 	function imageTransform() {
-		return `transform: translate(${imagePosition.x}%, ${imagePosition.y}%) scale(${imagePosition.zoom}) rotate(${imagePosition.rotation}deg);`;
+		return `--image-x: ${imagePosition.x}; --image-y: ${imagePosition.y}; --image-width: ${imagePosition.width}; --image-zoom: ${imagePosition.zoom}; --image-rotation: ${imagePosition.rotation}deg;`;
 	}
 
 	function personLabel(room: DisplayRoom) {
@@ -125,6 +142,12 @@
 
 	function updateImagePosition(partial: Partial<ImagePosition>) {
 		imagePosition = { ...imagePosition, ...partial };
+	}
+
+	function editPlannerTime(room: DisplayRoom) {
+		editingTimeRoomId = room.id;
+		plannerOpenTime = formatTime(room.config.open_time);
+		plannerCloseTime = formatTime(room.config.close_time);
 	}
 
 	function selectRoom(room: DisplayRoom) {
@@ -182,23 +205,30 @@
 	function removeImage() {
 		activityImageUrl = null;
 		selectedImageFile = null;
-		imagePosition = { x: 0, y: 0, zoom: 1, rotation: 0 };
+		imagePosition = { x: 68, y: 58, width: 36, zoom: 1, rotation: 0 };
 		message = 'Bild wird beim Speichern entfernt.';
 	}
 
 	function fitImage() {
-		imagePosition = { x: 0, y: 0, zoom: 1, rotation: 0 };
-		message = 'Bild ist vollständig eingepasst.';
+		imagePosition = { x: 68, y: 58, width: 38, zoom: 1, rotation: 0 };
+		message = 'Bild sitzt wieder ruhig in der Kachel.';
 	}
 
 	function centerImage() {
-		imagePosition = { ...imagePosition, x: 0, y: 0 };
+		imagePosition = { ...imagePosition, x: 50, y: 55 };
 	}
 
 	function zoomImage(delta: number) {
 		imagePosition = {
 			...imagePosition,
 			zoom: Math.max(0.2, Math.min(2.5, Math.round((imagePosition.zoom + delta) * 100) / 100))
+		};
+	}
+
+	function resizeImage(delta: number) {
+		imagePosition = {
+			...imagePosition,
+			width: clamp(Math.round(imagePosition.width + delta), 16, 86)
 		};
 	}
 
@@ -226,8 +256,8 @@
 		const dy = ((event.clientY - imageDragStart.y) / Math.max(1, rect.height)) * 100;
 		imagePosition = {
 			...imagePosition,
-			x: Math.round(imageDragStart.position.x + dx),
-			y: Math.round(imageDragStart.position.y + dy)
+			x: clamp(Math.round(imageDragStart.position.x + dx), 8, 92),
+			y: clamp(Math.round(imageDragStart.position.y + dy), 12, 88)
 		};
 	}
 
@@ -294,6 +324,51 @@
 		} finally {
 			saving = false;
 			uploading = false;
+		}
+	}
+
+	async function savePlannerTimes(room: DisplayRoom) {
+		plannerSavingRoomId = room.id;
+		message = '';
+
+		try {
+			const configData = {
+				room_id: room.id,
+				weekday: $viewWeekday,
+				activity: room.config.activity,
+				open_time: plannerOpenTime || null,
+				close_time: plannerCloseTime || null,
+				title_font_size: room.config.title_font_size,
+				text_font_size: room.config.text_font_size,
+				text_color: room.config.text_color,
+				title_alignment: room.config.title_alignment,
+				text_alignment: room.config.text_alignment,
+				is_locked: room.config.is_locked,
+				activity_image_url: room.config.activity_image_url,
+				activity_image_size: room.config.activity_image_size,
+				activity_image_crop: room.config.activity_image_crop,
+				activity_image_position: room.config.activity_image_position,
+				activity_image_position_calm: room.config.activity_image_position_calm
+			} satisfies Partial<DailyConfig> & { room_id: string; weekday: number };
+
+			const { data, error } = await supabase
+				.from('daily_configs')
+				.upsert(configData, { onConflict: 'room_id,weekday' })
+				.select()
+				.single();
+			if (error) throw error;
+
+			dailyConfigs.update((map) => {
+				const next = new Map(map);
+				next.set(`${room.id}-${$viewWeekday}`, data as DailyConfig);
+				return next;
+			});
+			editingTimeRoomId = null;
+			message = 'Zeit gespeichert.';
+		} catch (error) {
+			message = error instanceof Error ? error.message : 'Zeit konnte nicht gespeichert werden.';
+		} finally {
+			plannerSavingRoomId = null;
 		}
 	}
 
@@ -365,18 +440,45 @@
 					<h2>{page.label}</h2>
 					<div class="planner-grid">
 						{#each page.rooms as room (room.id)}
-							<button class="planner-card" onclick={() => selectRoom(room)}>
+							<article class="planner-card">
 								<div class="planner-card-head">
 									<strong>{room.name}</strong>
 									<span class:open={room.isOpen}>{room.isOpen ? 'Offen' : 'Geschlossen'}</span>
 								</div>
 								<p>{room.config.activity || 'Keine Aktivität eingetragen'}</p>
 								<div class="planner-meta">
-									<span>{configTimeLabel(room.config)}</span>
+									<button type="button" class="time-chip" onclick={() => editPlannerTime(room)}>
+										{configTimeLabel(room.config)}
+									</button>
 									<span>{personLabel(room)}</span>
 									<span>{room.config.activity_image_url ? 'Bild vorhanden' : 'Kein Bild'}</span>
 								</div>
-							</button>
+								{#if editingTimeRoomId === room.id}
+									<div class="planner-time-editor">
+										<label>
+											<span>Öffnet</span>
+											<input type="time" bind:value={plannerOpenTime} />
+										</label>
+										<label>
+											<span>Schließt</span>
+											<input type="time" bind:value={plannerCloseTime} />
+										</label>
+										<button
+											type="button"
+											class="save-time"
+											disabled={plannerSavingRoomId === room.id}
+											onclick={() => void savePlannerTimes(room)}
+										>
+											{plannerSavingRoomId === room.id ? 'Speichert...' : 'Zeit speichern'}
+										</button>
+										<button type="button" onclick={() => (editingTimeRoomId = null)}>Abbrechen</button>
+									</div>
+								{:else}
+									<button type="button" class="edit-room-button" onclick={() => selectRoom(room)}>
+										Kachel komplett bearbeiten
+									</button>
+								{/if}
+							</article>
 						{/each}
 					</div>
 				</div>
@@ -441,7 +543,7 @@
 					<h2>Aktivitätsbild</h2>
 					<div class="image-workbench">
 						<div
-							class="image-preview"
+							class="image-card-preview"
 							onpointerdown={handleImagePointerDown}
 							onpointermove={handleImagePointerMove}
 							onpointerup={handleImagePointerEnd}
@@ -449,9 +551,24 @@
 							role="presentation"
 						>
 							{#if activityImageUrl}
-								<img src={activityImageUrl} alt="" style={imageTransform()} />
-							{:else}
-								<span>Kein Bild</span>
+								<figure class="preview-image-free" style={imageTransform()}>
+									<img src={activityImageUrl} alt="" />
+								</figure>
+							{/if}
+							<div class="preview-status">
+								<span></span>
+								<strong>{selectedRoom.isOpen ? 'Offen' : 'Geschlossen'}</strong>
+							</div>
+							<div class="preview-copy">
+								<h3>{roomName || selectedRoom.name}</h3>
+								<p>{activity || 'Keine Aktivität eingetragen'}</p>
+							</div>
+							<footer>
+								<span>{configTimeLabel({ ...selectedRoom.config, open_time: openTime || null, close_time: closeTime || null })}</span>
+								<strong>{personLabel(selectedRoom)}</strong>
+							</footer>
+							{#if !activityImageUrl}
+								<div class="no-image-note">Kein Bild</div>
 							{/if}
 						</div>
 						<div class="image-actions">
@@ -459,16 +576,21 @@
 								<input type="file" accept="image/*" onchange={handleImageSelect} />
 								<span>Bild auswählen</span>
 							</label>
-							<button type="button" onclick={fitImage} disabled={!activityImageUrl}>Bild einpassen</button>
+							<button type="button" onclick={fitImage} disabled={!activityImageUrl}>Ruhig platzieren</button>
 							<button type="button" onclick={centerImage} disabled={!activityImageUrl}>Zentrieren</button>
-							<button type="button" onclick={() => zoomImage(-0.1)} disabled={!activityImageUrl}>Kleiner</button>
-							<button type="button" onclick={() => zoomImage(0.1)} disabled={!activityImageUrl}>Größer</button>
+							<button type="button" onclick={() => resizeImage(-4)} disabled={!activityImageUrl}>Schmaler</button>
+							<button type="button" onclick={() => resizeImage(4)} disabled={!activityImageUrl}>Breiter</button>
+							<button type="button" onclick={() => zoomImage(-0.1)} disabled={!activityImageUrl}>Auszoomen</button>
+							<button type="button" onclick={() => zoomImage(0.1)} disabled={!activityImageUrl}>Reinzoomen</button>
 							<button type="button" onclick={() => rotateImage(90)} disabled={!activityImageUrl}>90° drehen</button>
 							<button type="button" onclick={removeImage} disabled={!activityImageUrl}>Bild entfernen</button>
 						</div>
 					</div>
 
-					<div class="size-row">
+					<p class="image-help">Bild direkt auf der Kachel ziehen. Breite verändert die Bildfläche, Zoom verändert den Inhalt im Bild.</p>
+
+					<!-- Kompatibilität: alter Größenwert bleibt erhalten, ist aber nicht mehr die Hauptsteuerung. -->
+					<div class="size-row legacy-size-row">
 						<button type="button" class:active={activityImageSize === 'small'} onclick={() => (activityImageSize = 'small')}>Klein</button>
 						<button type="button" class:active={activityImageSize === 'medium'} onclick={() => (activityImageSize = 'medium')}>Mittel</button>
 						<button type="button" class:active={activityImageSize === 'large'} onclick={() => (activityImageSize = 'large')}>Groß</button>
@@ -477,13 +599,18 @@
 					<div class="slider-grid">
 						<label>
 							<span>X</span>
-							<input type="range" min="-80" max="80" step="1" value={imagePosition.x} oninput={(event) => updateImagePosition({ x: Number(event.currentTarget.value) })} />
+							<input type="range" min="8" max="92" step="1" value={imagePosition.x} oninput={(event) => updateImagePosition({ x: Number(event.currentTarget.value) })} />
 							<strong>{imagePosition.x}%</strong>
 						</label>
 						<label>
 							<span>Y</span>
-							<input type="range" min="-80" max="80" step="1" value={imagePosition.y} oninput={(event) => updateImagePosition({ y: Number(event.currentTarget.value) })} />
+							<input type="range" min="12" max="88" step="1" value={imagePosition.y} oninput={(event) => updateImagePosition({ y: Number(event.currentTarget.value) })} />
 							<strong>{imagePosition.y}%</strong>
+						</label>
+						<label>
+							<span>Breite</span>
+							<input type="range" min="16" max="86" step="1" value={imagePosition.width} oninput={(event) => updateImagePosition({ width: Number(event.currentTarget.value) })} />
+							<strong>{imagePosition.width}%</strong>
 						</label>
 						<label>
 							<span>Zoom</span>
@@ -664,6 +791,7 @@
 		gap: 10px;
 		min-height: 156px;
 		padding: 14px;
+		border: 1px solid rgba(246, 243, 232, 0.16);
 		text-align: left;
 		background: rgba(246, 243, 232, 0.055);
 	}
@@ -713,13 +841,54 @@
 		margin-top: auto;
 	}
 
-	.planner-meta span {
+	.planner-meta span,
+	.planner-meta button {
 		padding: 4px 8px;
 		border: 1px solid rgba(246, 243, 232, 0.12);
 		background: rgba(4, 10, 18, 0.3);
 		color: rgba(246, 243, 232, 0.68);
 		font-size: 13px;
 		font-weight: 850;
+	}
+
+	.planner-meta button {
+		min-height: 42px;
+		color: #f6f3e8;
+	}
+
+	.planner-time-editor {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+		margin-top: 4px;
+		padding: 12px;
+		border: 1px solid rgba(125, 211, 252, 0.24);
+		background: rgba(125, 211, 252, 0.08);
+	}
+
+	.planner-time-editor label {
+		gap: 6px;
+	}
+
+	.planner-time-editor input {
+		min-height: 56px;
+	}
+
+	.planner-time-editor button {
+		min-height: 54px;
+	}
+
+	.planner-time-editor .save-time {
+		border-color: rgba(134, 239, 172, 0.42);
+		background: rgba(34, 197, 94, 0.16);
+	}
+
+	.edit-room-button {
+		justify-self: start;
+		min-height: 44px;
+		padding: 0 12px;
+		color: rgba(246, 243, 232, 0.78);
+		font-size: 13px;
 	}
 
 	.room-list,
@@ -860,36 +1029,122 @@
 		align-items: stretch;
 	}
 
-	.image-preview {
+	.image-card-preview {
 		position: relative;
-		display: grid;
-		min-height: 180px;
+		display: flex;
+		min-height: 320px;
+		flex-direction: column;
 		overflow: hidden;
-		place-items: center;
 		border: 1px solid rgba(246, 243, 232, 0.2);
 		background:
-			linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+			linear-gradient(135deg, rgba(14, 24, 34, 0.95), rgba(15, 23, 42, 0.82)),
 			rgba(4, 10, 18, 0.62);
+		padding: 18px;
 		cursor: grab;
 		touch-action: none;
 	}
 
-	.image-preview:active {
+	.image-card-preview::before {
+		content: '';
+		position: absolute;
+		inset: 0 auto 0 0;
+		z-index: 3;
+		width: 7px;
+		background: #94a3b8;
+	}
+
+	.image-card-preview:active {
 		cursor: grabbing;
 	}
 
-	.image-preview img {
+	.preview-image-free {
 		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
+		z-index: 1;
+		left: calc(var(--image-x) * 1%);
+		top: calc(var(--image-y) * 1%);
+		width: calc(var(--image-width) * 1%);
+		margin: 0;
+		overflow: hidden;
+		border: 1px solid rgba(246, 243, 232, 0.26);
+		background: rgba(4, 10, 18, 0.56);
+		aspect-ratio: 16 / 10;
+		box-shadow: 0 14px 38px rgba(0, 0, 0, 0.26);
+		pointer-events: none;
+		transform: translate(-50%, -50%) scale(var(--image-zoom)) rotate(var(--image-rotation));
 		transform-origin: center;
 	}
 
-	.image-preview span {
+	.preview-image-free img {
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: contain;
+	}
+
+	.preview-status,
+	.preview-copy,
+	.image-card-preview footer,
+	.no-image-note {
+		position: relative;
+		z-index: 2;
+	}
+
+	.preview-status {
+		display: inline-flex;
+		align-items: center;
+		align-self: flex-start;
+		gap: 8px;
+		padding: 5px 9px;
+		border: 1px solid rgba(148, 163, 184, 0.24);
+		background: rgba(148, 163, 184, 0.1);
+		font-size: 12px;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.preview-status span {
+		width: 9px;
+		height: 9px;
+		border-radius: 999px;
+		background: #94a3b8;
+	}
+
+	.preview-copy h3 {
+		margin: 16px 0 0;
+		font-size: clamp(36px, 5vw, 58px);
+		line-height: 0.98;
+	}
+
+	.preview-copy p {
+		margin: 10px 0 0;
+		max-width: 24ch;
+		color: rgba(246, 243, 232, 0.72);
+		font-size: clamp(21px, 2.4vw, 30px);
+		font-weight: 850;
+		line-height: 1.08;
+	}
+
+	.image-card-preview footer {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		margin-top: auto;
+		padding-top: 32px;
+		font-size: 18px;
+		font-weight: 900;
+	}
+
+	.no-image-note {
+		margin: auto;
 		color: rgba(246, 243, 232, 0.58);
 		font-weight: 900;
+	}
+
+	.image-help {
+		margin: -4px 0 0;
+		color: rgba(246, 243, 232, 0.58);
+		font-weight: 800;
 	}
 
 	.image-actions {
@@ -923,6 +1178,10 @@
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 10px;
+	}
+
+	.legacy-size-row {
+		opacity: 0.72;
 	}
 
 	.size-row button.active {
@@ -1019,8 +1278,8 @@
 			grid-template-columns: minmax(0, 1fr) 180px;
 		}
 
-		.image-preview {
-			min-height: 150px;
+		.image-card-preview {
+			min-height: 260px;
 		}
 
 		.savebar {
