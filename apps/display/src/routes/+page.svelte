@@ -21,6 +21,7 @@
 	type ImagePosition = {
 		x?: number;
 		y?: number;
+		width?: number;
 		zoom?: number;
 		rotation?: number;
 	};
@@ -171,11 +172,23 @@
 		return 'Kein Zeitfenster';
 	}
 
-	function normalizeImagePosition(position: unknown): Required<ImagePosition> {
+	function clamp(value: number, min: number, max: number) {
+		return Math.min(max, Math.max(min, value));
+	}
+
+	function normalizeImagePosition(position: unknown, size: string | null | undefined): Required<ImagePosition> {
 		const candidate = typeof position === 'object' && position !== null ? (position as ImagePosition) : {};
+		const legacyWidth = size === 'small' ? 26 : size === 'large' ? 46 : 36;
+		const hasFreePosition = Number.isFinite(candidate.width);
+
 		return {
-			x: Number.isFinite(candidate.x) ? Number(candidate.x) : 0,
-			y: Number.isFinite(candidate.y) ? Number(candidate.y) : 0,
+			x: hasFreePosition
+				? clamp(Number(candidate.x), 8, 92)
+				: clamp(68 + Number(candidate.x ?? 0) * 0.12, 8, 92),
+			y: hasFreePosition
+				? clamp(Number(candidate.y), 12, 88)
+				: clamp(58 + Number(candidate.y ?? 0) * 0.12, 12, 88),
+			width: clamp(Number.isFinite(candidate.width) ? Number(candidate.width) : legacyWidth, 16, 86),
 			zoom: Number.isFinite(candidate.zoom) ? Math.max(0.2, Number(candidate.zoom)) : 1,
 			rotation: Number.isFinite(candidate.rotation) ? Number(candidate.rotation) : 0
 		};
@@ -183,14 +196,11 @@
 
 	function activityImageStyle(room: DisplayRoom) {
 		const position = normalizeImagePosition(
-			room.config.activity_image_position_calm ?? room.config.activity_image_position
+			room.config.activity_image_position_calm ?? room.config.activity_image_position,
+			room.config.activity_image_size
 		);
 
-		return `transform: translate(${position.x}%, ${position.y}%) scale(${position.zoom}) rotate(${position.rotation}deg);`;
-	}
-
-	function imageSizeClass(room: DisplayRoom) {
-		return room.config.activity_image_size ?? 'medium';
+		return `--image-x: ${position.x}; --image-y: ${position.y}; --image-width: ${position.width}; --image-zoom: ${position.zoom}; --image-rotation: ${position.rotation}deg;`;
 	}
 
 	function visiblePersonNames(room: DisplayRoom) {
@@ -313,7 +323,20 @@
 			>
 				{#each pageRooms as room (room.id)}
 					{@const state = roomState(room)}
-					<article class="room-card" class:open={state === 'open'} class:opening={state === 'opening'} class:closing={state === 'closing'} lang="de">
+					<article
+						class="room-card"
+						class:open={state === 'open'}
+						class:opening={state === 'opening'}
+						class:closing={state === 'closing'}
+						class:has-image={!!room.config.activity_image_url}
+						lang="de"
+					>
+						{#if room.config.activity_image_url}
+							<figure class="activity-image-free" style={activityImageStyle(room)}>
+								<img src={room.config.activity_image_url} alt="" />
+							</figure>
+						{/if}
+
 						<div class="state-line">
 							<span></span>
 							<strong>{stateLabel(room)}</strong>
@@ -323,12 +346,6 @@
 							<h2>{room.name}</h2>
 							<p>{room.config.activity || 'Keine Aktivität eingetragen'}</p>
 						</div>
-
-						{#if room.config.activity_image_url}
-							<figure class={`activity-image ${imageSizeClass(room)}`}>
-								<img src={room.config.activity_image_url} alt="" style={activityImageStyle(room)} />
-							</figure>
-						{/if}
 
 						<footer>
 							<span>{timeLabel(room)}</span>
@@ -678,12 +695,41 @@
 	}
 
 	.room-card::before {
+		z-index: 3;
 		content: '';
 		position: absolute;
 		inset: 0 auto 0 0;
 		width: 9px;
 		background: #94a3b8;
 		opacity: 0.78;
+	}
+
+	.activity-image-free {
+		position: absolute;
+		z-index: 1;
+		left: calc(var(--image-x) * 1%);
+		top: calc(var(--image-y) * 1%);
+		width: calc(var(--image-width) * 1%);
+		margin: 0;
+		overflow: hidden;
+		border: 1px solid rgba(246, 243, 232, 0.26);
+		background:
+			linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
+			rgba(4, 10, 18, 0.56);
+		aspect-ratio: 16 / 10;
+		box-shadow:
+			0 14px 38px rgba(0, 0, 0, 0.26),
+			inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+		pointer-events: none;
+		transform: translate(-50%, -50%) scale(var(--image-zoom)) rotate(var(--image-rotation));
+		transform-origin: center;
+	}
+
+	.activity-image-free img {
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: contain;
 	}
 
 	.room-card.open::before {
@@ -699,6 +745,8 @@
 	}
 
 	.state-line {
+		position: relative;
+		z-index: 2;
 		display: inline-flex;
 		align-items: center;
 		align-self: flex-start;
@@ -749,6 +797,8 @@
 	}
 
 	.room-copy {
+		position: relative;
+		z-index: 2;
 		min-height: 0;
 	}
 
@@ -776,42 +826,9 @@
 		line-clamp: 3;
 	}
 
-	.activity-image {
-		position: relative;
-		flex: 0 1 auto;
-		width: min(58%, 420px);
-		min-height: 54px;
-		max-height: clamp(66px, 20vh, 190px);
-		margin: clamp(12px, 1.5vw, 20px) 0 0;
-		overflow: hidden;
-		border: 1px solid rgba(246, 243, 232, 0.2);
-		background:
-			linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
-			rgba(4, 10, 18, 0.46);
-		aspect-ratio: 16 / 7;
-		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
-	}
-
-	.activity-image.medium {
-		width: min(66%, 500px);
-		aspect-ratio: 16 / 8;
-	}
-
-	.activity-image.large {
-		width: min(74%, 580px);
-		aspect-ratio: 16 / 9;
-	}
-
-	.activity-image img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		transform-origin: center;
-	}
-
 	.room-card footer {
+		position: relative;
+		z-index: 2;
 		display: grid;
 		grid-template-columns: minmax(0, auto) minmax(0, 1fr);
 		gap: 14px;
@@ -1218,20 +1235,6 @@
 			font-size: clamp(17px, 2.2vw, 22px);
 		}
 
-		.activity-image {
-			width: min(64%, 330px);
-			max-height: 82px;
-			margin-top: 9px;
-		}
-
-		.activity-image.medium {
-			width: min(70%, 360px);
-		}
-
-		.activity-image.large {
-			width: min(78%, 390px);
-		}
-
 		.room-card footer {
 			gap: 10px;
 			padding-top: 10px;
@@ -1281,8 +1284,8 @@
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 
-		.activity-image {
-			max-height: 66px;
+		.activity-image-free {
+			max-width: 54%;
 		}
 	}
 
