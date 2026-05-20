@@ -53,6 +53,9 @@
 	let pageLabel = $derived(
 		$displayPages.find((page) => page.rooms.some((room) => room.id === selectedRoom?.id))?.label ?? ''
 	);
+	let selectedPageRoomCount = $derived(
+		$displayPages.find((page) => page.rooms.some((room) => room.id === selectedRoom?.id))?.rooms.length ?? 4
+	);
 
 	$effect(() => {
 		if (!selectedRoom && selectedRoomId !== null) {
@@ -115,6 +118,13 @@
 
 	function imageTransform() {
 		return `--image-x: ${imagePosition.x}; --image-y: ${imagePosition.y}; --image-width: ${imagePosition.width}; --image-zoom: ${imagePosition.zoom}; --image-rotation: ${imagePosition.rotation}deg;`;
+	}
+
+	function previewShapeClass(roomCount: number) {
+		if (roomCount === 1) return 'one';
+		if (roomCount === 2) return 'two';
+		if (roomCount === 3) return 'three';
+		return 'four';
 	}
 
 	function personLabel(room: DisplayRoom) {
@@ -542,34 +552,40 @@
 				<section class="panel">
 					<h2>Aktivitätsbild</h2>
 					<div class="image-workbench">
-						<div
-							class="image-card-preview"
-							onpointerdown={handleImagePointerDown}
-							onpointermove={handleImagePointerMove}
-							onpointerup={handleImagePointerEnd}
-							onpointercancel={handleImagePointerEnd}
-							role="presentation"
-						>
-							{#if activityImageUrl}
-								<figure class="preview-image-free" style={imageTransform()}>
-									<img src={activityImageUrl} alt="" />
-								</figure>
-							{/if}
-							<div class="preview-status">
-								<span></span>
-								<strong>{selectedRoom.isOpen ? 'Offen' : 'Geschlossen'}</strong>
+						<div class="image-preview-stage">
+							<div class="preview-scale-note">
+								<span>Display-Miniatur</span>
+								<strong>{selectedPageRoomCount} {selectedPageRoomCount === 1 ? 'Kachel' : 'Kacheln'} auf dieser Etage</strong>
 							</div>
-							<div class="preview-copy">
-								<h3>{roomName || selectedRoom.name}</h3>
-								<p>{activity || 'Keine Aktivität eingetragen'}</p>
+							<div
+								class={`image-card-preview ${previewShapeClass(selectedPageRoomCount)}`}
+								onpointerdown={handleImagePointerDown}
+								onpointermove={handleImagePointerMove}
+								onpointerup={handleImagePointerEnd}
+								onpointercancel={handleImagePointerEnd}
+								role="presentation"
+							>
+								{#if activityImageUrl}
+									<figure class="preview-image-free" style={imageTransform()}>
+										<img src={activityImageUrl} alt="" />
+									</figure>
+								{/if}
+								<div class="preview-status">
+									<span></span>
+									<strong>{selectedRoom.isOpen ? 'Offen' : 'Geschlossen'}</strong>
+								</div>
+								<div class="preview-copy">
+									<h3>{roomName || selectedRoom.name}</h3>
+									<p>{activity || 'Keine Aktivität eingetragen'}</p>
+								</div>
+								<footer>
+									<span>{configTimeLabel({ ...selectedRoom.config, open_time: openTime || null, close_time: closeTime || null })}</span>
+									<strong>{personLabel(selectedRoom)}</strong>
+								</footer>
+								{#if !activityImageUrl}
+									<div class="no-image-note">Kein Bild</div>
+								{/if}
 							</div>
-							<footer>
-								<span>{configTimeLabel({ ...selectedRoom.config, open_time: openTime || null, close_time: closeTime || null })}</span>
-								<strong>{personLabel(selectedRoom)}</strong>
-							</footer>
-							{#if !activityImageUrl}
-								<div class="no-image-note">Kein Bild</div>
-							{/if}
 						</div>
 						<div class="image-actions">
 							<label class="file-button">
@@ -1029,10 +1045,41 @@
 		align-items: stretch;
 	}
 
+	.image-preview-stage {
+		display: grid;
+		align-content: center;
+		justify-items: center;
+		gap: 10px;
+		min-width: 0;
+		padding: 14px;
+		overflow: hidden;
+		border: 1px solid rgba(246, 243, 232, 0.12);
+		background: rgba(4, 10, 18, 0.28);
+	}
+
+	.preview-scale-note {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		color: rgba(246, 243, 232, 0.6);
+		font-size: 12px;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.preview-scale-note strong {
+		color: rgba(246, 243, 232, 0.82);
+		text-align: right;
+	}
+
 	.image-card-preview {
 		position: relative;
 		display: flex;
-		min-height: 320px;
+		width: min(100%, 720px);
+		min-height: 0;
 		flex-direction: column;
 		overflow: hidden;
 		border: 1px solid rgba(246, 243, 232, 0.2);
@@ -1040,8 +1087,29 @@
 			linear-gradient(135deg, rgba(14, 24, 34, 0.95), rgba(15, 23, 42, 0.82)),
 			rgba(4, 10, 18, 0.62);
 		padding: 18px;
+		aspect-ratio: 1.72 / 1;
 		cursor: grab;
 		touch-action: none;
+	}
+
+	.image-card-preview.one {
+		width: min(100%, 760px);
+		aspect-ratio: 16 / 9;
+	}
+
+	.image-card-preview.two {
+		width: min(78%, 520px);
+		aspect-ratio: 0.86 / 1;
+	}
+
+	.image-card-preview.three {
+		width: min(52%, 360px);
+		aspect-ratio: 0.56 / 1;
+	}
+
+	.image-card-preview.four {
+		width: min(100%, 720px);
+		aspect-ratio: 1.72 / 1;
 	}
 
 	.image-card-preview::before {
@@ -1112,8 +1180,13 @@
 
 	.preview-copy h3 {
 		margin: 16px 0 0;
-		font-size: clamp(36px, 5vw, 58px);
+		font-size: clamp(30px, 5vw, 58px);
 		line-height: 0.98;
+	}
+
+	.image-card-preview.two .preview-copy h3,
+	.image-card-preview.three .preview-copy h3 {
+		font-size: clamp(28px, 4.6vw, 46px);
 	}
 
 	.preview-copy p {
@@ -1125,6 +1198,14 @@
 		line-height: 1.08;
 	}
 
+	.image-card-preview.two .preview-copy p,
+	.image-card-preview.three .preview-copy p {
+		max-width: 15ch;
+		font-size: clamp(18px, 2.2vw, 24px);
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+	}
+
 	.image-card-preview footer {
 		display: flex;
 		justify-content: space-between;
@@ -1133,6 +1214,12 @@
 		padding-top: 32px;
 		font-size: 18px;
 		font-weight: 900;
+	}
+
+	.image-card-preview.two footer,
+	.image-card-preview.three footer {
+		flex-wrap: wrap;
+		font-size: 16px;
 	}
 
 	.no-image-note {
@@ -1278,8 +1365,12 @@
 			grid-template-columns: minmax(0, 1fr) 180px;
 		}
 
-		.image-card-preview {
-			min-height: 260px;
+		.image-preview-stage {
+			padding: 10px;
+		}
+
+		.image-card-preview.three {
+			width: min(60%, 330px);
 		}
 
 		.savebar {
