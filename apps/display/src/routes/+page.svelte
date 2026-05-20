@@ -31,6 +31,7 @@
 	let menuOpen = $state(false);
 	let fullscreen = $state(false);
 	let fullscreenSupported = $state(false);
+	let displayLocked = $state(false);
 	let pageTimer: ReturnType<typeof setTimeout> | undefined;
 
 	let activePage = $derived($displayPages[activePageIndex] ?? $displayPages[0] ?? null);
@@ -123,6 +124,11 @@
 		localStorage.setItem('display-page-seconds', String(pageSeconds));
 	}
 
+	function setDisplayLocked(value: boolean) {
+		displayLocked = value;
+		localStorage.setItem('display-locked', String(value));
+	}
+
 	function parseMinutes(time: string | null | undefined) {
 		if (!time) return null;
 		const [hours, minutes] = time.split(':').map(Number);
@@ -187,11 +193,17 @@
 		return room.config.activity_image_size ?? 'medium';
 	}
 
+	function visiblePersonNames(room: DisplayRoom) {
+		return room.displayPersons.length ? room.displayPersons : ['Keine Person'];
+	}
+
 	onMount(() => {
 		const savedAuto = localStorage.getItem('display-auto-rotate');
 		const savedSeconds = localStorage.getItem('display-page-seconds');
+		const savedLocked = localStorage.getItem('display-locked');
 		if (savedAuto !== null) autoRotate = savedAuto === 'true';
 		if (savedSeconds) pageSeconds = Number(savedSeconds) || DEFAULT_PAGE_SECONDS;
+		if (savedLocked !== null) displayLocked = savedLocked === 'true';
 		fullscreenSupported = typeof document.documentElement.requestFullscreen === 'function';
 
 		const onFullscreen = () => {
@@ -213,7 +225,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<main class="display-shell" data-connection={$connection}>
+<main class="display-shell" data-connection={$connection} data-locked={displayLocked}>
 	<section class="status-rail" aria-label="Display Status">
 		<div class="brand-block">
 			<span>Raum Display</span>
@@ -320,7 +332,11 @@
 
 						<footer>
 							<span>{timeLabel(room)}</span>
-							<strong>{room.displayPersons.length ? room.displayPersons.join(' / ') : 'Keine Person'}</strong>
+							<div class="person-chips" class:empty={room.displayPersons.length === 0}>
+								{#each visiblePersonNames(room) as person}
+									<strong>{person}</strong>
+								{/each}
+							</div>
 						</footer>
 					</article>
 				{/each}
@@ -350,6 +366,10 @@
 					<span>Auto-Wechsel</span>
 					<strong>{autoRotate ? 'Aktiv' : 'Pausiert'}</strong>
 				</button>
+				<button class:active={displayLocked} onclick={() => setDisplayLocked(!displayLocked)}>
+					<span>Display-Sperre</span>
+					<strong>{displayLocked ? 'Gesperrt' : 'Bedienbar'}</strong>
+				</button>
 				<button onclick={goToday}>
 					<span>Tag</span>
 					<strong>Heute</strong>
@@ -360,7 +380,7 @@
 				</button>
 				<button onclick={() => goto('/control')}>
 					<span>Pflege</span>
-					<strong>Texte & Bilder</strong>
+					<strong>Planer & Bilder</strong>
 				</button>
 				<button onclick={toggleFullscreen} disabled={!fullscreenSupported}>
 					<span>Anzeige</span>
@@ -471,6 +491,12 @@
 		min-height: 54px;
 		padding: 8px;
 		text-align: left;
+	}
+
+	[data-locked='true'] .floor-nav,
+	[data-locked='true'] .ops-block {
+		pointer-events: none;
+		opacity: 0.72;
 	}
 
 	.floor-nav button.active {
@@ -796,12 +822,30 @@
 		font-weight: 900;
 	}
 
-	.room-card footer strong {
+	.person-chips {
+		display: flex;
 		min-width: 0;
-		text-align: right;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 6px;
+	}
+
+	.person-chips strong {
+		max-width: 100%;
+		padding: 3px 8px;
+		border: 1px solid rgba(246, 243, 232, 0.16);
+		background: rgba(246, 243, 232, 0.07);
+		font-size: 0.86em;
+		line-height: 1.15;
+		overflow-wrap: anywhere;
+	}
+
+	.person-chips.empty strong {
+		color: rgba(246, 243, 232, 0.62);
+	}
+
+	.room-card footer > span {
+		min-width: 0;
 	}
 
 	.page-progress {
@@ -1192,6 +1236,15 @@
 			gap: 10px;
 			padding-top: 10px;
 			font-size: clamp(14px, 1.8vw, 18px);
+		}
+
+		.person-chips {
+			gap: 4px;
+		}
+
+		.person-chips strong {
+			padding: 2px 6px;
+			font-size: 0.82em;
 		}
 
 		.page-progress {

@@ -25,6 +25,7 @@
 
 	let selectedRoomId = $state<string | null>(null);
 	let lastLoadedRoomKey = $state('');
+	let viewMode = $state<'planner' | 'editor'>('planner');
 	let saving = $state(false);
 	let uploading = $state(false);
 	let message = $state('');
@@ -37,6 +38,7 @@
 	let activityImageSize = $state<ImageSize>('medium');
 	let imagePosition = $state<ImagePosition>({ x: 0, y: 0, zoom: 1, rotation: 0 });
 	let selectedImageFile = $state<File | null>(null);
+	let imageDragStart = $state<{ pointerId: number; x: number; y: number; position: ImagePosition } | null>(null);
 
 	let allRooms = $derived($displayPages.flatMap((page) => page.rooms));
 	let selectedRoom = $derived(
@@ -98,6 +100,19 @@
 		return `transform: translate(${imagePosition.x}%, ${imagePosition.y}%) scale(${imagePosition.zoom}) rotate(${imagePosition.rotation}deg);`;
 	}
 
+	function personLabel(room: DisplayRoom) {
+		return room.displayPersons.length ? room.displayPersons.join(', ') : 'Keine Person';
+	}
+
+	function configTimeLabel(config: DailyConfig) {
+		const open = formatTime(config.open_time);
+		const close = formatTime(config.close_time);
+		if (open && close) return `${open} - ${close}`;
+		if (open) return `ab ${open}`;
+		if (close) return `bis ${close}`;
+		return 'Kein Zeitfenster';
+	}
+
 	function changeDay(offset: number) {
 		setViewDay($viewWeekday + offset);
 		lastLoadedRoomKey = '';
@@ -115,6 +130,7 @@
 	function selectRoom(room: DisplayRoom) {
 		selectedRoomId = room.id;
 		lastLoadedRoomKey = '';
+		viewMode = 'editor';
 	}
 
 	function localPreviewUrl(file: File) {
@@ -173,6 +189,50 @@
 	function fitImage() {
 		imagePosition = { x: 0, y: 0, zoom: 1, rotation: 0 };
 		message = 'Bild ist vollständig eingepasst.';
+	}
+
+	function centerImage() {
+		imagePosition = { ...imagePosition, x: 0, y: 0 };
+	}
+
+	function zoomImage(delta: number) {
+		imagePosition = {
+			...imagePosition,
+			zoom: Math.max(0.2, Math.min(2.5, Math.round((imagePosition.zoom + delta) * 100) / 100))
+		};
+	}
+
+	function rotateImage(delta: number) {
+		imagePosition = { ...imagePosition, rotation: imagePosition.rotation + delta };
+	}
+
+	function handleImagePointerDown(event: PointerEvent) {
+		if (!activityImageUrl) return;
+		const target = event.currentTarget as HTMLElement;
+		target.setPointerCapture(event.pointerId);
+		imageDragStart = {
+			pointerId: event.pointerId,
+			x: event.clientX,
+			y: event.clientY,
+			position: imagePosition
+		};
+	}
+
+	function handleImagePointerMove(event: PointerEvent) {
+		if (!imageDragStart || imageDragStart.pointerId !== event.pointerId) return;
+		const target = event.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
+		const dx = ((event.clientX - imageDragStart.x) / Math.max(1, rect.width)) * 100;
+		const dy = ((event.clientY - imageDragStart.y) / Math.max(1, rect.height)) * 100;
+		imagePosition = {
+			...imagePosition,
+			x: Math.round(imageDragStart.position.x + dx),
+			y: Math.round(imageDragStart.position.y + dy)
+		};
+	}
+
+	function handleImagePointerEnd(event: PointerEvent) {
+		if (imageDragStart?.pointerId === event.pointerId) imageDragStart = null;
 	}
 
 	async function saveRoom() {
@@ -280,7 +340,11 @@
 			<span>Raum Display</span>
 			<strong>Pflege</strong>
 		</div>
-		<button onclick={() => goto('/')}>Zur Anzeige</button>
+		<div class="top-actions">
+			<button class:active={viewMode === 'planner'} onclick={() => (viewMode = 'planner')}>Tagesplaner</button>
+			<button class:active={viewMode === 'editor'} onclick={() => (viewMode = 'editor')}>Raum bearbeiten</button>
+			<button onclick={() => goto('/')}>Zur Anzeige</button>
+		</div>
 	</header>
 
 	<section class="daybar">
@@ -294,6 +358,31 @@
 		<button class="today" onclick={goToday}>Heute</button>
 	</section>
 
+	{#if viewMode === 'planner'}
+		<section class="planner-view">
+			{#each $displayPages as page (page.id)}
+				<div class="planner-section">
+					<h2>{page.label}</h2>
+					<div class="planner-grid">
+						{#each page.rooms as room (room.id)}
+							<button class="planner-card" onclick={() => selectRoom(room)}>
+								<div class="planner-card-head">
+									<strong>{room.name}</strong>
+									<span class:open={room.isOpen}>{room.isOpen ? 'Offen' : 'Geschlossen'}</span>
+								</div>
+								<p>{room.config.activity || 'Keine Aktivität eingetragen'}</p>
+								<div class="planner-meta">
+									<span>{configTimeLabel(room.config)}</span>
+									<span>{personLabel(room)}</span>
+									<span>{room.config.activity_image_url ? 'Bild vorhanden' : 'Kein Bild'}</span>
+								</div>
+							</button>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</section>
+	{:else}
 	<section class="control-layout">
 		<aside class="room-list" aria-label="Räume">
 			{#each $displayPages as page (page.id)}
@@ -351,7 +440,14 @@
 				<section class="panel">
 					<h2>Aktivitätsbild</h2>
 					<div class="image-workbench">
-						<div class="image-preview">
+						<div
+							class="image-preview"
+							onpointerdown={handleImagePointerDown}
+							onpointermove={handleImagePointerMove}
+							onpointerup={handleImagePointerEnd}
+							onpointercancel={handleImagePointerEnd}
+							role="presentation"
+						>
 							{#if activityImageUrl}
 								<img src={activityImageUrl} alt="" style={imageTransform()} />
 							{:else}
@@ -364,6 +460,10 @@
 								<span>Bild auswählen</span>
 							</label>
 							<button type="button" onclick={fitImage} disabled={!activityImageUrl}>Bild einpassen</button>
+							<button type="button" onclick={centerImage} disabled={!activityImageUrl}>Zentrieren</button>
+							<button type="button" onclick={() => zoomImage(-0.1)} disabled={!activityImageUrl}>Kleiner</button>
+							<button type="button" onclick={() => zoomImage(0.1)} disabled={!activityImageUrl}>Größer</button>
+							<button type="button" onclick={() => rotateImage(90)} disabled={!activityImageUrl}>90° drehen</button>
 							<button type="button" onclick={removeImage} disabled={!activityImageUrl}>Bild entfernen</button>
 						</div>
 					</div>
@@ -412,6 +512,7 @@
 			</div>
 		{/if}
 	</section>
+	{/if}
 </main>
 
 <style>
@@ -461,6 +562,20 @@
 
 	.topbar {
 		justify-content: space-between;
+	}
+
+	.top-actions {
+		display: flex;
+		gap: 10px;
+	}
+
+	.top-actions button {
+		padding: 0 14px;
+	}
+
+	.top-actions button.active {
+		border-color: rgba(134, 239, 172, 0.46);
+		background: rgba(34, 197, 94, 0.16);
 	}
 
 	.topbar span,
@@ -513,6 +628,98 @@
 		gap: 14px;
 		min-height: 0;
 		padding: 14px;
+	}
+
+	.planner-view {
+		display: grid;
+		align-content: start;
+		gap: 16px;
+		min-height: 0;
+		overflow: auto;
+		padding: 14px;
+	}
+
+	.planner-section {
+		display: grid;
+		gap: 10px;
+	}
+
+	.planner-section h2 {
+		margin: 0;
+		color: rgba(246, 243, 232, 0.66);
+		font-size: 13px;
+		font-weight: 900;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.planner-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.planner-card {
+		display: grid;
+		gap: 10px;
+		min-height: 156px;
+		padding: 14px;
+		text-align: left;
+		background: rgba(246, 243, 232, 0.055);
+	}
+
+	.planner-card-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.planner-card-head strong {
+		font-size: clamp(22px, 3vw, 34px);
+		line-height: 1;
+	}
+
+	.planner-card-head span {
+		flex: 0 0 auto;
+		padding: 5px 8px;
+		border: 1px solid rgba(148, 163, 184, 0.3);
+		background: rgba(148, 163, 184, 0.1);
+		color: rgba(246, 243, 232, 0.72);
+		font-size: 11px;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.planner-card-head span.open {
+		border-color: rgba(34, 197, 94, 0.36);
+		background: rgba(34, 197, 94, 0.14);
+		color: #bbf7d0;
+	}
+
+	.planner-card p {
+		margin: 0;
+		color: rgba(246, 243, 232, 0.72);
+		font-size: 20px;
+		font-weight: 850;
+		line-height: 1.12;
+	}
+
+	.planner-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-top: auto;
+	}
+
+	.planner-meta span {
+		padding: 4px 8px;
+		border: 1px solid rgba(246, 243, 232, 0.12);
+		background: rgba(4, 10, 18, 0.3);
+		color: rgba(246, 243, 232, 0.68);
+		font-size: 13px;
+		font-weight: 850;
 	}
 
 	.room-list,
@@ -663,6 +870,12 @@
 		background:
 			linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
 			rgba(4, 10, 18, 0.62);
+		cursor: grab;
+		touch-action: none;
+	}
+
+	.image-preview:active {
+		cursor: grabbing;
 	}
 
 	.image-preview img {
@@ -824,6 +1037,7 @@
 
 		.control-layout,
 		.image-workbench,
+		.planner-grid,
 		.slider-grid,
 		.time-grid,
 		.hero-panel {
